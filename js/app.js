@@ -219,7 +219,6 @@
     const HoverEffectsModule = {
         init() {
             this.addRippleEffect();
-            this.addParallaxEffect();
             this.addNavGlowEffect();
         },
         addRippleEffect() {
@@ -264,9 +263,6 @@
                 });
             });
         },
-        addParallaxEffect() {
-            return;
-        },
         addNavGlowEffect() {
             const navLinks = document.querySelectorAll('.main-nav a, .sidebar-nav a');
             navLinks.forEach(link => {
@@ -283,21 +279,6 @@
                     }
                 });
             });
-        }
-    };
-    const ScrollAnimationsModule = {
-        init() {
-            return;
-        }
-    };
-    const ConsoleArtModule = {
-        init() {
-            const styles = [
-                'color: #E74C3C',
-                'font-size: 20px',
-                'font-weight: bold',
-                'text-shadow: 2px 2px 0px #C0392B'
-            ].join(';');
         }
     };
     const PerformanceModule = {
@@ -410,14 +391,6 @@
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
     };
-    const CounterAnimationModule = {
-        init() {
-            return;
-        },
-        animateCounter(element) {
-            return;
-        }
-    };
     const TypingEffectModule = {
         init() {
             const tagline = document.querySelector('.hero-tagline');
@@ -448,12 +421,9 @@
             SmoothScrollModule.init();
             BackToTopModule.init();
             DropdownModule.init();
-            ConsoleArtModule.init();
             PerformanceModule.init();
             HoverEffectsModule.init();
-            ScrollAnimationsModule.init();
             FormValidationModule.init();
-            CounterAnimationModule.init();
             TypingEffectModule.init();
         } catch (error) {
             console.error('Errore durante l\'inizializzazione:', error);

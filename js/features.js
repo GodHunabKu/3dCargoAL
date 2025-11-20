@@ -125,16 +125,6 @@
             });
         }
     };
-    const CardAnimator = {
-        init: function() {
-            document.querySelectorAll('.card, .panel, .box').forEach(card => {
-                if (!card.classList.contains('card-modern')) {
-                    card.classList.add('card-modern');
-                }
-            });
-            return;
-        }
-    };
     const AccessibilityEnhancer = {
         init: function() {
             document.querySelectorAll('button, a, input, select, textarea').forEach(el => {
@@ -232,7 +222,6 @@
             ToastManager.init();
             SmoothScroll.init();
             FormEnhancer.init();
-            CardAnimator.init();
             AccessibilityEnhancer.init();
             AjaxEnhancer.init();
             PerformanceOptimizer.init();

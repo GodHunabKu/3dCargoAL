@@ -218,11 +218,6 @@
             });
         }
     }
-    class ScrollReveal {
-        static init() {
-            return;
-        }
-    }
     class VideoLazyLoad {
         static init() {
             const videoWrapper = document.querySelector('.video-wrapper');
@@ -240,44 +235,6 @@
                 });
             }, { threshold: 0.25 });
             observer.observe(videoWrapper);
-        }
-    }
-    class MicroInteractions {
-        static init() {
-            return;
-            button.addEventListener('click', function(e) {
-                const ripple = document.createElement('span');
-                ripple.classList.add('ripple-effect');
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const x = e.clientX - rect.left - size / 2;
-                const y = e.clientY - rect.top - size / 2;
-                ripple.style.cssText = `
-                    position: absolute;
-                    width: ${size}px;
-                    height: ${size}px;
-                    left: ${x}px;
-                    top: ${y}px;
-                    background: rgba(255, 255, 255, 0.5);
-                    border-radius: 50%;
-                    transform: scale(0);
-                    animation: ripple 0.6s ease-out;
-                    pointer-events: none;
-                `;
-                this.appendChild(ripple);
-                setTimeout(() => ripple.remove(), 600);
-            });
-            document.querySelectorAll('.stat-box').forEach(box => {
-                box.addEventListener('mouseenter', function() {
-                    const icon = this.querySelector('.stat-icon i');
-                    if (icon) {
-                        icon.style.animation = 'none';
-                        setTimeout(() => {
-                            icon.style.animation = 'iconRotate3D 0.6s ease-in-out';
-                        }, 10);
-                    }
-                });
-            });
         }
     }
     class PerformanceMonitor {
@@ -315,10 +272,8 @@
         const parallax = new Parallax3D();
         parallax.init();
         setTimeout(() => AnimatedCounter.init(), 500);
-        ScrollReveal.init();
         SmoothScrollEnhanced.init();
         VideoLazyLoad.init();
-        MicroInteractions.init();
         KeyboardNav.init();
     }
     if (document.readyState === 'loading') {

@@ -11,9 +11,6 @@
             }, 5000);
         }
     }
-    function initCardAnimations() {
-        return;
-    }
     function initFormConfirmations() {
         const forms = document.querySelectorAll('.action-item form');
         forms.forEach(function(form) {
@@ -114,8 +111,25 @@
     }
     function init() {
         initNotifications();
-        initCardAnimations();
         initButtonEffects();
         initSmoothScroll();
     }
+})();
+
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const phpNotification = document.getElementById('mainNotification');
+        if (phpNotification && window.ModernFeatures && window.ModernFeatures.toast) {
+            const type = phpNotification.classList.contains('notification-success') ? 'success' :
+                        phpNotification.classList.contains('notification-error') ? 'error' :
+                        phpNotification.classList.contains('notification-warning') ? 'warning' : 'info';
+            const titleEl = phpNotification.querySelector('strong');
+            const messageEl = phpNotification.querySelector('p');
+            const title = titleEl ? titleEl.textContent : '';
+            const message = messageEl ? messageEl.textContent : '';
+            const fullMessage = title + (title && message ? ': ' : '') + message;
+            phpNotification.remove();
+            window.ModernFeatures.toast.show(fullMessage, type, 5000);
+        }
+    });
 })();

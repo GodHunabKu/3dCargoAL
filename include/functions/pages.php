@@ -76,7 +76,7 @@
 			break;
 		default:
 			$page = 'news';
-			$title = $lang['news'];
+			$title = 'Homepage';
 			include 'include/functions/news.php';
 	}
 ?>
