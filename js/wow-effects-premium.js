@@ -425,7 +425,6 @@
     }
     function initWOWEffects() {
         if (!document.querySelector('.hero-section')) return;
-        new LoadingScreen();
         setTimeout(() => {
             new CursorTrail();
             new CursorGlow();
