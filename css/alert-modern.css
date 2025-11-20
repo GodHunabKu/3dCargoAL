@@ -1,7 +1,3 @@
-
-/* ==========================================
-   ALERT MESSAGES (MANCANTI - FIX)
-   ========================================== */
 .alert-modern {
     position: fixed;
     top: 100px;
@@ -13,13 +9,12 @@
     border-radius: 15px;
     padding: 25px 30px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    z-index: 9999;
+    z-index: 9998;
     display: flex;
     align-items: flex-start;
     gap: 15px;
     backdrop-filter: blur(10px);
 }
-
 @keyframes alertSlideIn {
     from {
         opacity: 0;
@@ -30,22 +25,18 @@
         transform: translateX(-50%) translateY(0) scale(1);
     }
 }
-
 .alert-modern.alert-success {
     background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
     border-left: 5px solid #28a745;
 }
-
 .alert-modern.alert-danger {
     background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
     border-left: 5px solid #dc3545;
 }
-
 .alert-modern.alert-warning {
     background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
     border-left: 5px solid #ffc107;
 }
-
 .alert-icon {
     flex-shrink: 0;
     width: 50px;
@@ -56,30 +47,25 @@
     border-radius: 50%;
     font-size: 24px;
 }
-
 .alert-success .alert-icon {
     background: #28a745;
     color: white;
     box-shadow: 0 0 20px rgba(40, 167, 69, 0.5);
 }
-
 .alert-danger .alert-icon {
     background: #dc3545;
     color: white;
     box-shadow: 0 0 20px rgba(220, 53, 69, 0.5);
 }
-
 .alert-warning .alert-icon {
     background: #ffc107;
     color: #000;
     box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
 }
-
 .alert-content {
     flex: 1;
     color: #333;
 }
-
 .alert-content strong {
     display: block;
     font-size: 18px;
@@ -87,13 +73,11 @@
     margin-bottom: 5px;
     color: #000;
 }
-
 .alert-content p {
     font-size: 14px;
     margin: 0;
     color: #555;
 }
-
 .alert-close {
     flex-shrink: 0;
     background: none;
@@ -110,14 +94,11 @@
     border-radius: 50%;
     transition: all 0.2s ease;
 }
-
 .alert-close:hover {
     background: rgba(0, 0, 0, 0.1);
     color: #333;
     transform: rotate(90deg);
 }
-
-/* Responsive */
 @media (max-width: 768px) {
     .alert-modern {
         min-width: 90%;
@@ -125,17 +106,14 @@
         top: 80px;
         padding: 20px;
     }
-
     .alert-icon {
         width: 40px;
         height: 40px;
         font-size: 20px;
     }
-
     .alert-content strong {
         font-size: 16px;
     }
-
     .alert-content p {
         font-size: 13px;
     }
