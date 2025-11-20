@@ -36,7 +36,7 @@
 		$shop_url = $item_shop;
 	else if(is_dir('shop')) 
 		$shop_url = $site_url.'shop'; 
-	else $shop_url = '';
+	else $shop_url = '#'; // Mostra sempre l'icona, il JavaScript gestirà il blocco
 	$top10backup_date=getJsonSettings("date", "top10backup");
 	
 	include 'include/functions/social-links.php';

@@ -181,7 +181,7 @@ if(isset($item_shop) && $item_shop != "") {
                         <li><a href="<?php echo $site_url; ?>ranking/players"><i class="fas fa-trophy"></i> <?php echo $lang['ranking']; ?></a></li>
                         <li><a href="<?php echo $site_url; ?>download"><i class="fas fa-download"></i> <?php echo $lang['download']; ?></a></li>
                         <li><a href="<?php echo $site_url; ?>users/register"><i class="fas fa-user-plus"></i> <?php echo $lang['register']; ?></a></li>
-                        <?php if($shop_url && $shop_url != '#') { ?>
+                        <?php if($shop_url) { ?>
                         <li class="itemshop-premium">
                             <a href="<?php print $shop_url; ?>" target="_blank">
                                 <i class="fas fa-shopping-cart"></i> <?php echo $lang['item-shop']; ?>
@@ -484,7 +484,7 @@ if(isset($item_shop) && $item_shop != "") {
                     <a href="<?php print $site_url; ?>user/characters">
                         <i class="fa fa-users"></i> <?php print $lang['chars-list']; ?>
                     </a>
-                    <?php if($shop_url && $shop_url != '#') { ?>
+                    <?php if($shop_url) { ?>
                     <a href="<?php print $shop_url; ?>" target="_blank" class="gold-premium-link">
                         <i class="fas fa-shopping-cart"></i> <?php print $lang['item-shop']; ?>
                     </a>
