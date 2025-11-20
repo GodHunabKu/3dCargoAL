@@ -11,9 +11,6 @@
             }, 5000);
         }
     }
-    function initCardAnimations() {
-        return;
-    }
     function initFormConfirmations() {
         const forms = document.querySelectorAll('.action-item form');
         forms.forEach(function(form) {
@@ -114,7 +111,6 @@
     }
     function init() {
         initNotifications();
-        initCardAnimations();
         initButtonEffects();
         initSmoothScroll();
     }
