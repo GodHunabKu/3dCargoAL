@@ -165,49 +165,6 @@ if(isset($item_shop) && $item_shop != "") {
 
     <div class="page-wrapper">
 
-        <!-- ====================================
-             HEADER - SEMPRE VISIBILE
-             ==================================== -->
-        <header class="main-header">
-            <a href="<?php echo $site_url; ?>" class="nav-logo" aria-label="Homepage ONE">
-                <img src="<?php echo $site_url; ?>kebab/logo3.png" alt="<?php echo $site_title; ?> Logo">
-            </a>
-            <nav class="main-nav" aria-label="Navigazione principale">
-                <a href="<?php echo $site_url; ?>news/"><?php echo $lang['news']; ?></a>
-                <a href="<?php echo $site_url; ?>download"><?php echo $lang['download']; ?></a>
-                <?php if(!$database->is_loggedin()) { ?>
-                <a href="<?php echo $site_url; ?>users/register"><?php echo $lang['register']; ?></a>
-                <?php } else { ?>
-                <a href="<?php echo $site_url; ?>user/newadministration"><?php echo $lang['account-data']; ?></a>
-                <?php } ?>
-                <a href="<?php echo $site_url; ?>ranking/players"><?php echo $lang['ranking']; ?></a>
-            </nav>
-            <div class="user-area">
-                <div class="user-actions">
-                    <?php if($offline || !$database->is_loggedin()) { ?>
-                        <a href="<?php echo $site_url; ?>users/login"><span><?php echo $lang['login']; ?></span>Login</a>
-                    <?php } else { ?>
-                        <a href="<?php echo $site_url; ?>user/administration"><span>Benvenuto/a</span><?php echo htmlspecialchars(getAccountName($_SESSION['id']), ENT_QUOTES, 'UTF-8'); ?></a>
-                    <?php } ?>
-                </div>
-                <div class="dropdown">
-                    <button class="dropbtn" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user-circle"></i> User <i class="fas fa-caret-down"></i></button>
-                    <div class="dropdown-content" role="menu">
-                        <?php if($offline || !$database->is_loggedin()) { ?>
-                            <a href="<?php echo $site_url; ?>users/login" role="menuitem"><?php echo $lang['login']; ?></a>
-                            <a href="<?php echo $site_url; ?>users/register" role="menuitem"><?php echo $lang['register']; ?></a>
-                        <?php } else { ?>
-                            <a href="<?php echo $site_url; ?>user/newadministration" role="menuitem"><?php echo $lang['account-data']; ?></a>
-                            <a href="<?php echo $site_url; ?>user/characters" role="menuitem"><?php echo $lang['chars-list']; ?></a>
-                            <a href="<?php echo $site_url; ?>users/logout" role="menuitem"><?php echo $lang['logout']; ?></a>
-                        <?php } ?>
-                    </div>
-                </div>
-                <a href="<?php echo $site_url; ?>download" class="btn-download"><i class="fas fa-download"></i> Download</a>
-            </div>
-            <button id="mobile-menu-toggle" aria-label="Menu" aria-expanded="false"><i class="fas fa-bars"></i></button>
-        </header>
-
         <div class="main-container">
             
             <!-- ====================================
