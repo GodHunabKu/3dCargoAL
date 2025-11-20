@@ -1,37 +1,21 @@
-/**
- * BLOCCO TEMPORANEO ITEM-SHOP
- * File JS per disabilitare l'accesso all'Item-Shop prima dello start del server
- * Elimina questo file quando vuoi riattivare lo shop
- */
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Trova tutti i link dell'Item-Shop
     const shopLinks = document.querySelectorAll('a[href*="shop"], .itemshop-premium a');
-
     shopLinks.forEach(function(link) {
-        // Rimuovi l'href e blocca il click
         link.style.cursor = 'not-allowed';
         link.style.opacity = '0.7';
-
         link.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-
-            // Mostra messaggio personalizzato
             showShopAlert();
             return false;
         });
     });
 });
-
 function showShopAlert() {
-    // Rimuovi eventuali alert precedenti
     const existingAlert = document.querySelector('.shop-blocked-alert');
     if (existingAlert) {
         existingAlert.remove();
     }
-
-    // Crea l'alert
     const alert = document.createElement('div');
     alert.className = 'alert-modern alert-warning shop-blocked-alert';
     alert.innerHTML = `
@@ -47,10 +31,7 @@ function showShopAlert() {
             <i class="fas fa-times"></i>
         </button>
     `;
-
     document.body.appendChild(alert);
-
-    // Rimuovi automaticamente dopo 5 secondi
     setTimeout(function() {
         if (alert.parentNode) {
             alert.style.animation = 'alertSlideOut 0.5s ease';
@@ -60,8 +41,6 @@ function showShopAlert() {
         }
     }, 5000);
 }
-
-// Aggiungi l'animazione di uscita
 const style = document.createElement('style');
 style.textContent = `
 @keyframes alertSlideOut {

@@ -1,60 +1,43 @@
-/**
- * ADMIN PANEL STYLES
- * Stili dedicati al pannello amministrativo
- * Estratto da index.php per migliorare la manutenibilità
- */
-
-/* === FIX COMPLETO PANNELLO ADMIN === */
 body.admin-page {
     overflow-y: auto !important;
     overflow-x: hidden !important;
 }
-
 .admin-page .admin-content-wrapper,
 .admin-page .admin-content-wrapper * {
     position: relative !important;
     pointer-events: auto !important;
 }
-
-/* === MODAL BOOTSTRAP - Z-INDEX CORRETTO === */
-/* Il backdrop DEVE stare SOTTO il modal per non bloccare i click */
 .admin-page .modal-backdrop {
     z-index: 1050 !important;
     background-color: rgba(0, 0, 0, 0.7) !important;
-    pointer-events: auto !important; /* Blocca click sul contenuto sotto */
+    pointer-events: auto !important;
 }
-
 .admin-page .modal {
     z-index: 1055 !important;
-    pointer-events: none !important; /* Permette ai click di passare al contenuto interno */
+    pointer-events: none !important;
 }
-
 .admin-page .modal.show {
     display: block !important;
 }
-
 .admin-page .modal-dialog {
     z-index: 1056 !important;
-    pointer-events: auto !important; /* Blocca click e li gestisce */
+    pointer-events: auto !important;
     margin: 30px auto !important;
-    position: relative !important; /* Crea nuovo stacking context */
+    position: relative !important;
 }
-
 .admin-page .modal-content {
     z-index: 1057 !important;
     background: #ffffff !important;
     border-radius: 8px !important;
     box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;
     pointer-events: auto !important;
-    position: relative !important; /* Assicura che sia sopra tutto */
+    position: relative !important;
 }
-
 .admin-page .modal-header {
     background-color: #f8f9fa !important;
     border-bottom: 1px solid #dee2e6 !important;
     padding: 15px 20px !important;
 }
-
 .admin-page .modal-header h5,
 .admin-page .modal-title {
     color: #000000 !important;
@@ -62,25 +45,20 @@ body.admin-page {
     font-weight: 600 !important;
     margin: 0 !important;
 }
-
 .admin-page .modal-body {
     padding: 20px !important;
     background: #ffffff !important;
     pointer-events: auto !important;
 }
-
 .admin-page .modal-footer {
     background-color: #f8f9fa !important;
     border-top: 1px solid #dee2e6 !important;
     padding: 15px 20px !important;
 }
-
-/* === TABS NEL MODAL === */
 .admin-page .modal .nav-tabs {
     border-bottom: 1px solid #dee2e6 !important;
     margin-bottom: 15px !important;
 }
-
 .admin-page .modal .nav-link {
     color: #495057 !important;
     border: 1px solid transparent !important;
@@ -88,22 +66,17 @@ body.admin-page {
     pointer-events: auto !important;
     padding: 8px 16px !important;
 }
-
 .admin-page .modal .nav-link.active {
     color: #495057 !important;
     background-color: #fff !important;
     border-color: #dee2e6 #dee2e6 #fff !important;
 }
-
 .admin-page .modal .tab-content {
     pointer-events: auto !important;
 }
-
 .admin-page .modal .tab-pane {
     pointer-events: auto !important;
 }
-
-/* === FIX ULTRA AGGRESSIVO PER TUTTI GLI INPUT === */
 .admin-page .modal input,
 .admin-page .modal textarea,
 .admin-page .modal select,
@@ -130,7 +103,7 @@ body.admin-page {
     border-radius: 4px !important;
     width: 100% !important;
     position: relative !important;
-    z-index: 1 !important; /* Non serve z-index alto, usa position: relative */
+    z-index: 1 !important;
     pointer-events: auto !important;
     cursor: text !important;
     opacity: 1 !important;
@@ -142,14 +115,10 @@ body.admin-page {
     user-select: text !important;
     -webkit-touch-callout: text !important;
 }
-
-/* Hidden inputs devono rimanere invisibili ma funzionanti */
 .admin-page .modal input[type="hidden"] {
     display: none !important;
     background: transparent !important;
 }
-
-/* Forza textarea a essere editabile */
 .admin-page .modal textarea {
     min-height: 100px !important;
     resize: vertical !important;
@@ -157,8 +126,6 @@ body.admin-page {
     line-height: 1.5 !important;
     overflow: auto !important;
 }
-
-/* Stato focus */
 .admin-page .modal input:focus,
 .admin-page .modal textarea:focus,
 .admin-page .modal select:focus,
@@ -170,15 +137,11 @@ body.admin-page {
     outline: none !important;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
 }
-
-/* Placeholder */
 .admin-page .modal input::placeholder,
 .admin-page .modal textarea::placeholder {
     color: #6c757d !important;
     opacity: 0.7 !important;
 }
-
-/* Label */
 .admin-page .modal label {
     display: block !important;
     margin-bottom: 8px !important;
@@ -187,13 +150,10 @@ body.admin-page {
     font-size: 14px !important;
     pointer-events: auto !important;
 }
-
 .admin-page .modal .form-group {
     margin-bottom: 20px !important;
     pointer-events: auto !important;
 }
-
-/* === BOTTONI === */
 .admin-page .modal .btn,
 .admin-page .modal button {
     padding: 10px 20px !important;
@@ -207,32 +167,27 @@ body.admin-page {
     opacity: 1 !important;
     font-weight: 400 !important;
 }
-
 .admin-page .modal .btn-primary,
 .admin-page .modal button[type="submit"] {
     background-color: #007bff !important;
     border-color: #007bff !important;
     color: #ffffff !important;
 }
-
 .admin-page .modal .btn-primary:hover,
 .admin-page .modal button[type="submit"]:hover {
     background-color: #0056b3 !important;
     border-color: #0056b3 !important;
 }
-
 .admin-page .modal .btn-secondary,
 .admin-page .modal button[data-bs-dismiss="modal"] {
     background-color: #6c757d !important;
     border-color: #6c757d !important;
     color: #ffffff !important;
 }
-
 .admin-page .modal .btn-secondary:hover {
     background-color: #545b62 !important;
     border-color: #545b62 !important;
 }
-
 .admin-page .modal .close,
 .admin-page .modal .btn-close {
     position: absolute !important;
@@ -248,32 +203,24 @@ body.admin-page {
     padding: 0 !important;
     z-index: 1 !important;
 }
-
 .admin-page .modal .close:hover,
 .admin-page .modal .btn-close:hover {
     opacity: 0.75 !important;
 }
-
-/* === FIX LAYOUT === */
 .admin-page .modal .row {
     pointer-events: auto !important;
 }
-
 .admin-page .modal .col-lg-3 {
     pointer-events: auto !important;
 }
-
 .admin-page .modal hr {
     border-top: 1px solid rgba(0,0,0,0.1) !important;
     margin: 15px 0 !important;
 }
-
-/* === RIMUOVI OVERLAY === */
 .admin-page.modal-open {
     overflow: auto !important;
     padding-right: 0 !important;
 }
-
 .admin-page .modal::before,
 .admin-page .modal::after,
 .admin-page .modal-content::before,
@@ -283,8 +230,6 @@ body.admin-page {
     display: none !important;
     content: none !important;
 }
-
-/* === DISABILITA SFONDI ANIMATI === */
 .admin-page .animated-bg,
 .admin-page .background-fog,
 .admin-page #preloader,
@@ -297,20 +242,15 @@ body.admin-page {
     display: none !important;
     pointer-events: none !important;
 }
-
 .admin-page *,
 .admin-page *::before,
 .admin-page *::after {
     animation: none !important;
 }
-
-/* Permetti transizioni nei modal */
 .admin-page .modal,
 .admin-page .modal-dialog {
     transition: transform 0.3s ease-out !important;
 }
-
-/* === FIX GENERICI ADMIN === */
 .admin-page .admin-content-wrapper input,
 .admin-page .admin-content-wrapper select,
 .admin-page .admin-content-wrapper textarea {
@@ -318,14 +258,11 @@ body.admin-page {
     color: #000 !important;
     border: 1px solid #ddd !important;
 }
-
 .admin-page .admin-content-wrapper button,
 .admin-page .admin-content-wrapper .btn {
     cursor: pointer !important;
     pointer-events: auto !important;
 }
-
-/* === FIX TABELLE === */
 .admin-page .admin-content-wrapper table,
 .admin-page .admin-content-wrapper tbody,
 .admin-page .admin-content-wrapper tr,
@@ -333,26 +270,18 @@ body.admin-page {
 .admin-page .admin-content-wrapper th {
     pointer-events: auto !important;
 }
-
-/* === FIX SPECIFICO PER FORM NEL MODAL === */
 .admin-page .modal form {
     background: transparent !important;
     pointer-events: auto !important;
 }
-
-/* Forza tutti gli elementi form a essere interattivi */
 .admin-page .modal form * {
     pointer-events: auto !important;
 }
-
-/* === OVERRIDE BOOTSTRAP === */
 .admin-page .modal .form-control:disabled,
 .admin-page .modal .form-control[readonly] {
     background-color: #e9ecef !important;
     opacity: 1 !important;
 }
-
-/* Assicura che readonly non venga applicato */
 .admin-page .modal input:not([readonly]),
 .admin-page .modal textarea:not([readonly]) {
     -webkit-user-modify: read-write !important;
