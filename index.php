@@ -160,7 +160,10 @@ if(isset($item_shop) && $item_shop != "") {
     </div>
     <div class="background-fog"></div>
 
-    <div id="preloader"></div>
+    <div id="preloader">
+        <img src="<?php echo $site_url; ?>kebab/logo3.png" alt="Loading..." class="preloader-logo">
+        <div class="preloader-spinner"></div>
+    </div>
     <?php } ?>
 
     <div class="page-wrapper">
