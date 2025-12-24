@@ -1937,11 +1937,6 @@ class HunterLevelWindow(ui.ScriptWindow):
         if self.overtakeWnd:
             self.overtakeWnd.ShowOvertake(overtakenName, newPosition)
     
-    def ShowSystemMessage(self, msg, color="PURPLE"):
-        """Mostra messaggio di sistema con colore rank"""
-        if self.systemMsgWnd:
-            self.systemMsgWnd.ShowMessage(msg, color)
-    
     def ShowEventStatus(self, eventName, duration, eventType="default"):
         """Mostra finestra stato evento"""
         if self.eventWnd:
