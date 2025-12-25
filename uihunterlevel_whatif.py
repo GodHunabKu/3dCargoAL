@@ -416,7 +416,8 @@ class SystemMessageWindow(ui.Window):
         # Determina colore
         finalColor = self.currentColor
         if color:
-            if isinstance(color, int):
+            # FIX: In Python 2, numeri grandi sono 'long', non 'int'
+            if isinstance(color, (int, long)):
                 finalColor = color
             else:
                 finalColor = self.__GetColorFromKey(color)
