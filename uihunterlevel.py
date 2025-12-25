@@ -446,6 +446,22 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.missionProgressWnd = uihunterlevel_whatif.MissionProgressPopup()
         self.missionCompleteWnd = uihunterlevel_whatif.MissionCompleteWindow()
         self.allMissionsCompleteWnd = uihunterlevel_whatif.AllMissionsCompleteWindow()
+
+        # ==============================================================================
+        # HUNTER SYSTEM COMPLETE OVERHAUL - NEW WINDOWS & DATA
+        # ==============================================================================
+        self.achievementUnlockWnd = None  # Achievement Unlock Popup
+        self.penaltyBox = None  # Penalty Status Box
+        self.rivalTrackerBox = None  # Rival Tracker Box
+        self.rankBonusIndicator = None  # Rank Bonus Indicator
+        self.gloriaSourcesChart = None  # Gloria Sources Pie Chart
+
+        # New data structures
+        self.penaltyData = {"active": 0, "expires": 0, "strikes": 0}
+        self.rivalData = {"name": "NONE", "diff": 0, "category": "total"}
+        self.rankBonusData = {"gloria_pct": 0, "drop_pct": 0, "next_rank_pts": 0}
+        self.achievementProgress = {}  # {type: current_value}
+        self.gloriaSourcesData = {}  # {source_type: {total, count}}
         
         # Collega OvertakeWindow a EventStatusWindow per gestione posizione dinamica
         if self.overtakeWnd and self.eventWnd:
@@ -2142,7 +2158,111 @@ class HunterLevelWindow(ui.ScriptWindow):
         """Chiude la finestra stato evento"""
         if self.eventWnd:
             self.eventWnd.Hide()
-    
+
+    # ========================================================================
+    #  HUNTER SYSTEM COMPLETE OVERHAUL - NEW HANDLERS
+    # ========================================================================
+
+    def HunterPenaltyStatus(self, active, expires, strikes):
+        """Aggiorna stato penalita"""
+        self.penaltyData["active"] = int(active)
+        self.penaltyData["expires"] = int(expires)
+        self.penaltyData["strikes"] = int(strikes)
+        # Update penalty box UI if exists
+        if self.penaltyBox:
+            self.__UpdatePenaltyBox()
+
+    def HunterRivalInfo(self, rival_name, diff, category):
+        """Aggiorna rival tracker info"""
+        self.rivalData["name"] = str(rival_name)
+        self.rivalData["diff"] = int(diff)
+        self.rivalData["category"] = str(category)
+        # Update rival tracker box UI if exists
+        if self.rivalTrackerBox:
+            self.__UpdateRivalTrackerBox()
+
+    def HunterRankBonus(self, gloria_pct, drop_pct, next_rank_pts):
+        """Aggiorna bonus rank"""
+        self.rankBonusData["gloria_pct"] = int(gloria_pct)
+        self.rankBonusData["drop_pct"] = int(drop_pct)
+        self.rankBonusData["next_rank_pts"] = int(next_rank_pts)
+        # Update rank bonus indicator UI if exists
+        if self.rankBonusIndicator:
+            self.__UpdateRankBonusIndicator()
+
+    def HunterAchievementUnlock(self, ach_id, ach_name, reward_vnum, reward_count):
+        """Mostra popup achievement unlock"""
+        # Create achievement unlock popup window if not exists
+        if not self.achievementUnlockWnd:
+            import uihunterlevel_whatif
+            self.achievementUnlockWnd = uihunterlevel_whatif.AchievementUnlockWindow()
+
+        if self.achievementUnlockWnd:
+            self.achievementUnlockWnd.ShowAchievementUnlock(
+                int(ach_id),
+                str(ach_name),
+                int(reward_vnum),
+                int(reward_count)
+            )
+
+    def HunterAchievementProgress(self, ach_type, current):
+        """Aggiorna progresso achievement real-time"""
+        self.achievementProgress[int(ach_type)] = int(current)
+        # Refresh achievements tab if visible
+        if self.currentTab == 1:  # Achievements tab
+            self.__RefreshAchievementsTab()
+
+    def HunterAchievementClaimed(self, ach_id):
+        """Notifica che achievement e stato riscosso"""
+        # Refresh achievements tab
+        if self.currentTab == 1:
+            self.__RefreshAchievementsTab()
+
+    def HunterGloriaSources(self, data):
+        """Aggiorna statistiche sorgenti gloria"""
+        if str(data) == "NONE":
+            self.gloriaSourcesData = {}
+        else:
+            # Parse: "SOURCE1~total1~count1;SOURCE2~total2~count2;..."
+            self.gloriaSourcesData = {}
+            sources = str(data).split(";")
+            for source in sources:
+                parts = source.split("~")
+                if len(parts) >= 3:
+                    source_type = parts[0]
+                    total = int(parts[1])
+                    count = int(parts[2])
+                    self.gloriaSourcesData[source_type] = {"total": total, "count": count}
+
+        # Update gloria sources chart if visible
+        if self.currentTab == 0 and self.gloriaSourcesChart:  # Stats tab
+            self.__UpdateGloriaSourcesChart()
+
+    def __UpdatePenaltyBox(self):
+        """Update penalty box UI"""
+        # TODO: Implement UI rendering
+        pass
+
+    def __UpdateRivalTrackerBox(self):
+        """Update rival tracker box UI"""
+        # TODO: Implement UI rendering
+        pass
+
+    def __UpdateRankBonusIndicator(self):
+        """Update rank bonus indicator UI"""
+        # TODO: Implement UI rendering
+        pass
+
+    def __RefreshAchievementsTab(self):
+        """Refresh achievements tab content"""
+        # TODO: Implement refresh logic
+        pass
+
+    def __UpdateGloriaSourcesChart(self):
+        """Update gloria sources pie chart"""
+        # TODO: Implement chart rendering
+        pass
+
     # ========================================================================
     #  DAILY MISSIONS SYSTEM
     # ========================================================================
