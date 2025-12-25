@@ -892,12 +892,13 @@ quest hunter_level_bridge begin
             pc.setqf("hq_last_login_day", today)
             
             -- Legge giorni e bonus dal DB config (100% configurabile)
+            -- Usa i nomi esistenti nel DB per i bonus percentuali
             local days_tier3 = tonumber(hunter_level_bridge.get_config("streak_days_tier3")) or 30
-            local bonus_tier3 = tonumber(hunter_level_bridge.get_config("streak_bonus_tier3")) or 20
+            local bonus_tier3 = tonumber(hunter_level_bridge.get_config("streak_bonus_30days")) or 20
             local days_tier2 = tonumber(hunter_level_bridge.get_config("streak_days_tier2")) or 7
-            local bonus_tier2 = tonumber(hunter_level_bridge.get_config("streak_bonus_tier2")) or 10
+            local bonus_tier2 = tonumber(hunter_level_bridge.get_config("streak_bonus_7days")) or 10
             local days_tier1 = tonumber(hunter_level_bridge.get_config("streak_days_tier1")) or 3
-            local bonus_tier1 = tonumber(hunter_level_bridge.get_config("streak_bonus_tier1")) or 5
+            local bonus_tier1 = tonumber(hunter_level_bridge.get_config("streak_bonus_3days")) or 5
 
             local bonus = 0
             if streak >= days_tier3 then
