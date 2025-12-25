@@ -749,21 +749,10 @@ quest hunter_level_bridge begin
         end
         
         function get_rank_key(points)
-            -- Legge soglie dal DB per massima flessibilità
-            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
-            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
-            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
-            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
-            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
-            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
-
-            if points >= N then return "N"
-            elseif points >= S then return "S"
-            elseif points >= A then return "A"
-            elseif points >= B then return "B"
-            elseif points >= C then return "C"
-            elseif points >= D then return "D"
-            else return "E" end
+            -- Usa get_rank_index per evitare duplicazione logica
+            local rank_letters = {"E", "D", "C", "B", "A", "S", "N"}
+            local rank_idx = get_rank_index(points)
+            return rank_letters[rank_idx + 1] or "E"
         end
 
         function get_rank_name(rank_key)
