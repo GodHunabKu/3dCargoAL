@@ -3764,3 +3764,88 @@ class GameWindow(ui.ScriptWindow):
 				self.interface.HunterEventsOpen()
 		except:
 			pass
+
+	# ==============================================================================
+	# HUNTER SYSTEM COMPLETE OVERHAUL - NEW COMMAND HANDLERS
+	# ==============================================================================
+
+	def __HunterPenaltyStatus(self, data):
+		"""Invia stato penalita al client"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 3:
+				active = int(parts[0])
+				expires = int(parts[1])
+				strikes = int(parts[2])
+				if self.interface:
+					self.interface.HunterPenaltyStatus(active, expires, strikes)
+		except:
+			pass
+
+	def __HunterRivalInfo(self, data):
+		"""Invia informazioni rival tracker"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 3:
+				rival_name = parts[0].replace("+", " ")
+				diff = int(parts[1])
+				category = parts[2]
+				if self.interface:
+					self.interface.HunterRivalInfo(rival_name, diff, category)
+		except:
+			pass
+
+	def __HunterRankBonus(self, data):
+		"""Invia bonus rank attuale (gloria %, drop %, pts prossimo rank)"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 3:
+				gloria_pct = int(parts[0])
+				drop_pct = int(parts[1])
+				next_rank_pts = int(parts[2])
+				if self.interface:
+					self.interface.HunterRankBonus(gloria_pct, drop_pct, next_rank_pts)
+		except:
+			pass
+
+	def __HunterAchievementUnlock(self, data):
+		"""Mostra popup achievement unlock"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 4:
+				ach_id = int(parts[0])
+				ach_name = parts[1].replace("+", " ")
+				reward_vnum = int(parts[2])
+				reward_count = int(parts[3])
+				if self.interface:
+					self.interface.HunterAchievementUnlock(ach_id, ach_name, reward_vnum, reward_count)
+		except:
+			pass
+
+	def __HunterAchievementProgress(self, data):
+		"""Aggiorna progresso achievement real-time"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 2:
+				ach_type = int(parts[0])
+				current = int(parts[1])
+				if self.interface:
+					self.interface.HunterAchievementProgress(ach_type, current)
+		except:
+			pass
+
+	def __HunterAchievementClaimed(self, ach_id):
+		"""Notifica che achievement e stato riscosso"""
+		try:
+			if self.interface:
+				self.interface.HunterAchievementClaimed(int(ach_id))
+		except:
+			pass
+
+	def __HunterGloriaSources(self, data):
+		"""Invia statistiche sorgenti gloria per pie chart"""
+		try:
+			if self.interface:
+				self.interface.HunterGloriaSources(data)
+		except:
+			pass
