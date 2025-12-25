@@ -3428,6 +3428,7 @@ class GameWindow(ui.ScriptWindow):
 				parts = msg.split("|", 1)
 				rank_key = parts[0].strip()  # FIX: strip() whitespace per lookup corretto
 				actual_msg = parts[1] if len(parts) > 1 else ""
+				dbg.TraceError("[DEBUG] HunterSystemSpeak: rankKey='%s' msg='%s'" % (rank_key, actual_msg[:50]))
 				self.interface.HunterSystemSpeak(actual_msg, rank_key)
 			else:
 				# Retrocompatibilita: vecchio formato senza rank

@@ -175,7 +175,9 @@ quest hunter_level_bridge begin
         function hunter_speak_color(msg, color_code)
             if msg == nil then return end
             -- color_code: GREEN, BLUE, ORANGE, RED, GOLD, PURPLE, BLACKWHITE
-            cmdchat("HunterSystemSpeak " .. (color_code or "BLUE") .. "|" .. hunter_level_bridge.clean_str(msg))
+            local final_color = color_code or "BLUE"
+            syschat("[DEBUG] hunter_speak_color: color=" .. final_color .. " msg=" .. msg)
+            cmdchat("HunterSystemSpeak " .. final_color .. "|" .. hunter_level_bridge.clean_str(msg))
         end
         
         -- Colori HEX per ogni rank (usati nei syschat)
@@ -453,9 +455,9 @@ quest hunter_level_bridge begin
         end
         
         function get_mob_info(vnum)
-            local c, d = mysql_direct_query("SELECT name, type_name, base_points FROM srv1_hunabku.hunter_quest_spawns WHERE vnum=" .. vnum .. " LIMIT 1")
-            if c > 0 and d[1] then 
-                return { name = d[1].name, type_name = d[1].type_name, base_points = tonumber(d[1].base_points) or 100 } 
+            local c, d = mysql_direct_query("SELECT name, type_name, base_points, rank_color FROM srv1_hunabku.hunter_quest_spawns WHERE vnum=" .. vnum .. " LIMIT 1")
+            if c > 0 and d[1] then
+                return { name = d[1].name, type_name = d[1].type_name, base_points = tonumber(d[1].base_points) or 100, rank_color = d[1].rank_color or "BLUE" }
             end
             return nil
         end
@@ -1219,7 +1221,8 @@ quest hunter_level_bridge begin
             end
             
             local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("BERSAGLIO ELIMINATO: " .. mob_info.name .. " | +" .. base_pts .. " GLORIA")
-            hunter_level_bridge.hunter_speak(msg)
+            syschat("[DEBUG] Kill: mob=" .. mob_info.name .. " color=" .. (mob_info.rank_color or "NIL"))
+            hunter_level_bridge.hunter_speak_color(msg, mob_info.rank_color or "BLUE")
             
             hunter_level_bridge.check_achievements()
             hunter_level_bridge.send_player_data()
