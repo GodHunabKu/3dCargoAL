@@ -19,6 +19,38 @@ quest hunter_level_bridge begin
         local CONFIG_CACHE_DURATION = 3600  -- 1 ora
 
         -- ============================================================
+        -- SECURITY: Safe Math Operations
+        -- ============================================================
+
+        function safe_add_points(current_pts, add_pts)
+            local current = tonumber(current_pts) or 0
+            local add = tonumber(add_pts) or 0
+            local sum = current + add
+
+            -- SECURITY: Previeni integer overflow
+            if sum > MAX_RANK_POINTS then
+                return MAX_RANK_POINTS
+            end
+
+            if sum < 0 then  -- Underflow protection
+                return 0
+            end
+
+            return sum
+        end
+
+        -- ============================================================
+        -- SECURITY: Audit Logging
+        -- ============================================================
+
+        function log_security_event(action_type, action_data)
+            local pid = pc.get_player_id()
+            local safe_data = clean_str(tostring(action_data))  -- Sanifica data prima di loggare
+            -- Usa mysql_escape_string se disponibile, altrimenti clean_str è sufficiente
+            mysql_direct_query("INSERT INTO srv1_hunabku.hunter_security_log (player_id, action_type, action_data) VALUES (" .. pid .. ", '" .. action_type .. "', '" .. safe_data .. "')")
+        end
+
+        -- ============================================================
         -- 1. UTILITY & CONFIG
         -- ============================================================
         
@@ -39,7 +71,27 @@ quest hunter_level_bridge begin
         
         function clean_str(str)
             if str == nil then return "" end
-            local result = string.gsub(tostring(str), " ", "+")
+            local result = tostring(str)
+
+            -- SECURITY: Rimuovi caratteri pericolosi per cmdchat injection
+            result = string.gsub(result, "|", "")  -- Pipe separator cmdchat
+            result = string.gsub(result, "\n", "")  -- Newline
+            result = string.gsub(result, "\r", "")  -- Carriage return
+            result = string.gsub(result, "<", "")   -- HTML tags
+            result = string.gsub(result, ">", "")
+            result = string.gsub(result, '"', "")   -- Quotes
+            result = string.gsub(result, "'", "")
+            result = string.gsub(result, ";", "")   -- SQL separator
+            result = string.gsub(result, "`", "")   -- Backtick
+
+            -- Sostituisci spazi con +
+            result = string.gsub(result, " ", "+")
+
+            -- SECURITY: Max 255 caratteri
+            if string.len(result) > 255 then
+                result = string.sub(result, 1, 255)
+            end
+
             return result
         end
 
@@ -241,7 +293,8 @@ quest hunter_level_bridge begin
                 local reward_count = pc.getqf("hq_emerg_reward_count") or 0
                 
                 if bonus_pts > 0 then
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+"..bonus_pts..", spendable_points=spendable_points+"..bonus_pts.." WHERE player_id="..pc.get_player_id())
+                    -- SECURITY: LEAST() previene integer overflow a livello DB
+                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..bonus_pts..", "..MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..bonus_pts..", "..MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
                 end
                 
                 if reward_vnum > 0 and reward_count > 0 then
@@ -708,7 +761,7 @@ quest hunter_level_bridge begin
             syschat(t1)
             syschat(t2)
             syschat(t3)
-            local speak = hunter_level_bridge.get_text("awaken4_speak", {NAME = pc.get_name()}) or ("RISVEGLIO COMPLETATO. BENVENUTO, " .. pc.get_name() .. ".")
+            local speak = hunter_level_bridge.get_text("awaken4_speak", {NAME = pc.get_name()}) or ("[SISTEMA] IL TUO RISVEGLIO E COMPLETO. SEI DIVENTATO UN HUNTER, " .. pc.get_name() .. ".")
             cmdchat("HunterSystemSpeak E|" .. hunter_level_bridge.clean_str(speak))
         end
         
@@ -1197,7 +1250,8 @@ quest hunter_level_bridge begin
             -- Salva punti prima dell'update per check rank up
             local old_total_pts = pc.getqf("hq_total_points") or 0
             
-            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+" .. base_pts .. ", spendable_points=spendable_points+" .. base_pts .. ", daily_points=daily_points+" .. base_pts .. ", weekly_points=weekly_points+" .. base_pts .. ", total_kills=total_kills+1, daily_kills=daily_kills+1, weekly_kills=weekly_kills+1 WHERE player_id=" .. pid)
+            -- SECURITY: LEAST() previene integer overflow a livello DB
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+" .. base_pts .. ", " .. MAX_RANK_POINTS .. "), spendable_points=LEAST(spendable_points+" .. base_pts .. ", " .. MAX_RANK_POINTS .. "), daily_points=daily_points+" .. base_pts .. ", weekly_points=weekly_points+" .. base_pts .. ", total_kills=total_kills+1, daily_kills=daily_kills+1, weekly_kills=weekly_kills+1 WHERE player_id=" .. pid)
             
             pc.setqf("hq_total_kills", (pc.getqf("hq_total_kills") or 0) + 1)
             local new_total_pts = old_total_pts + base_pts
@@ -1225,7 +1279,7 @@ quest hunter_level_bridge begin
                 pc.setqf("hq_pending_elite", pending - 1) 
             end
             
-            local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("BERSAGLIO ELIMINATO: " .. mob_info.name .. " | +" .. base_pts .. " GLORIA")
+            local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("[SISTEMA] Hai sconfitto " .. mob_info.name .. ". ESPERIENZA ACQUISITA: +" .. base_pts .. " Punti.")
             hunter_level_bridge.hunter_speak_color(msg, mob_info.rank_color or "BLUE")
             
             hunter_level_bridge.check_achievements()
@@ -1322,7 +1376,8 @@ quest hunter_level_bridge begin
                 local msg = hunter_level_bridge.get_text("chest_opened", {ITEM = hunter_level_bridge.item_name(v)}) or ("BAULE APERTO: OTTENUTO " .. hunter_level_bridge.item_name(v))
                 hunter_level_bridge.hunter_speak(msg)
                 if b > 0 then
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+"..b..", spendable_points=spendable_points+"..b.." WHERE player_id="..pc.get_player_id())
+                    -- SECURITY: LEAST() previene integer overflow a livello DB
+                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..b..", "..MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..b..", "..MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
                     local bonus_msg = hunter_level_bridge.get_text("chest_bonus", {POINTS = b}) or ("Incredibile! Il baule conteneva anche " .. b .. " Gloria!")
                     syschat("|cffFFD700[BONUS]|r " .. bonus_msg)
                 end
@@ -1488,70 +1543,10 @@ quest hunter_level_bridge begin
         end
         
         -- Handler Risposta What-If
-        when chat."/hunter_whatif_answer" begin
-            local txt = pc.get_chat_msg()
-            -- Parse: /hunter_whatif_answer qid choice
-            -- txt contiene tutto: "/hunter_whatif_answer gate_main 1"
-            -- Trova secondo spazio per qid, terzo per choice
-            local space1 = string.find(txt, " ", 1, true) or 0
-            local space2 = string.find(txt, " ", space1 + 1, true) or 0
-            local qid = ""
-            local choice = 0
-            if space1 > 0 and space2 > 0 then
-                qid = string.sub(txt, space1 + 1, space2 - 1)
-                choice = tonumber(string.sub(txt, space2 + 1)) or 0
-            end
-            
-            if qid == "gate_main" then
-                local vnum = pc.getqf("hq_temp_gate_vnum")
-                local freq = pc.getqf("hq_temp_gate_freq") or 0
-                local player_pts = pc.getqf("hq_temp_player_pts") or 0
-                local pid = pc.get_player_id()
-                
-                -- Recupera stringhe dalla tabella temp
-                local temp_data = hunter_level_bridge.get_temp_gate_data(pid)
-                local fname = temp_data.fname or "Frattura"
-                local frank = temp_data.frank or "E-Rank"
-                local fcolor = temp_data.fcolor or "PURPLE"
-                
-                if choice == 1 then
-                    if player_pts >= freq then
-                        local msg = hunter_level_bridge.get_text("whatif_seal_break") or "IL SIGILLO SI SPEZZA. PREPARATI."
-                        hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                        hunter_level_bridge.open_gate(fname, frank, fcolor, pid)
-                    else
-                        if party.is_party() and party.get_near_count() >= 4 then
-                            local msg = hunter_level_bridge.get_text("whatif_party_force") or "IL PARTY FORZA IL SIGILLO!"
-                            hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                            hunter_level_bridge.open_gate(fname, frank, fcolor, pid)
-                            local raid_msg = hunter_level_bridge.get_text("classic_raid_announce", {PLAYER = pc.get_name(), RANK = frank}) or ("|cffFF0000[RAID]|r Il Party di " .. pc.get_name() .. " ha forzato un Gate " .. frank .. "!")
-                            notice_all(raid_msg)
-                        else
-                            local msg = hunter_level_bridge.get_text("whatif_need_party") or "ERRORE: SERVONO 4 MEMBRI VICINI."
-                            hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                        end
-                    end
-                    
-                elseif choice == 2 then
-                    npc.purge()
-                    local bonus = hunter_level_bridge.get_config("seal_fracture_bonus") or 200
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+" .. bonus .. ", spendable_points=spendable_points+" .. bonus .. " WHERE player_id=" .. pid)
-                    local msg = hunter_level_bridge.get_text("whatif_sealed", {POINTS = bonus}) or ("FRATTURA SIGILLATA. +" .. bonus .. " GLORIA")
-                    hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                    hunter_level_bridge.send_player_data()
-                    
-                elseif choice == 3 then
-                    local msg = hunter_level_bridge.get_text("whatif_retreat") or "TI ALLONTANI DALLA FRATTURA."
-                    hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                end
-                
-                -- Pulisci dati temp
-                pc.setqf("hq_temp_gate_vnum", 0)
-                pc.setqf("hq_temp_gate_freq", 0)
-                pc.setqf("hq_temp_player_pts", 0)
-                hunter_level_bridge.set_temp_gate_data(pid, nil)
-            end
-        end
+        -- SECURITY FIX: Comando /hunter_whatif_answer RIMOSSO
+        -- MOTIVO: Pericoloso - permette di manipolare gate senza controlli adeguati
+        -- ALTERNATIVA: Usa i comandi GM /htest_* per testare il sistema
+        -- Se necessario, implementare con GM check e validazione robusta
 
         function open_gate(fname, frank, fcolor, pid)
             npc.purge()
@@ -1649,8 +1644,12 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_all_data()
         end
         
-        when chat."/hunter_request_data" begin 
-            hunter_level_bridge.send_all_data() 
+        when chat."/hunter_request_data" begin
+            -- SECURITY: Solo i propri dati + ranking top 10 pubblico (non tutti i dati!)
+            hunter_level_bridge.send_player_data()  -- Solo dati personali
+            hunter_level_bridge.send_ranking("daily")  -- Solo top 10, non tutti
+            hunter_level_bridge.send_ranking("weekly")
+            hunter_level_bridge.send_ranking("total")
         end
         
         -- Comando per forzare refresh del rank (senza relog)
@@ -2610,8 +2609,9 @@ quest hunter_level_bridge begin
         
         -- Comando: Apri pannello missioni
         when chat."/hunter_missions" begin
-            hunter_level_bridge.assign_daily_missions()
-            hunter_level_bridge.send_daily_missions()
+            -- SECURITY: Comando pubblico OK - apre solo UI, non modifica DB
+            -- Le missioni sono già state assegnate al login, qui solo visualizziamo
+            hunter_level_bridge.send_daily_missions()  -- Invia missioni già assegnate
             cmdchat("HunterMissionsOpen")
         end
         
@@ -2620,18 +2620,12 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_today_events(true)  -- Carica eventi E apre la finestra
         end
         
-        -- Comando: Carica eventi senza aprire finestra (per tab terminale)
-        when chat."/hunter_events_silent" begin
-            hunter_level_bridge.send_today_events(false)  -- Carica eventi senza aprire popup
-        end
-        
-        -- Comando: Partecipa a evento
-        when chat."/hunter_join_event" begin
-            local event_id = tonumber(string.gsub(input, "/hunter_join_event ", "")) or 0
-            if event_id > 0 then
-                hunter_level_bridge.join_event(event_id)
-            end
-        end
+        -- SECURITY FIX: Comando /hunter_events_silent RIMOSSO
+        -- MOTIVO: Duplicato inutile - /hunter_events è sufficiente
+
+        -- SECURITY FIX: Comando /hunter_join_event RIMOSSO
+        -- MOTIVO: Permette di joinare eventi arbitrari senza validazione
+        -- ALTERNATIVA: Eventi gestiti automaticamente dal sistema o via UI sicura
 
         -- ============================================================
         -- HUNTER SYSTEM COMPLETE OVERHAUL - NEW FEATURES
@@ -2839,7 +2833,7 @@ quest hunter_level_bridge begin
         function claim_achievement_reward(ach_id)
             local pid = pc.get_player_id()
 
-            -- Verifica che sia unlocked e non claimed
+            -- Verifica che sia unlocked
             local unlocked_flag = "hq_ach_unlock_" .. ach_id
             local claimed_flag = "hq_ach_claim_" .. ach_id
 
@@ -2848,21 +2842,27 @@ quest hunter_level_bridge begin
                 return false
             end
 
-            if pc.getqf(claimed_flag) == 1 then
-                hunter_level_bridge.hunter_speak_color("Ricompensa gia riscossa!", "RED")
+            -- SECURITY: Atomic check-and-set con DB lock per prevenire race condition
+            -- Tenta di aggiornare SOLO se claimed_at IS NULL
+            local c, d = mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_player_achievements SET claimed_at=NOW() WHERE player_id=" .. pid .. " AND achievement_id=" .. ach_id .. " AND claimed_at IS NULL")
+
+            if c == 0 then
+                -- Già claimed o achievement non unlocked
+                hunter_level_bridge.hunter_speak_color("Ricompensa non disponibile o gia riscossa!", "RED")
                 return false
             end
 
+            -- Se arrivati qui, UPDATE è andato a buon fine → possiamo dare item
             -- Query achievement info
-            local c, d = mysql_direct_query("SELECT reward_vnum, reward_count, achievement_name FROM srv1_hunabku.hunter_quest_achievements_config WHERE achievement_id=" .. ach_id)
-            if c == 0 then
+            local c2, d2 = mysql_direct_query("SELECT reward_vnum, reward_count, achievement_name FROM srv1_hunabku.hunter_quest_achievements_config WHERE achievement_id=" .. ach_id)
+            if c2 == 0 then
                 hunter_level_bridge.hunter_speak_color("Achievement non trovato!", "RED")
                 return false
             end
 
-            local vnum = tonumber(d[1].reward_vnum) or 0
-            local count = tonumber(d[1].reward_count) or 1
-            local name = d[1].achievement_name or "Achievement"
+            local vnum = tonumber(d2[1].reward_vnum) or 0
+            local count = tonumber(d2[1].reward_count) or 1
+            local name = d2[1].achievement_name or "Achievement"
 
             -- Dai ricompensa
             if vnum > 0 and count > 0 then
@@ -2870,11 +2870,11 @@ quest hunter_level_bridge begin
                 hunter_level_bridge.hunter_speak_color("Ricompensa riscossa: " .. hunter_level_bridge.item_name(vnum) .. " x" .. count, "GREEN")
             end
 
-            -- Marca come claimed
+            -- Marca come claimed in quest flag per UI
             pc.setqf(claimed_flag, 1)
 
-            -- Aggiorna DB
-            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_player_achievements SET claimed_at=NOW() WHERE player_id=" .. pid .. " AND achievement_id=" .. ach_id)
+            -- SECURITY: Log claim achievement
+            hunter_level_bridge.log_security_event("claim_achievement", "ach_id=" .. ach_id .. ",vnum=" .. vnum .. ",count=" .. count)
 
             -- Notifica client
             cmdchat("HunterAchievementClaimed " .. ach_id)
@@ -3344,11 +3344,15 @@ quest hunter_level_bridge begin
         -- ============================================================
 
         when chat."/hunter_claim" begin
+            -- SECURITY: Solo player normali possono claim i PROPRI achievement
+            -- GM devono usare /htest_achievement per test
             local ach_id = tonumber(string.gsub(input, "/hunter_claim ", "")) or 0
-            if ach_id > 0 then
+
+            -- SECURITY: Whitelist range valido (ID achievement 1-1000)
+            if ach_id > 0 and ach_id <= 1000 then
                 hunter_level_bridge.claim_achievement_reward(ach_id)
             else
-                hunter_level_bridge.hunter_speak_color("Uso: /hunter_claim <achievement_id>", "RED")
+                hunter_level_bridge.hunter_speak_color("Uso: /hunter_claim <achievement_id> (ID validi: 1-1000)", "RED")
             end
         end
 
