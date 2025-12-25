@@ -2381,6 +2381,11 @@ class GameWindow(ui.ScriptWindow):
 		serverCommandList["HunterBossAlert"]        = self.__HunterBossAlert
 		serverCommandList["HunterSystemInit"]       = self.__HunterSystemInit
 		serverCommandList["HunterAwakening"]        = self.__HunterAwakening
+
+		# FIX 4-6: Config 100% da DB
+		serverCommandList["HunterRankColor"]        = self.__HunterRankColor
+		serverCommandList["HunterUIText"]           = self.__HunterUIText
+		serverCommandList["HunterUIDimensions"]     = self.__HunterUIDimensions
 		serverCommandList["HunterActivation"]       = self.__HunterActivation
 		serverCommandList["HunterRankUp"]           = self.__HunterRankUp
 		serverCommandList["HunterOvertake"]         = self.__HunterOvertake
@@ -3563,6 +3568,30 @@ class GameWindow(ui.ScriptWindow):
 				newRank = parts[1]
 				if self.interface:
 					self.interface.HunterRankUp(oldRank, newRank)
+		except:
+			pass
+
+	def __HunterRankColor(self, data):
+		"""FIX 4: Riceve colori rank da DB (56+ colors)"""
+		try:
+			if self.interface:
+				self.interface.UpdateRankColor(data)
+		except:
+			pass
+
+	def __HunterUIText(self, data):
+		"""FIX 5: Riceve stringhe UI da DB (35+ strings)"""
+		try:
+			if self.interface:
+				self.interface.UpdateUIText(data)
+		except:
+			pass
+
+	def __HunterUIDimensions(self, data):
+		"""FIX 6: Riceve dimensioni UI da DB (20+ dimensions)"""
+		try:
+			if self.interface:
+				self.interface.UpdateUIDimensions(data)
 		except:
 			pass
 
