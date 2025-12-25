@@ -175,9 +175,7 @@ quest hunter_level_bridge begin
         function hunter_speak_color(msg, color_code)
             if msg == nil then return end
             -- color_code: GREEN, BLUE, ORANGE, RED, GOLD, PURPLE, BLACKWHITE
-            local final_color = color_code or "BLUE"
-            syschat("[DEBUG] hunter_speak_color: color=" .. final_color .. " msg=" .. msg)
-            cmdchat("HunterSystemSpeak " .. final_color .. "|" .. hunter_level_bridge.clean_str(msg))
+            cmdchat("HunterSystemSpeak " .. (color_code or "BLUE") .. "|" .. hunter_level_bridge.clean_str(msg))
         end
         
         -- Colori HEX per ogni rank (usati nei syschat)
@@ -1221,7 +1219,6 @@ quest hunter_level_bridge begin
             end
             
             local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("BERSAGLIO ELIMINATO: " .. mob_info.name .. " | +" .. base_pts .. " GLORIA")
-            syschat("[DEBUG] Kill: mob=" .. mob_info.name .. " color=" .. (mob_info.rank_color or "NIL"))
             hunter_level_bridge.hunter_speak_color(msg, mob_info.rank_color or "BLUE")
             
             hunter_level_bridge.check_achievements()
