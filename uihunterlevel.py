@@ -2049,6 +2049,9 @@ class HunterLevelWindow(ui.ScriptWindow):
         """Mostra messaggio del Sistema con colore basato sul rank"""
         if self.systemMsgWnd:
             color = self.RANK_COLORS.get(rankKey, 0xFF808080)
+            # DEBUG: Log color lookup
+            import dbg
+            dbg.TraceError("[PY-DEBUG] ShowSystemMessage: rankKey='%s', color=0x%X" % (rankKey, color))
             self.systemMsgWnd.ShowMessage(msg, color)
             # REMOVED: SetRankColor() era ridondante e causava override del colore
     
