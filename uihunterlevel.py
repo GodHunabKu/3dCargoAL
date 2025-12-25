@@ -1488,22 +1488,28 @@ class HunterLevelWindow(ui.ScriptWindow):
         # =====================================================
         self.__CText("COME GUADAGNARE GLORIA", 140, y, GOLD_COLOR)
         y += 25
-        
+
+        # IMPORTANTE: Spiegazione mostri normali NON danno Gloria
+        self.__CBar(5, y, 420, 55, 0x44FF0000)
+        self.__CText("ATTENZIONE!", 180, y + 5, 0xFFFF0000)
+        self.__CText("I mostri, metin e boss NORMALI NON danno Gloria!", 30, y + 22, 0xFFFFAAAA)
+        self.__CText("Ottieni Gloria SOLO da:", 140, y + 37, 0xFFFFFFFF)
+        y += 62
+
         gloryMethods = [
-            ("Uccidi Mostri", "+1-5 per mob", "Varia in base al livello del mob"),
-            ("Distruggi Metin", "+50-200", "Bonus per metin di alto livello"),
-            ("Sconfiggi Boss", "+100-500", "I boss rari danno piu' Gloria"),
-            ("Sigilla Fratture", "+200-1000", "Ricompensa enorme per le fratture"),
-            ("Completa Missioni", "+50-300", "Missioni giornaliere obbligatorie"),
-            ("Vinci Eventi", "+100-2000", "Partecipa e vinci gli eventi!"),
-            ("Streak Login", "+1-20% bonus", "Accedi ogni giorno per bonus"),
-            ("Apri Bauli Hunter", "+25-100", "Trova bauli nelle mappe"),
+            ("Fratture Dimensionali", "+200-1000", "Mob/Boss/Metin DENTRO le fratture"),
+            ("Missioni Giornaliere", "+50-300", "3 missioni giornaliere (vedi tab Eventi)"),
+            ("Emergency Quest", "+100-600", "40% chance ogni 100 kill normali"),
+            ("Eventi Programmati", "+100-2000", "Glory Rush, Metin Frenzy, Boss Massacre..."),
+            ("Streak Login", "+1-20% bonus", "Accedi ogni giorno per bonus Gloria"),
+            ("Bauli Hunter", "+25-100", "Bauli spawn nelle mappe normali"),
+            ("Speed Kill Bonus", "x2 reward", "Boss 60s, Metin 300s = doppia Gloria"),
         ]
-        
+
         for method, reward, desc in gloryMethods:
             self.__CBar(5, y, 420, 35, t["bg_dark"])
             self.__CText(method, 15, y + 3, t["text_value"])
-            self.__CText(reward, 180, y + 3, 0xFF00FF00)
+            self.__CText(reward, 200, y + 3, 0xFF00FF00)
             self.__CText(desc, 15, y + 18, t["text_muted"])
             y += 38
         
@@ -1541,11 +1547,14 @@ class HunterLevelWindow(ui.ScriptWindow):
         y += 25
         
         # Intro
-        self.__CBar(5, y, 420, 55, t["bg_dark"])
+        self.__CBar(5, y, 420, 80, t["bg_dark"])
         self.__CText("Ogni giorno alle 00:05 ricevi 3 nuove missioni.", 50, y + 5, t["text_value"])
         self.__CText("Le missioni sono basate sul tuo Rank attuale.", 60, y + 20, t["text_muted"])
-        self.__CText("Usa /hunter_missions per vedere le tue missioni.", 55, y + 35, 0xFF00CCFF)
-        y += 65
+
+        self.__CText("DOVE VEDERLE:", 170, y + 40, 0xFFFFAA00)
+        self.__CText("1. Scrivi /hunter_missions in chat", 80, y + 55, 0xFF00CCFF)
+        self.__CText("2. Premi N > Tab Eventi > Apri Dettagli", 75, y + 68, 0xFF00CCFF)
+        y += 90
         
         # Tipi di missioni (quelli effettivi nel DB)
         self.__CText("TIPI DI MISSIONI:", 5, y, t["accent"])
@@ -1892,7 +1901,10 @@ class HunterLevelWindow(ui.ScriptWindow):
              "Raggiungi il livello 30 per attivare il sistema automaticamente."),
 
             ("Come vedo le mie missioni?",
-             "Usa /hunter_missions oppure premi N e vai nel tab Eventi."),
+             "Usa /hunter_missions oppure premi N > Tab Eventi > Apri Dettagli."),
+
+            ("I mostri normali danno Gloria?",
+             "NO! Solo Fratture, Missioni, Emergency Quest ed Eventi danno Gloria!"),
 
             ("Perche' perdo Gloria?",
              "Non hai completato le missioni giornaliere entro mezzanotte."),

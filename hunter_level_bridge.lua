@@ -749,7 +749,20 @@ quest hunter_level_bridge begin
             elseif points >= 2000 then return "D"
             else return "E" end
         end
-        
+
+        function get_rank_name(rank_key)
+            local names = {
+                ["E"] = "Risvegliato",
+                ["D"] = "Apprendista",
+                ["C"] = "Cacciatore",
+                ["B"] = "Veterano",
+                ["A"] = "Maestro",
+                ["S"] = "Leggenda",
+                ["N"] = "Monarca Nazionale"
+            }
+            return names[rank_key] or "Sconosciuto"
+        end
+
         function get_rank_data(rank_key)
             -- Legge i testi dal DB (hunter_texts)
             local border = hunter_level_bridge.get_text_colored("welcome_" .. rank_key .. "_border")
