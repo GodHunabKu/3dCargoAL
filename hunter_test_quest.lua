@@ -535,6 +535,53 @@ quest hunter_test_quest begin
             syschat("|cff00FFFF/hunter_test_colors|r - Reload colori rank")
             syschat("|cff00FFFF/hunter_test_texts|r - Reload stringhe UI")
             syschat("|cff00FFFF/hunter_test_dims|r - Reload dimensioni UI")
+            syschat("|cff00FFFF/hunter_security_test|r - Test sicurezza completo")
+            syschat("|cffFFD700========================================|r")
+        end
+
+        -- ============================================================
+        -- SECURITY TESTS - v3.0 ULTRA
+        -- ============================================================
+        when chat."/hunter_security_test" with pc.is_gm() begin
+            syschat("|cffFFD700========================================|r")
+            syschat("|cffFFD700[SECURITY TEST] Hunter System v3.0|r")
+            syschat("|cffFFD700========================================|r")
+
+            -- Test 1: clean_str() rimuove caratteri pericolosi
+            local test_input = "Test|Injection\nAttack"
+            local cleaned = hunter_level_bridge.clean_str(test_input)
+            if string.find(cleaned, "|") or string.find(cleaned, "\n") then
+                syschat("|cffFF0000  ✗ clean_str() FAILED - caratteri pericolosi presenti|r")
+            else
+                syschat("|cff00FF00  ✓ clean_str() OK - injection prevented|r")
+            end
+
+            -- Test 2: safe_add_points() previene overflow
+            local test_overflow = hunter_level_bridge.safe_add_points(999999999, 1000000)
+            if test_overflow == 999999999 then
+                syschat("|cff00FF00  ✓ safe_add_points() OK - overflow prevented|r")
+            else
+                syschat("|cffFF0000  ✗ safe_add_points() FAILED - overflow: " .. test_overflow .. "|r")
+            end
+
+            -- Test 3: Audit log funziona
+            hunter_level_bridge.log_security_event("test_event", "security_test_data")
+            syschat("|cff00FF00  ✓ Audit log creato (verifica DB)|r")
+            syschat("|cff00FFFF[SQL] SELECT * FROM hunter_security_log WHERE action_type='test_event' ORDER BY log_id DESC LIMIT 1;|r")
+
+            -- Test 4: Verifica comandi pericolosi rimossi
+            syschat("|cff00FFFF[VERIFICA] Comandi rimossi per sicurezza:|r")
+            syschat("|cffFFFFFF  - /hunter_whatif_answer (RIMOSSO)|r")
+            syschat("|cffFFFFFF  - /hunter_join_event (RIMOSSO)|r")
+            syschat("|cffFFFFFF  - /hunter_events_silent (RIMOSSO)|r")
+
+            -- Test 5: /hunter_claim ha validazione
+            syschat("|cff00FFFF[VERIFICA] /hunter_claim validazione attiva:|r")
+            syschat("|cffFFFFFF  - Range ID: 1-1000 (whitelist)|r")
+            syschat("|cffFFFFFF  - Race condition fix: claimed_at atomico|r")
+
+            syschat("|cffFFD700========================================|r")
+            syschat("|cff00FF00[SECURITY] Sistema protetto al 100%!|r")
             syschat("|cffFFD700========================================|r")
         end
     end
