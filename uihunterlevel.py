@@ -1210,22 +1210,35 @@ class HunterLevelWindow(ui.ScriptWindow):
             y += 45
     
     def __LoadEvents(self, skipRequest=False):
-        """Tab Eventi - Ora include Missioni Giornaliere + Eventi Calendario"""
+        """Tab Eventi - MISSIONI GIORNALIERE + Eventi Calendario"""
         t = self.theme
         y = 5
-        
+
+        # HEADER TAB - Spiega che contiene MISSIONI + EVENTI
+        self.__CBar(5, y, 420, 40, 0x33FFD700)
+        self.__CText("MISSIONI & EVENTI", 160, y + 3, GOLD_COLOR)
+        self.__CText("Questa schermata contiene:", 125, y + 18, t["text_value"])
+        self.__CText("Missioni Giornaliere + Eventi Programmati 24H", 65, y + 28, t["text_muted"])
+        y += 48
+
         # Se non abbiamo dati eventi E non stiamo refreshando dopo averli ricevuti
         if not self.eventsData and not skipRequest:
             net.SendChatPacket("/hunter_events_silent")  # Richiedi eventi senza aprire popup
-        
+
         # =====================================================
         # SEZIONE MISSIONI GIORNALIERE
         # =====================================================
         self.__CBar(5, y, 420, 28, t["bg_dark"])
-        self.__CText("MISSIONI GIORNALIERE", 15, y + 6, 0xFF00CCFF)
-        self.__CButton(310, y + 2, "Apri Missioni", ui.__mem_func__(self.__OnOpenMissions))
+        self.__CText("MISSIONI GIORNALIERE (Reset: 00:05)", 15, y + 6, 0xFF00CCFF)
+        self.__CButton(310, y + 2, "Apri Dettagli", ui.__mem_func__(self.__OnOpenMissions))
         y += 35
-        
+
+        # Tooltip missioni
+        self.__CBar(5, y, 420, 30, 0x33444444)
+        self.__CText("Il Terminale si apre automaticamente quando fai progresso!", 30, y + 2, 0xFF88FF88)
+        self.__CText("Completa TUTTE E 3 per bonus x1.5 Gloria!", 70, y + 16, GOLD_COLOR)
+        y += 35
+
         # Info missioni disponibili
         missionCount = len(self.missionsData)
         completedCount = sum(1 for m in self.missionsData if m.get("status") == "completed")
@@ -1585,7 +1598,70 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.__CText("BONUS TUTTE COMPLETE", 155, y + 5, 0xFF00FF00)
         self.__CText("Completa tutte e 3 le missioni = +50% Gloria extra!", 75, y + 25, 0xFF88FF88)
         y += 55
-        
+
+        y += 15
+        self.__CSep(5, y)
+        y += 15
+
+        # =====================================================
+        # EMERGENCY QUEST - Sezione dedicata
+        # =====================================================
+        self.__CBar(5, y, 420, 35, 0x33FF6600)
+        self.__CText("EMERGENCY QUEST", 160, y + 5, 0xFFFF6600)
+        self.__CText("MISSIONI SPECIALI A TEMPO - PREMI MASSIMI!", 80, y + 22, 0xFFFFAA00)
+        y += 43
+
+        self.__CText("COME FUNZIONA:", 5, y, t["accent"])
+        y += 22
+
+        emergencySteps = [
+            "1. Spawn RANDOM dopo aver ucciso ~2000 mob normali",
+            "2. 40% chance Emergency, 60% chance Frattura",
+            "3. Tempo limitato: 30-180 secondi per completare!",
+            "4. Obiettivi: 30-250 kill a seconda della difficolta'",
+            "5. Premi: 150-1200 Gloria + item bonus",
+            "6. Se fallisci, non c'e' penalita' (solo opportunita' persa)",
+        ]
+
+        for step in emergencySteps:
+            self.__CText(step, 15, y, t["text_value"])
+            y += 18
+
+        y += 10
+
+        # Difficoltà Emergency
+        self.__CText("LIVELLI DI DIFFICOLTA':", 5, y, t["accent"])
+        y += 22
+
+        emergencyLevels = [
+            ("EASY", 0xFF00FF00, "30 kill/60s", "+150 Gloria"),
+            ("NORMAL", 0xFF00CCFF, "50 kill/60s", "+250 Gloria"),
+            ("HARD", 0xFFFFAA00, "60-120 kill/60-90s", "+300-600 Gloria"),
+            ("EXTREME", 0xFFFF6600, "120-250 kill/90-180s", "+600-1000 Gloria"),
+            ("GOD_MODE", 0xFFFF0000, "250+ kill/180s", "+1200 Gloria"),
+        ]
+
+        for diff, color, req, reward in emergencyLevels:
+            self.__CBar(5, y, 420, 22, t["bg_dark"])
+            self.__CBar(5, y, 4, 22, color)
+            self.__CText(diff, 15, y + 3, color)
+            self.__CText(req, 150, y + 3, t["text_value"])
+            self.__CText(reward, 290, y + 3, 0xFF00FF00)
+            y += 24
+
+        y += 10
+
+        # Speed Kill bonus per Emergency
+        self.__CBar(5, y, 420, 50, 0x3300FFFF)
+        self.__CText("SPEED KILL BONUS", 165, y + 5, 0xFF00FFFF)
+        self.__CText("Boss: Uccidi entro 60 secondi = x2 Punti Gloria!", 45, y + 22, t["text_value"])
+        self.__CText("Metin: Distruggi entro 300 secondi = x2 Punti Gloria!", 35, y + 36, t["text_value"])
+        y += 60
+
+        y += 15
+        self.__CSep(5, y)
+        y += 15
+
         # Ricompense per rank
         self.__CText("RICOMPENSE PER RANK:", 5, y, t["accent"])
         y += 22
@@ -1675,7 +1751,76 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.__CText("Quando un evento e' [IN CORSO], clicca 'Partecipa'", 55, y + 22, t["text_value"])
         self.__CText("Bonus Gloria attivo per tutta la durata dell'evento!", 50, y + 38, t["text_muted"])
         y += 65
-        
+
+        y += 15
+        self.__CSep(5, y)
+        y += 15
+
+        # =====================================================
+        # BAULI DIMENSIONALI
+        # =====================================================
+        self.__CBar(5, y, 420, 30, 0x33AA00FF)
+        self.__CText("BAULI DIMENSIONALI", 155, y + 5, 0xFFAA00FF)
+        self.__CText("Spawn random dopo kill - Contengono tesori!", 65, y + 20, t["text_muted"])
+        y += 38
+
+        self.__CText("INFO BAULI:", 5, y, t["accent"])
+        y += 22
+
+        chestsInfo = [
+            "- Spawn random dopo uccisioni (bassa % ma aumenta con streak)",
+            "- Contengono: Buoni Gloria (100/500/1000 pt) + Item rari",
+            "- 2 tipi: Cassa E-Rank (comune) e Cassa S-Rank (rara)",
+            "- Tracciate nelle statistiche (tab Stats, sezione Record)",
+            "- Possono dropare Buoni DR (Monete Drago) se fortunati!",
+        ]
+
+        for info in chestsInfo:
+            self.__CText(info, 15, y, t["text_value"])
+            y += 18
+
+        y += 15
+        self.__CSep(5, y)
+        y += 15
+
+        # =====================================================
+        # FRATTURE DIMENSIONALI
+        # =====================================================
+        self.__CBar(5, y, 420, 30, 0x339900FF)
+        self.__CText("FRATTURE DIMENSIONALI", 145, y + 5, 0xFF9900FF)
+        self.__CText("Portali con mob potenti - Alta ricompensa!", 75, y + 20, t["text_muted"])
+        y += 38
+
+        self.__CText("RANK FRATTURE:", 5, y, t["accent"])
+        y += 22
+
+        fracturesInfo = [
+            ("E-Rank (Verde)", "0+ Gloria", "+200 Gloria", "Tutti possono aprire"),
+            ("D-Rank (Blu)", "2K+ Gloria", "+350 Gloria", ""),
+            ("C-Rank (Arancio)", "10K+ Gloria", "+500 Gloria", ""),
+            ("B-Rank (Rosso)", "50K+ Gloria", "+700 Gloria", ""),
+            ("A-Rank (Oro)", "150K+ Gloria", "+900 Gloria", "Solo rank A+"),
+            ("S-Rank (Viola)", "500K+ Gloria", "+1200 Gloria", "Solo rank S+"),
+            ("National (B/W)", "1.5M+ Gloria", "+2000 Gloria", "Solo National"),
+        ]
+
+        for fracName, reqGloria, reward, note in fracturesInfo:
+            self.__CBar(5, y, 420, 18, t["bg_dark"])
+            self.__CText(fracName, 15, y + 2, t["text_value"])
+            self.__CText(reqGloria, 140, y + 2, t["text_muted"])
+            self.__CText(reward, 250, y + 2, 0xFF00FF00)
+            if note:
+                self.__CText(note, 320, y + 2, 0xFFFF6666)
+            y += 20
+
+        y += 10
+
+        self.__CBar(5, y, 420, 45, 0x33FFD700)
+        self.__CText("ATTENZIONE!", 180, y + 5, GOLD_COLOR)
+        self.__CText("Aprire una frattura rivela la tua posizione a TUTTI!", 50, y + 22, 0xFFFF6666)
+        self.__CText("Altri player possono rubarti il Boss! Preparati a difenderlo.", 35, y + 34, t["text_value"])
+        y += 55
+
         return y
     
     def __LoadGuideShop(self, y):
@@ -1738,84 +1883,109 @@ class HunterLevelWindow(ui.ScriptWindow):
     def __LoadGuideFAQ(self, y):
         """FAQ e domande frequenti"""
         t = self.theme
-        
+
         self.__CText("DOMANDE FREQUENTI (FAQ)", 130, y, t["accent"])
         y += 25
-        
+
         faqs = [
-            ("Come attivo il sistema Hunter?", 
+            ("Come attivo il sistema Hunter?",
              "Raggiungi il livello 30 per attivare il sistema automaticamente."),
-            
+
             ("Come vedo le mie missioni?",
-             "Usa /hunter_missions oppure apri il tab Missioni nel terminale."),
-            
+             "Usa /hunter_missions oppure premi N e vai nel tab Eventi."),
+
             ("Perche' perdo Gloria?",
              "Non hai completato le missioni giornaliere entro mezzanotte."),
-            
+
             ("Cos'e' il Bonus x1.5?",
              "Se completi TUTTE E 3 le missioni, ricevi +50% Gloria extra!"),
-            
+
             ("Come salgo di Rank?",
              "Accumula Gloria! E->D: 2000, D->C: 10000, C->B: 50000, etc."),
-            
+
             ("Posso perdere il mio Rank?",
              "No, il Rank e' permanente. La Gloria puo' scendere ma non il Rank."),
-            
+
             ("Come partecipo agli eventi?",
-             "Usa /hunter_events per vedere gli eventi, poi /hunter_join_event [id]"),
-            
+             "Usa /hunter_events per vedere gli eventi, poi clicca 'Partecipa'."),
+
             ("Cosa sono le Fratture?",
-             "Portali dimensionali con mob potenti. Sigillale per Gloria (rank A+)!"),
-            
+             "Portali dimensionali con mob potenti. Danno +200-1000 Gloria!"),
+
             ("Quando si resettano le missioni?",
              "Ogni giorno alle 00:05. Le missioni non complete danno penalita'."),
-            
+
             ("Come funziona lo streak bonus?",
              "Login consecutivi: 3gg=+5%, 7gg=+10%, 30gg=+20% Gloria extra!"),
+
+            ("Cos'e' l'Emergency Quest?",
+             "Missioni speciali che spawnano random! Tempo limitato, premi ALTI."),
+
+            ("Come ottengo Speed Kill Bonus?",
+             "Uccidi Boss in 60s o Metin in 300s = x2 Punti Gloria!"),
+
+            ("Perche' il Terminale si apre da solo?",
+             "Quando fai progresso missioni si apre automaticamente per 5 secondi!"),
+
+            ("Cosa succede se fallisco 3 missioni?",
+             "Ricevi uno Strike. A 3 Strike = 24h di penalty (no Gloria)."),
+
+            ("Come funziona il sistema Rival?",
+             "Se qualcuno ti supera in classifica, ricevi una notifica!"),
+
+            ("Cosa sono i Bauli Dimensionali?",
+             "Spawn random dopo kill. Danno item rari + Buoni Gloria!"),
+
+            ("Posso aprire Fratture da E-Rank?",
+             "SI, ma quelle Rank A+ richiedono 500K+ Gloria per entrare."),
         ]
-        
+
         for q, a in faqs:
             # Domanda
             self.__CBar(5, y, 420, 18, t["bg_dark"])
             self.__CText("D: " + q, 10, y + 2, GOLD_COLOR)
             y += 20
-            
+
             # Risposta
             self.__CText("R: " + a, 10, y, t["text_value"])
             y += 22
-        
+
         y += 15
         self.__CSep(5, y)
         y += 15
-        
+
         # Comandi utili
-        self.__CBar(5, y, 420, 100, t["bg_dark"])
-        self.__CText("COMANDI UTILI:", 170, y + 5, t["accent"])
+        self.__CBar(5, y, 420, 130, t["bg_dark"])
+        self.__CText("COMANDI E SCORCIATOIE:", 155, y + 5, t["accent"])
         y += 22
-        
+
         commands = [
+            ("Tasto N", "Apre/Chiude il Terminale Hunter"),
             ("/hunter_missions", "Apre pannello missioni giornaliere"),
             ("/hunter_events", "Mostra eventi programmati di oggi"),
-            ("/hunter_join_event [id]", "Partecipa a un evento attivo"),
-            ("/hunter_stats", "Mostra le tue statistiche"),
+            ("/hunter_stats", "Mostra le tue statistiche complete"),
+            ("/hunter_convert [qty]", "Converti Gloria in Crediti (ratio 10:1)"),
+            ("/hunter_shop", "Apre il Mercante Hunter"),
         ]
-        
+
         for cmd, desc in commands:
             self.__CText(cmd, 15, y, 0xFF00CCFF)
             self.__CText(desc, 180, y, t["text_muted"])
             y += 18
-        
+
         y += 20
-        
+
         # Consigli finali
-        self.__CBar(5, y, 420, 80, 0x33FFD700)
+        self.__CBar(5, y, 420, 110, 0x33FFD700)
         self.__CText("CONSIGLI PER NUOVI HUNTER:", 130, y + 5, GOLD_COLOR)
-        self.__CText("1. Completa SEMPRE le 3 missioni giornaliere", 15, y + 22, t["text_value"])
-        self.__CText("2. Partecipa agli eventi del weekend (+50% Gloria)", 15, y + 36, t["text_value"])
-        self.__CText("3. Accedi ogni giorno per lo streak bonus!", 15, y + 50, t["text_value"])
-        self.__CText("4. Le Fratture danno piu' Gloria dei mob normali", 15, y + 64, t["text_value"])
-        y += 90
-        
+        self.__CText("1. Completa SEMPRE le 3 missioni giornaliere (evita penalty)", 15, y + 22, t["text_value"])
+        self.__CText("2. Emergency Quest = opportunita' MASSIMA! Non perderle!", 15, y + 36, t["text_value"])
+        self.__CText("3. Speed Kill Boss (60s) e Metin (300s) = DOPPI PUNTI!", 15, y + 50, t["text_value"])
+        self.__CText("4. Accedi ogni giorno per streak bonus (fino a +20%)", 15, y + 64, t["text_value"])
+        self.__CText("5. Weekend = eventi speciali con Gloria x2/x3!", 15, y + 78, t["text_value"])
+        self.__CText("6. Fratture danno PIU' Gloria dei mob normali", 15, y + 92, t["text_value"])
+        y += 120
+
         return y
     
     # ========================================================================
