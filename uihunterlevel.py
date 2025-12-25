@@ -166,18 +166,30 @@ GOLD_COLOR = 0xFFFFD700
 SILVER_COLOR = 0xFFC0C0C0
 BRONZE_COLOR = 0xFFCD7F32
 
+# Soglie rank - Popolate da server al login (100% configurabili da DB)
+RANK_THRESHOLDS = {
+    "E": 0,
+    "D": 2000,
+    "C": 10000,
+    "B": 50000,
+    "A": 150000,
+    "S": 500000,
+    "N": 1500000,
+}
+
 def GetRankKey(points):
-    if points >= 1500000:
+    """Determina rank key da punti - USA SOGLIE DA DB"""
+    if points >= RANK_THRESHOLDS["N"]:
         return "N"
-    elif points >= 500000:
+    elif points >= RANK_THRESHOLDS["S"]:
         return "S"
-    elif points >= 150000:
+    elif points >= RANK_THRESHOLDS["A"]:
         return "A"
-    elif points >= 50000:
+    elif points >= RANK_THRESHOLDS["B"]:
         return "B"
-    elif points >= 10000:
+    elif points >= RANK_THRESHOLDS["C"]:
         return "C"
-    elif points >= 2000:
+    elif points >= RANK_THRESHOLDS["D"]:
         return "D"
     return "E"
 
@@ -2189,6 +2201,14 @@ class HunterLevelWindow(ui.ScriptWindow):
         # Update rank bonus indicator UI if exists
         if self.rankBonusIndicator:
             self.__UpdateRankBonusIndicator()
+
+    def SetRankThresholds(self, thresholds):
+        """Aggiorna soglie rank da server (100% configurabile da DB)"""
+        global RANK_THRESHOLDS
+        RANK_THRESHOLDS = thresholds
+        # Refresh UI con nuove soglie (se necessario)
+        if self.isLoaded:
+            self.RefreshPlayerInfo()
 
     def HunterAchievementUnlock(self, ach_id, ach_name, reward_vnum, reward_count):
         """Mostra popup achievement unlock"""

@@ -2387,7 +2387,11 @@ class GameWindow(ui.ScriptWindow):
 		serverCommandList["HunterSysMsg"]           = self.__HunterSysMsg
 		serverCommandList["HunterEventStatus"]      = self.__HunterEventStatus
 		serverCommandList["HunterEventClose"]       = self.__HunterEventClose
-		
+		serverCommandList["HunterRankThresholds"]   = self.__HunterRankThresholds
+		serverCommandList["HunterPenaltyStatus"]    = self.__HunterPenaltyStatus
+		serverCommandList["HunterRivalInfo"]        = self.__HunterRivalInfo
+		serverCommandList["HunterRankBonus"]        = self.__HunterRankBonus
+
 		# Daily Missions & Events System
 		serverCommandList["HunterMissionsCount"]     = self.__HunterMissionsCount
 		serverCommandList["HunterMissionData"]       = self.__HunterMissionData
@@ -3805,6 +3809,25 @@ class GameWindow(ui.ScriptWindow):
 				next_rank_pts = int(parts[2])
 				if self.interface:
 					self.interface.HunterRankBonus(gloria_pct, drop_pct, next_rank_pts)
+		except:
+			pass
+
+	def __HunterRankThresholds(self, data):
+		"""Riceve soglie rank dal server - Format: E|D|C|B|A|S|N"""
+		try:
+			parts = data.split("|")
+			if len(parts) == 7:
+				thresholds = {
+					"E": int(parts[0]),
+					"D": int(parts[1]),
+					"C": int(parts[2]),
+					"B": int(parts[3]),
+					"A": int(parts[4]),
+					"S": int(parts[5]),
+					"N": int(parts[6]),
+				}
+				if self.interface:
+					self.interface.SetRankThresholds(thresholds)
 		except:
 			pass
 

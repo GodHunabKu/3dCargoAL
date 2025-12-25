@@ -131,14 +131,21 @@ quest hunter_level_bridge begin
         end
         
         -- Converti punti in indice rank numerico (0-6)
-        -- Legge soglie dal DB per massima flessibilità
+        -- Legge soglie dal DB - NESSUN fallback hardcoded
         function get_rank_index(points)
-            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
-            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
-            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
-            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
-            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
-            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
+            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N"))
+            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S"))
+            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A"))
+            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B"))
+            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C"))
+            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D"))
+
+            -- Verifica che tutte le soglie siano configurate
+            if not N or not S or not A or not B or not C or not D then
+                syschat("|cffFF0000[HUNTER] ERRORE: Soglie rank non configurate nel DB!|r")
+                syschat("|cffFF0000Esegui HUNTER_CONFIG_COMPLETE.sql e usa /hunter_reload|r")
+                return 0  -- Default a rank E
+            end
 
             if points >= N then return 6      -- N
             elseif points >= S then return 5   -- S
@@ -2961,7 +2968,27 @@ quest hunter_level_bridge begin
         end
 
         -- ============================================================
-        -- 4. PENALTY VISIBILITY
+        -- 4. RANK THRESHOLDS SYNC (Lua -> Python)
+        -- ============================================================
+
+        -- Invia soglie rank al client Python
+        function send_rank_thresholds()
+            local thresholds = {}
+            thresholds.E = 0
+            thresholds.D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
+            thresholds.C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
+            thresholds.B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
+            thresholds.A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
+            thresholds.S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
+            thresholds.N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
+
+            -- Format: E|D|C|B|A|S|N
+            local data = thresholds.E .. "|" .. thresholds.D .. "|" .. thresholds.C .. "|" .. thresholds.B .. "|" .. thresholds.A .. "|" .. thresholds.S .. "|" .. thresholds.N
+            cmdchat("HunterRankThresholds " .. data)
+        end
+
+        -- ============================================================
+        -- 5. PENALTY VISIBILITY
         -- ============================================================
 
         -- Invia stato penalit\u00e0 al client
@@ -3208,25 +3235,28 @@ quest hunter_level_bridge begin
                 hunter_level_bridge.reload_all_config()
             end
 
-            -- 2. Check penalty expiration
+            -- 2. Send rank thresholds to Python UI
+            hunter_level_bridge.send_rank_thresholds()
+
+            -- 3. Check penalty expiration
             hunter_level_bridge.check_penalty_expiration()
 
-            -- 3. Send penalty status
+            -- 4. Send penalty status
             hunter_level_bridge.send_penalty_status()
 
-            -- 4. Send rival info
+            -- 5. Send rival info
             hunter_level_bridge.send_rival_info()
 
-            -- 5. Send rank bonus
+            -- 6. Send rank bonus
             hunter_level_bridge.send_rank_bonus()
 
-            -- 6. Send gloria sources stats
+            -- 7. Send gloria sources stats
             hunter_level_bridge.send_gloria_sources_stats()
 
-            -- 7. Send all achievement progress
+            -- 8. Send all achievement progress
             hunter_level_bridge.send_all_achievement_progress()
 
-            -- 8. Show random tip
+            -- 9. Show random tip
             hunter_level_bridge.show_random_tip()
 
             -- 9. Check streak milestone
