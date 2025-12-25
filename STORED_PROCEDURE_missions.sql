@@ -20,6 +20,16 @@ BEGIN
     DECLARE v_slot INT DEFAULT 1;
     DECLARE done INT DEFAULT 0;
 
+    -- Variabili per il cursore (DEVONO essere dichiarate prima del cursore!)
+    DECLARE v_mission_id INT;
+    DECLARE v_mission_name VARCHAR(100);
+    DECLARE v_mission_type VARCHAR(20);
+    DECLARE v_target_vnum INT;
+    DECLARE v_target_count INT;
+    DECLARE v_reward INT;
+    DECLARE v_penalty INT;
+    DECLARE v_time_limit INT;
+
     -- Cursore per selezionare 3 missioni random appropriate per il rank
     DECLARE mission_cursor CURSOR FOR
         SELECT mission_id, mission_name, mission_type, target_vnum, target_count,
@@ -43,7 +53,6 @@ BEGIN
 
     -- Se ha già 3 missioni, esci
     IF v_mission_count >= 3 THEN
-        -- Niente da fare
         SELECT 'Already assigned' AS result;
     ELSE
         -- Cancella eventuali missioni vecchie o incomplete di oggi
@@ -55,15 +64,6 @@ BEGIN
         OPEN mission_cursor;
 
         read_loop: LOOP
-            DECLARE v_mission_id INT;
-            DECLARE v_mission_name VARCHAR(100);
-            DECLARE v_mission_type VARCHAR(20);
-            DECLARE v_target_vnum INT;
-            DECLARE v_target_count INT;
-            DECLARE v_reward INT;
-            DECLARE v_penalty INT;
-            DECLARE v_time_limit INT;
-
             FETCH mission_cursor INTO v_mission_id, v_mission_name, v_mission_type,
                                      v_target_vnum, v_target_count, v_reward, v_penalty, v_time_limit;
 
@@ -95,7 +95,7 @@ END$$
 
 DELIMITER ;
 
--- Test della stored procedure (opzionale, commentato)
+-- Test della stored procedure (commentato - rimuovi i -- per testare)
 -- CALL sp_assign_daily_missions(4, 'E', 'TestPlayer');
 -- SELECT * FROM hunter_player_missions WHERE player_id = 4;
 
