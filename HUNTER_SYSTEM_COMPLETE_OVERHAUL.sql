@@ -337,6 +337,147 @@ CREATE INDEX idx_rank_points ON `hunter_rank_bonuses` (`min_points`, `max_points
 CREATE INDEX idx_tip_active ON `hunter_quest_tips` (`is_active`);
 
 -- =====================================================================
+-- 16. FIX 4: RANK THEME COLORS (56+ colors) - 100% CONFIGURABILE
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS `hunter_ui_rank_colors` (
+  `rank_code` VARCHAR(1) PRIMARY KEY,
+  `bg_dark` VARCHAR(10) NOT NULL,
+  `bg_medium` VARCHAR(10) NOT NULL,
+  `bg_light` VARCHAR(10) NOT NULL,
+  `border` VARCHAR(10) NOT NULL,
+  `accent` VARCHAR(10) NOT NULL,
+  `text_title` VARCHAR(10) NOT NULL,
+  `text_value` VARCHAR(10) NOT NULL,
+  `text_muted` VARCHAR(10) NOT NULL,
+  `bar_fill` VARCHAR(10) NOT NULL,
+  `glow` VARCHAR(10) NOT NULL,
+  `btn_normal` VARCHAR(10) NOT NULL,
+  `btn_hover` VARCHAR(10) NOT NULL,
+  `btn_down` VARCHAR(10) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Popola con colori attuali da uihunterlevel.py RANK_THEMES
+INSERT INTO `hunter_ui_rank_colors` VALUES
+-- E-Rank (Grigio)
+('E', '0xEE0D0D0D', '0xEE1A1A1A', '0xEE2A2A2A', '0xFF555555', '0xFF808080', '0xFF999999', '0xFFCCCCCC', '0xFF666666', '0xFF808080', '0x33808080', '0xFF333333', '0xFF444444', '0xFF555555', NOW(), NOW()),
+-- D-Rank (Verde)
+('D', '0xEE0A1A0A', '0xEE0F2A0F', '0xEE153A15', '0xFF00AA00', '0xFF00FF00', '0xFF44FF44', '0xFFAAFFAA', '0xFF337733', '0xFF00DD00', '0x3300FF00', '0xFF0A2A0A', '0xFF0F3F0F', '0xFF155515', NOW(), NOW()),
+-- C-Rank (Celeste)
+('C', '0xEE0A1A2A', '0xEE0F2A3A', '0xEE153A4A', '0xFF00CCFF', '0xFF00FFFF', '0xFF44DDFF', '0xFFAAEEFF', '0xFF337799', '0xFF00CCFF', '0x3300FFFF', '0xFF0A2A3A', '0xFF0F3A4A', '0xFF154A5A', NOW(), NOW()),
+-- B-Rank (Blu)
+('B', '0xEE0A0A2A', '0xEE0F0F3A', '0xEE15154A', '0xFF0066FF', '0xFF4488FF', '0xFF6699FF', '0xFFAABBFF', '0xFF334477', '0xFF0066FF', '0x330066FF', '0xFF0A0A3A', '0xFF0F0F4A', '0xFF15155A', NOW(), NOW()),
+-- A-Rank (Viola)
+('A', '0xEE1A0A2A', '0xEE2A0F3A', '0xEE3A154A', '0xFFAA00FF', '0xFFCC66FF', '0xFFDD88FF', '0xFFEEBBFF', '0xFF773399', '0xFFAA00FF', '0x33AA00FF', '0xFF2A0A3A', '0xFF3A0F4A', '0xFF4A155A', NOW(), NOW()),
+-- S-Rank (Arancione)
+('S', '0xEE2A1A0A', '0xEE3A2A0F', '0xEE4A3A15', '0xFFFF6600', '0xFFFFAA00', '0xFFFFBB44', '0xFFFFDDAA', '0xFF996633', '0xFFFF6600', '0x33FF6600', '0xFF3A2A0A', '0xFF4A3A0F', '0xFF5A4A15', NOW(), NOW()),
+-- N-Rank (Rosso)
+('N', '0xEE2A0A0A', '0xEE3A0F0F', '0xEE4A1515', '0xFFFF0000', '0xFFFF4444', '0xFFFF6666', '0xFFFFAAAA', '0xFF993333', '0xFFFF0000', '0x33FF0000', '0xFF3A0A0A', '0xFF4A0F0F', '0xFF5A1515', NOW(), NOW());
+
+-- Colori speciali (medaglie, ecc.)
+INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `description`) VALUES
+('color_gold', '0xFFFFD700', 'color', 'Colore oro (medaglie)'),
+('color_silver', '0xFFC0C0C0', 'color', 'Colore argento'),
+('color_bronze', '0xFFCD7F32', 'color', 'Colore bronzo');
+
+-- =====================================================================
+-- 17. FIX 5: UI STRINGS (35+ strings) - 100% CONFIGURABILE
+-- =====================================================================
+
+-- Tab titles
+INSERT INTO `hunter_texts` VALUES ('ui_tab_stats', 'STATISTICHE PERSONALI');
+INSERT INTO `hunter_texts` VALUES ('ui_tab_achievements', 'TRAGUARDI');
+INSERT INTO `hunter_texts` VALUES ('ui_tab_ranking', 'SALA DELLE LEGGENDE');
+INSERT INTO `hunter_texts` VALUES ('ui_tab_events', 'EVENTI DEL GIORNO');
+INSERT INTO `hunter_texts` VALUES ('ui_tab_missions', 'MISSIONI');
+INSERT INTO `hunter_texts` VALUES ('ui_tab_guide', 'GUIDA');
+
+-- Section titles
+INSERT INTO `hunter_texts` VALUES ('ui_section_today', 'OGGI');
+INSERT INTO `hunter_texts` VALUES ('ui_section_total', 'TOTALE');
+INSERT INTO `hunter_texts` VALUES ('ui_section_economy', 'ECONOMIA');
+INSERT INTO `hunter_texts` VALUES ('ui_section_records', 'RECORD');
+INSERT INTO `hunter_texts` VALUES ('ui_section_personal_stats', 'STATISTICHE PERSONALI');
+
+-- Guide sections
+INSERT INTO `hunter_texts` VALUES ('ui_guide_ranks', 'SISTEMA DEI RANGHI');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_glory', 'COME GUADAGNARE GLORIA');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_credits', 'COME GUADAGNARE CREDITI');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_missions', 'MISSIONI GIORNALIERE');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_emergency', 'EMERGENCY QUEST');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_speedkill', 'SPEED KILL BONUS');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_events', 'EVENTI SCHEDULATI');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_chests', 'BAULI DIMENSIONALI');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_fractures', 'FRATTURE DIMENSIONALI');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_shop', 'MERCANTE HUNTER');
+
+-- Rank descriptions
+INSERT INTO `hunter_texts` VALUES ('rank_E_title', 'E-Rank');
+INSERT INTO `hunter_texts` VALUES ('rank_E_desc', 'Novizio - Inizi il tuo viaggio');
+INSERT INTO `hunter_texts` VALUES ('rank_D_title', 'D-Rank');
+INSERT INTO `hunter_texts` VALUES ('rank_D_desc', 'Principiante - Hai imparato le basi');
+INSERT INTO `hunter_texts` VALUES ('rank_C_title', 'C-Rank');
+INSERT INTO `hunter_texts` VALUES ('rank_C_desc', 'Cacciatore - Competente e affidabile');
+INSERT INTO `hunter_texts` VALUES ('rank_B_title', 'B-Rank');
+INSERT INTO `hunter_texts` VALUES ('rank_B_desc', 'Veterano - Rispettato dalla comunità');
+INSERT INTO `hunter_texts` VALUES ('rank_A_title', 'A-Rank');
+INSERT INTO `hunter_texts` VALUES ('rank_A_desc', 'Elite - Tra i migliori del regno');
+INSERT INTO `hunter_texts` VALUES ('rank_S_title', 'S-Rank');
+INSERT INTO `hunter_texts` VALUES ('rank_S_desc', 'Leggenda - Potere straordinario');
+INSERT INTO `hunter_texts` VALUES ('rank_N_title', 'N-Rank');
+INSERT INTO `hunter_texts` VALUES ('rank_N_desc', 'Monarca Nazionale - Hai raggiunto l apice del potere!');
+
+-- Messages
+INSERT INTO `hunter_texts` VALUES ('ui_msg_all_complete', 'BONUS TUTTE COMPLETE');
+INSERT INTO `hunter_texts` VALUES ('ui_msg_how_participate', 'COME PARTECIPARE');
+INSERT INTO `hunter_texts` VALUES ('ui_msg_rewards', 'RICOMPENSE');
+
+-- =====================================================================
+-- 18. FIX 6: UI DIMENSIONS (20+ dimensions) - 100% CONFIGURABILE
+-- =====================================================================
+
+-- Main window
+INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `description`) VALUES
+('ui_window_width', '500', 'int', 'Larghezza finestra principale'),
+('ui_window_height', '520', 'int', 'Altezza finestra principale'),
+
+-- Sections
+('ui_header_height', '95', 'int', 'Altezza header'),
+('ui_content_height', '300', 'int', 'Altezza contenuto'),
+('ui_tab_height', '28', 'int', 'Altezza tab'),
+('ui_footer_height', '35', 'int', 'Altezza footer'),
+
+-- Panels
+('ui_stats_panel_width', '240', 'int', 'Larghezza pannello stats'),
+('ui_stats_panel_height', '200', 'int', 'Altezza pannello stats'),
+('ui_achievement_popup_width', '500', 'int', 'Larghezza popup achievement'),
+('ui_achievement_popup_height', '200', 'int', 'Altezza popup achievement'),
+
+-- Positions
+('ui_window_center_x', '1', 'bool', 'Centra finestra X (0=no, 1=si)'),
+('ui_window_center_y', '1', 'bool', 'Centra finestra Y'),
+('ui_header_y', '0', 'int', 'Posizione Y header'),
+('ui_content_y', '95', 'int', 'Posizione Y contenuto'),
+('ui_footer_y', '485', 'int', 'Posizione Y footer'),
+
+-- Text sizes
+('ui_font_size_title', '16', 'int', 'Font size titoli'),
+('ui_font_size_label', '12', 'int', 'Font size label'),
+('ui_font_size_value', '14', 'int', 'Font size valori'),
+
+-- Paddings
+('ui_padding_small', '5', 'int', 'Padding piccolo'),
+('ui_padding_medium', '10', 'int', 'Padding medio'),
+('ui_padding_large', '15', 'int', 'Padding grande');
+
+-- =====================================================================
+-- 19. CONFIG TEST MODE
+-- =====================================================================
+INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `description`) VALUES
+('test_mode_enabled', '0', 'bool', 'Abilita modalità test (0=no, 1=si)');
+
+-- =====================================================================
 -- FINE SCHEMA SQL
 -- =====================================================================
 -- Per applicare questo schema:
