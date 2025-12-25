@@ -8,15 +8,15 @@
 USE srv1_hunabku;
 
 -- Elimina i config di esempio esistenti se ci sono
-DELETE FROM hunter_config WHERE config_key LIKE 'rank_%';
-DELETE FROM hunter_config WHERE config_key LIKE 'streak_%';
-DELETE FROM hunter_config WHERE config_key LIKE 'rival_%';
-DELETE FROM hunter_config WHERE config_key LIKE 'bonus_%';
+DELETE FROM hunter_quest_config WHERE config_key LIKE 'rank_%';
+DELETE FROM hunter_quest_config WHERE config_key LIKE 'streak_%';
+DELETE FROM hunter_quest_config WHERE config_key LIKE 'rival_%';
+DELETE FROM hunter_quest_config WHERE config_key LIKE 'bonus_%';
 
 -- ============================================================================
 -- 1. SOGLIE RANK (Punti Gloria richiesti per ogni rank)
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
+INSERT INTO hunter_quest_config (config_key, config_value, description) VALUES
 ('rank_threshold_N', '1500000', 'Punti Gloria richiesti per National rank'),
 ('rank_threshold_S', '500000',  'Punti Gloria richiesti per S-rank'),
 ('rank_threshold_A', '150000',  'Punti Gloria richiesti per A-rank'),
@@ -28,18 +28,20 @@ INSERT INTO hunter_config (config_key, config_value, description) VALUES
 -- ============================================================================
 -- 2. STREAK BONUS (Login consecutivi)
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
-('streak_days_tier1', '3',   'Giorni consecutivi per bonus tier 1'),
-('streak_bonus_tier1', '5',  'Percentuale bonus Gloria per tier 1 (3 giorni)'),
-('streak_days_tier2', '7',   'Giorni consecutivi per bonus tier 2'),
-('streak_bonus_tier2', '10', 'Percentuale bonus Gloria per tier 2 (7 giorni)'),
-('streak_days_tier3', '30',  'Giorni consecutivi per bonus tier 3'),
-('streak_bonus_tier3', '20', 'Percentuale bonus Gloria per tier 3 (30 giorni)');
+-- NOTA: I bonus percentuali esistono già nel DB come:
+-- - streak_bonus_3days (già presente = 5)
+-- - streak_bonus_7days (già presente = 10)
+-- - streak_bonus_30days (già presente = 20)
+-- Aggiungo solo i giorni configurabili per i tier:
+INSERT INTO hunter_quest_config (config_key, config_value, description) VALUES
+('streak_days_tier1', '3',  'Giorni consecutivi per bonus tier 1'),
+('streak_days_tier2', '7',  'Giorni consecutivi per bonus tier 2'),
+('streak_days_tier3', '30', 'Giorni consecutivi per bonus tier 3');
 
 -- ============================================================================
 -- 3. RIVAL TRACKER (Range punti per trovare rivali)
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
+INSERT INTO hunter_quest_config (config_key, config_value, description) VALUES
 ('rival_range_daily',     '500',   'Range punti per Rival Tracker classifica giornaliera'),
 ('rival_range_weekly',    '2000',  'Range punti per Rival Tracker classifica settimanale'),
 ('rival_range_total',     '50000', 'Range punti per Rival Tracker classifica Gloria totale'),
@@ -50,37 +52,40 @@ INSERT INTO hunter_config (config_key, config_value, description) VALUES
 -- ============================================================================
 -- 4. BONUS MULTIPLICATORI
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
+INSERT INTO hunter_quest_config (config_key, config_value, description) VALUES
 ('bonus_all_missions_complete', '50', 'Percentuale bonus Gloria se completi tutte 3 le missioni giornaliere'),
 ('bonus_speed_kill_multiplier', '2',  'Moltiplicatore reward per Speed Kill (Boss 60s, Metin 300s)');
 
 -- ============================================================================
--- 5. SPEED KILL TIMERS (secondi)
+-- 5. SPEED KILL TIMERS (secondi) - Già esistono nel DB, solo commento
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
-('speed_kill_boss_seconds',  '60',  'Secondi massimi per Speed Kill Bonus su Boss'),
-('speed_kill_metin_seconds', '300', 'Secondi massimi per Speed Kill Bonus su Metin');
+-- NOTA: Questi config esistono già nel DB come:
+-- - speedkill_boss_seconds (già presente = 60)
+-- - speedkill_metin_seconds (già presente = 300)
+-- Non serve inserirli di nuovo!
 
 -- ============================================================================
--- 6. EMERGENCY QUEST CONFIG
+-- 6. EMERGENCY QUEST CONFIG - Già esistono nel DB
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
-('emergency_chance_percent', '40',  'Percentuale chance di spawn Emergency Quest ogni X kill normali'),
-('emergency_spawn_threshold', '100', 'Numero kill normali per check Emergency Quest');
+-- NOTA: Questi config esistono già nel DB come:
+-- - emergency_chance_percent (già presente = 40)
+-- - spawn_threshold_normal (già presente = 1000)
+-- Non serve inserirli di nuovo!
 
 -- ============================================================================
 -- 7. CONVERSIONE GLORIA → CREDITI
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
+INSERT INTO hunter_quest_config (config_key, config_value, description) VALUES
 ('conversion_gloria_to_credits', '10', 'Quanti Crediti ottieni per ogni 100 Gloria convertiti');
 
 -- ============================================================================
--- 8. RESET E TIMINGS
+-- 8. RESET E TIMINGS - Già esistono nel DB
 -- ============================================================================
-INSERT INTO hunter_config (config_key, config_value, description) VALUES
-('welcome_offline_seconds', '120',  'Secondi offline minimi per mostrare messaggio benvenuto'),
-('daily_reset_hour',        '0',    'Ora reset missioni giornaliere (0-23)'),
-('daily_reset_minute',      '5',    'Minuto reset missioni giornaliere (0-59)');
+-- NOTA: Questi config esistono già nel DB come:
+-- - welcome_offline_seconds (già presente = 120)
+-- - daily_reset_hour (già presente = 0)
+-- Non serve inserirli di nuovo!
+-- daily_reset_minute non esiste, ma il reset è fisso alle 00:05
 
 -- ============================================================================
 -- VERIFICA CONFIG INSERITI
@@ -89,7 +94,7 @@ SELECT
     config_key,
     config_value,
     description
-FROM hunter_config
+FROM hunter_quest_config
 WHERE config_key LIKE 'rank_%'
    OR config_key LIKE 'streak_%'
    OR config_key LIKE 'rival_%'
