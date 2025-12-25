@@ -24,147 +24,54 @@ TAB_HEIGHT = 28
 FOOTER_HEIGHT = 35
 
 # ============================================================================
-#  RANK THEMES - Ogni rank ha il suo schema colori completo
+#  FIX 4: RANK THEMES - Popolato da server DB (100% configurabile)
 # ============================================================================
+# Inizializzato vuoto, popolato da HunterRankColor server command al login
 RANK_THEMES = {
-    "E": {
-        "name": "E-Rank",
-        "title": "Risvegliato",
-        "min": 0,
-        "max": 2000,
-        "bg_dark": 0xEE0D0D0D,
-        "bg_medium": 0xEE1A1A1A,
-        "bg_light": 0xEE2A2A2A,
-        "border": 0xFF555555,
-        "accent": 0xFF808080,
-        "text_title": 0xFF999999,
-        "text_value": 0xFFCCCCCC,
-        "text_muted": 0xFF666666,
-        "bar_fill": 0xFF808080,
-        "glow": 0x33808080,
-        "btn_normal": 0xFF333333,
-        "btn_hover": 0xFF444444,
-        "btn_down": 0xFF555555,
-    },
-    "D": {
-        "name": "D-Rank",
-        "title": "Apprendista",
-        "min": 2000,
-        "max": 10000,
-        "bg_dark": 0xEE0A1A0A,
-        "bg_medium": 0xEE0F2A0F,
-        "bg_light": 0xEE153A15,
-        "border": 0xFF00AA00,
-        "accent": 0xFF00FF00,
-        "text_title": 0xFF44FF44,
-        "text_value": 0xFFAAFFAA,
-        "text_muted": 0xFF337733,
-        "bar_fill": 0xFF00DD00,
-        "glow": 0x3300FF00,
-        "btn_normal": 0xFF0A2A0A,
-        "btn_hover": 0xFF0F3F0F,
-        "btn_down": 0xFF155515,
-    },
-    "C": {
-        "name": "C-Rank",
-        "title": "Cacciatore",
-        "min": 10000,
-        "max": 50000,
-        "bg_dark": 0xEE0A1A2A,
-        "bg_medium": 0xEE0F2A3A,
-        "bg_light": 0xEE153A4A,
-        "border": 0xFF00CCFF,
-        "accent": 0xFF00FFFF,
-        "text_title": 0xFF44DDFF,
-        "text_value": 0xFFAAEEFF,
-        "text_muted": 0xFF337799,
-        "bar_fill": 0xFF00CCFF,
-        "glow": 0x3300FFFF,
-        "btn_normal": 0xFF0A2A3A,
-        "btn_hover": 0xFF0F3A4A,
-        "btn_down": 0xFF154A5A,
-    },
-    "B": {
-        "name": "B-Rank",
-        "title": "Veterano",
-        "min": 50000,
-        "max": 150000,
-        "bg_dark": 0xEE0A0A2A,
-        "bg_medium": 0xEE0F0F3A,
-        "bg_light": 0xEE15154A,
-        "border": 0xFF0066FF,
-        "accent": 0xFF4488FF,
-        "text_title": 0xFF6699FF,
-        "text_value": 0xFFAABBFF,
-        "text_muted": 0xFF334477,
-        "bar_fill": 0xFF0066FF,
-        "glow": 0x330066FF,
-        "btn_normal": 0xFF0A0A3A,
-        "btn_hover": 0xFF0F0F4A,
-        "btn_down": 0xFF15155A,
-    },
-    "A": {
-        "name": "A-Rank",
-        "title": "Maestro",
-        "min": 150000,
-        "max": 500000,
-        "bg_dark": 0xEE1A0A2A,
-        "bg_medium": 0xEE2A0F3A,
-        "bg_light": 0xEE3A154A,
-        "border": 0xFFAA00FF,
-        "accent": 0xFFCC66FF,
-        "text_title": 0xFFDD88FF,
-        "text_value": 0xFFEEBBFF,
-        "text_muted": 0xFF773399,
-        "bar_fill": 0xFFAA00FF,
-        "glow": 0x33AA00FF,
-        "btn_normal": 0xFF2A0A3A,
-        "btn_hover": 0xFF3A0F4A,
-        "btn_down": 0xFF4A155A,
-    },
-    "S": {
-        "name": "S-Rank",
-        "title": "Leggenda",
-        "min": 500000,
-        "max": 1500000,
-        "bg_dark": 0xEE2A1A0A,
-        "bg_medium": 0xEE3A2A0F,
-        "bg_light": 0xEE4A3A15,
-        "border": 0xFFFF6600,
-        "accent": 0xFFFFAA00,
-        "text_title": 0xFFFFBB44,
-        "text_value": 0xFFFFDDAA,
-        "text_muted": 0xFF996633,
-        "bar_fill": 0xFFFF6600,
-        "glow": 0x33FF6600,
-        "btn_normal": 0xFF3A2A0A,
-        "btn_hover": 0xFF4A3A0F,
-        "btn_down": 0xFF5A4A15,
-    },
-    "N": {
-        "name": "NATIONAL",
-        "title": "Monarca Nazionale",
-        "min": 1500000,
-        "max": 5000000,
-        "bg_dark": 0xEE2A0A0A,
-        "bg_medium": 0xEE3A0F0F,
-        "bg_light": 0xEE4A1515,
-        "border": 0xFFFF0000,
-        "accent": 0xFFFF4444,
-        "text_title": 0xFFFF6666,
-        "text_value": 0xFFFFAAAA,
-        "text_muted": 0xFF993333,
-        "bar_fill": 0xFFFF0000,
-        "glow": 0x33FF0000,
-        "btn_normal": 0xFF3A0A0A,
-        "btn_hover": 0xFF4A0F0F,
-        "btn_down": 0xFF5A1515,
-    },
+    "E": {"name": "E-Rank", "title": "Risvegliato", "min": 0, "max": 2000},
+    "D": {"name": "D-Rank", "title": "Apprendista", "min": 2000, "max": 10000},
+    "C": {"name": "C-Rank", "title": "Cacciatore", "min": 10000, "max": 50000},
+    "B": {"name": "B-Rank", "title": "Veterano", "min": 50000, "max": 150000},
+    "A": {"name": "A-Rank", "title": "Maestro", "min": 150000, "max": 500000},
+    "S": {"name": "S-Rank", "title": "Leggenda", "min": 500000, "max": 1500000},
+    "N": {"name": "NATIONAL", "title": "Monarca Nazionale", "min": 1500000, "max": 5000000},
 }
 
 GOLD_COLOR = 0xFFFFD700
 SILVER_COLOR = 0xFFC0C0C0
 BRONZE_COLOR = 0xFFCD7F32
+
+# ============================================================================
+#  FIX 5: UI TEXTS - Popolato da server DB (100% configurabile)
+# ============================================================================
+UI_TEXTS = {}
+
+# ============================================================================
+#  FIX 6: UI DIMENSIONS - Popolato da server DB (100% configurabile)
+# ============================================================================
+UI_DIMENSIONS = {
+    "window_width": 500,
+    "window_height": 520,
+    "header_height": 95,
+    "content_height": 300,
+    "tab_height": 28,
+    "footer_height": 35,
+    "stats_panel_width": 240,
+    "stats_panel_height": 200,
+    "achievement_popup_width": 500,
+    "achievement_popup_height": 200,
+    "window_center_x": 1,
+    "window_center_y": 1,
+    "header_y": 0,
+    "content_y": 95,
+    "footer_y": 485,
+    "font_size_title": 16,
+    "font_size_label": 12,
+    "font_size_value": 14,
+    "padding_small": 5,
+    "padding_medium": 10,
+    "padding_large": 15,
+}
 
 # Soglie rank - Popolate da server al login (100% configurabili da DB)
 RANK_THRESHOLDS = {
@@ -2639,7 +2546,78 @@ class HunterLevelWindow(ui.ScriptWindow):
     
     def SetFractures(self, d):
         pass
-    
+
+    # ========================================================================
+    #  FIX 4-6: UPDATE METHODS FROM DB CONFIG
+    # ========================================================================
+    def UpdateRankColor(self, data):
+        """FIX 4: Aggiorna colori rank da server DB (56+ colors)"""
+        try:
+            parts = data.split("|")
+            if len(parts) == 14:  # rank_code + 13 colori
+                rank = parts[0]
+                if rank in RANK_THEMES:
+                    RANK_THEMES[rank]["bg_dark"] = int(parts[1], 16)
+                    RANK_THEMES[rank]["bg_medium"] = int(parts[2], 16)
+                    RANK_THEMES[rank]["bg_light"] = int(parts[3], 16)
+                    RANK_THEMES[rank]["border"] = int(parts[4], 16)
+                    RANK_THEMES[rank]["accent"] = int(parts[5], 16)
+                    RANK_THEMES[rank]["text_title"] = int(parts[6], 16)
+                    RANK_THEMES[rank]["text_value"] = int(parts[7], 16)
+                    RANK_THEMES[rank]["text_muted"] = int(parts[8], 16)
+                    RANK_THEMES[rank]["bar_fill"] = int(parts[9], 16)
+                    RANK_THEMES[rank]["glow"] = int(parts[10], 16)
+                    RANK_THEMES[rank]["btn_normal"] = int(parts[11], 16)
+                    RANK_THEMES[rank]["btn_hover"] = int(parts[12], 16)
+                    RANK_THEMES[rank]["btn_down"] = int(parts[13], 16)
+
+                    # Refresh tema UI se finestra già aperta e rank corrente
+                    if self.isLoaded and hasattr(self, 'currentRank') and self.currentRank == rank:
+                        self.__UpdateTheme()
+        except Exception as e:
+            pass
+
+    def UpdateUIText(self, data):
+        """FIX 5: Aggiorna stringhe UI da server DB (35+ strings)"""
+        try:
+            parts = data.split("|", 1)
+            if len(parts) == 2:
+                UI_TEXTS[parts[0]] = parts[1]
+        except:
+            pass
+
+    def UpdateUIDimensions(self, data):
+        """FIX 6: Aggiorna dimensioni UI da server DB (20+ dimensions)"""
+        try:
+            parts = data.split("|")
+            if len(parts) >= 21:
+                UI_DIMENSIONS["window_width"] = int(parts[0])
+                UI_DIMENSIONS["window_height"] = int(parts[1])
+                UI_DIMENSIONS["header_height"] = int(parts[2])
+                UI_DIMENSIONS["content_height"] = int(parts[3])
+                UI_DIMENSIONS["tab_height"] = int(parts[4])
+                UI_DIMENSIONS["footer_height"] = int(parts[5])
+                UI_DIMENSIONS["stats_panel_width"] = int(parts[6])
+                UI_DIMENSIONS["stats_panel_height"] = int(parts[7])
+                UI_DIMENSIONS["achievement_popup_width"] = int(parts[8])
+                UI_DIMENSIONS["achievement_popup_height"] = int(parts[9])
+                UI_DIMENSIONS["window_center_x"] = int(parts[10])
+                UI_DIMENSIONS["window_center_y"] = int(parts[11])
+                UI_DIMENSIONS["header_y"] = int(parts[12])
+                UI_DIMENSIONS["content_y"] = int(parts[13])
+                UI_DIMENSIONS["footer_y"] = int(parts[14])
+                UI_DIMENSIONS["font_size_title"] = int(parts[15])
+                UI_DIMENSIONS["font_size_label"] = int(parts[16])
+                UI_DIMENSIONS["font_size_value"] = int(parts[17])
+                UI_DIMENSIONS["padding_small"] = int(parts[18])
+                UI_DIMENSIONS["padding_medium"] = int(parts[19])
+                UI_DIMENSIONS["padding_large"] = int(parts[20])
+
+                # Note: Le dimensioni si applicano al prossimo load della finestra
+                # Per applicarle immediatamente servirebbe rebuild completo UI
+        except:
+            pass
+
     # ========================================================================
     #  UPDATE
     # ========================================================================
