@@ -168,7 +168,8 @@ quest hunter_level_bridge begin
             end
             
             local rank_key = hunter_level_bridge.get_rank_letter(rank_num)
-            cmdchat("HunterSystemSpeak " .. rank_key .. "|" .. hunter_level_bridge.clean_str(msg))
+            -- FIX: NESSUNO spazio dopo HunterSystemSpeak
+            cmdchat("HunterSystemSpeak" .. rank_key .. "|" .. hunter_level_bridge.clean_str(msg))
         end
         
         -- Messaggio di sistema con colore specifico (per fratture, eventi, ecc.)
