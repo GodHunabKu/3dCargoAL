@@ -131,14 +131,22 @@ quest hunter_level_bridge begin
         end
         
         -- Converti punti in indice rank numerico (0-6)
+        -- Legge soglie dal DB per massima flessibilità
         function get_rank_index(points)
-            if points >= 1500000 then return 6      -- N
-            elseif points >= 500000 then return 5   -- S
-            elseif points >= 150000 then return 4   -- A
-            elseif points >= 50000 then return 3    -- B
-            elseif points >= 10000 then return 2    -- C
-            elseif points >= 2000 then return 1     -- D
-            else return 0 end                        -- E
+            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
+            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
+            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
+            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
+            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
+            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
+
+            if points >= N then return 6      -- N
+            elseif points >= S then return 5   -- S
+            elseif points >= A then return 4   -- A
+            elseif points >= B then return 3    -- B
+            elseif points >= C then return 2    -- C
+            elseif points >= D then return 1     -- D
+            else return 0 end                    -- E
         end
         
         -- Messaggio di sistema con colore del rank
@@ -741,12 +749,20 @@ quest hunter_level_bridge begin
         end
         
         function get_rank_key(points)
-            if points >= 1500000 then return "N"
-            elseif points >= 500000 then return "S"
-            elseif points >= 150000 then return "A"
-            elseif points >= 50000 then return "B"
-            elseif points >= 10000 then return "C"
-            elseif points >= 2000 then return "D"
+            -- Legge soglie dal DB per massima flessibilità
+            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
+            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
+            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
+            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
+            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
+            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
+
+            if points >= N then return "N"
+            elseif points >= S then return "S"
+            elseif points >= A then return "A"
+            elseif points >= B then return "B"
+            elseif points >= C then return "C"
+            elseif points >= D then return "D"
             else return "E" end
         end
 
@@ -875,18 +891,21 @@ quest hunter_level_bridge begin
             pc.setqf("hq_login_streak", streak)
             pc.setqf("hq_last_login_day", today)
             
-            -- Legge bonus dal DB config
-            local bonus_30 = hunter_level_bridge.get_config("streak_bonus_30days") or 20
-            local bonus_7 = hunter_level_bridge.get_config("streak_bonus_7days") or 10
-            local bonus_3 = hunter_level_bridge.get_config("streak_bonus_3days") or 5
-            
+            -- Legge giorni e bonus dal DB config (100% configurabile)
+            local days_tier3 = tonumber(hunter_level_bridge.get_config("streak_days_tier3")) or 30
+            local bonus_tier3 = tonumber(hunter_level_bridge.get_config("streak_bonus_tier3")) or 20
+            local days_tier2 = tonumber(hunter_level_bridge.get_config("streak_days_tier2")) or 7
+            local bonus_tier2 = tonumber(hunter_level_bridge.get_config("streak_bonus_tier2")) or 10
+            local days_tier1 = tonumber(hunter_level_bridge.get_config("streak_days_tier1")) or 3
+            local bonus_tier1 = tonumber(hunter_level_bridge.get_config("streak_bonus_tier1")) or 5
+
             local bonus = 0
-            if streak >= 30 then 
-                bonus = bonus_30 
-            elseif streak >= 7 then 
-                bonus = bonus_7 
-            elseif streak >= 3 then 
-                bonus = bonus_3 
+            if streak >= days_tier3 then
+                bonus = bonus_tier3
+            elseif streak >= days_tier2 then
+                bonus = bonus_tier2
+            elseif streak >= days_tier1 then
+                bonus = bonus_tier1
             end
             pc.setqf("hq_streak_bonus", bonus)
             if streak > 1 then
@@ -981,17 +1000,17 @@ quest hunter_level_bridge begin
         function check_overtake(pid, pname, col_name, added_val, label_nice)
             -- ============================================================
             -- CONFIGURAZIONE RANGE RIVALE (DISTACCO MASSIMO)
-            -- Qui decidi entro quanti punti mostrare il rivale per ogni classifica
+            -- Legge dal DB per massima flessibilità
             -- ============================================================
             local RIVAL_RANGES = {
-                ["daily_points"]    = 500,      -- Range per Classifica Giornaliera
-                ["weekly_points"]   = 2000,     -- Range per Classifica Settimanale
-                ["total_metins"]    = 50,       -- Range per Classifica Metin
-                ["total_chests"]    = 50,       -- Range per Classifica Bauli
-                ["total_fractures"] = 20,       -- Range per Classifica Fratture
-                ["total_points"]    = 50000,    -- Range per Classifica Gloria (Totale)
+                ["daily_points"]    = tonumber(hunter_level_bridge.get_config("rival_range_daily")) or 500,
+                ["weekly_points"]   = tonumber(hunter_level_bridge.get_config("rival_range_weekly")) or 2000,
+                ["total_metins"]    = tonumber(hunter_level_bridge.get_config("rival_range_metins")) or 50,
+                ["total_chests"]    = tonumber(hunter_level_bridge.get_config("rival_range_chests")) or 50,
+                ["total_fractures"] = tonumber(hunter_level_bridge.get_config("rival_range_fractures")) or 20,
+                ["total_points"]    = tonumber(hunter_level_bridge.get_config("rival_range_total")) or 50000,
             }
-            
+
             local limit = RIVAL_RANGES[col_name] or 50000 -- Default se non trovato
             
             local q_me = "SELECT " .. col_name .. " FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid
