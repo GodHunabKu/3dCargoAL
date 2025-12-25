@@ -478,6 +478,27 @@ INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `de
 ('test_mode_enabled', '0', 'bool', 'Abilita modalità test (0=no, 1=si)');
 
 -- =====================================================================
+-- 20. SECURITY: AUDIT LOG TABLE
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS `hunter_security_log` (
+  `log_id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `player_id` INT NOT NULL,
+  `action_type` VARCHAR(50) NOT NULL,
+  `action_data` TEXT,
+  `ip_address` VARCHAR(45) DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_player (player_id),
+  INDEX idx_action (action_type),
+  INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================================
+-- 21. SECURITY: ADD claimed_at COLUMN FOR RACE CONDITION FIX
+-- =====================================================================
+ALTER TABLE `hunter_quest_player_achievements`
+ADD COLUMN IF NOT EXISTS `claimed_at` DATETIME NULL DEFAULT NULL;
+
+-- =====================================================================
 -- FINE SCHEMA SQL
 -- =====================================================================
 -- Per applicare questo schema:
