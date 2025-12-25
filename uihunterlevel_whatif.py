@@ -421,8 +421,6 @@ class SystemMessageWindow(ui.Window):
             else:
                 finalColor = self.__GetColorFromKey(color)
 
-        dbg.TraceError("[DEBUG] SystemMessageWindow.ShowMessage: color=0x%X msg='%s'" % (finalColor, msg[:50]))
-
         # Aggiungi alla coda
         self.messageQueue.append((msg.replace("+", " "), finalColor))
 
@@ -434,8 +432,6 @@ class SystemMessageWindow(ui.Window):
         """Mostra il prossimo messaggio in coda"""
         if len(self.messageQueue) > 0:
             msg, color = self.messageQueue.pop(0)
-
-            dbg.TraceError("[DEBUG] ShowNextMessage: Applying color=0x%X msg='%s'" % (color, msg[:50]))
 
             # Aggiorna visuale
             self.__UpdateColors(color)

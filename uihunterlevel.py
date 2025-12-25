@@ -2049,7 +2049,6 @@ class HunterLevelWindow(ui.ScriptWindow):
         """Mostra messaggio del Sistema con colore basato sul rank"""
         if self.systemMsgWnd:
             color = self.RANK_COLORS.get(rankKey, 0xFF808080)
-            dbg.TraceError("[DEBUG] ShowSystemMessage: rankKey='%s' color=0x%X msg='%s'" % (rankKey, color, msg[:50]))
             self.systemMsgWnd.ShowMessage(msg, color)
             # REMOVED: SetRankColor() era ridondante e causava override del colore
     
