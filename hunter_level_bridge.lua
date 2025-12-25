@@ -168,16 +168,16 @@ quest hunter_level_bridge begin
             end
             
             local rank_key = hunter_level_bridge.get_rank_letter(rank_num)
-            cmdchat("HunterSystemSpeak " .. rank_key .. "|" .. hunter_level_bridge.clean_str(msg))
+            -- FIX: NESSUNO spazio dopo HunterSystemSpeak
+            cmdchat("HunterSystemSpeak" .. rank_key .. "|" .. hunter_level_bridge.clean_str(msg))
         end
         
         -- Messaggio di sistema con colore specifico (per fratture, eventi, ecc.)
         function hunter_speak_color(msg, color_code)
             if msg == nil then return end
             -- color_code: GREEN, BLUE, ORANGE, RED, GOLD, PURPLE, BLACKWHITE
-            local final_color = color_code or "BLUE"
-            syschat("[LUA-1] hunter_speak_color: color=" .. final_color)
-            cmdchat("HunterSystemSpeak " .. final_color .. "|" .. hunter_level_bridge.clean_str(msg))
+            -- FIX: NESSUNO spazio dopo HunterSystemSpeak per evitare " GREEN" invece di "GREEN"
+            cmdchat("HunterSystemSpeak" .. (color_code or "BLUE") .. "|" .. hunter_level_bridge.clean_str(msg))
         end
         
         -- Colori HEX per ogni rank (usati nei syschat)

@@ -421,8 +421,6 @@ class SystemMessageWindow(ui.Window):
             else:
                 finalColor = self.__GetColorFromKey(color)
 
-        chat("[PY-3] SystemMessageWindow.ShowMessage: finalColor=0x%X" % finalColor)
-
         # Aggiungi alla coda
         self.messageQueue.append((msg.replace("+", " "), finalColor))
 
@@ -434,8 +432,6 @@ class SystemMessageWindow(ui.Window):
         """Mostra il prossimo messaggio in coda"""
         if len(self.messageQueue) > 0:
             msg, color = self.messageQueue.pop(0)
-
-            chat("[PY-4] ShowNextMessage: APPLYING color=0x%X" % color)
 
             # Aggiorna visuale
             self.__UpdateColors(color)
