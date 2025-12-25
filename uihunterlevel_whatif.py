@@ -322,7 +322,7 @@ class WhatIfChoiceWindow(SoloLevelingWindow):
 
 
 class SystemMessageWindow(ui.Window):
-    """Messaggio di sistema con colori dinamici basati sul rank"""
+    """Messaggio di sistema con colori dinamici basati sul rank + CODA MESSAGGI"""
     def __init__(self):
         ui.Window.__init__(self)
         self.SetSize(500, 60)
@@ -330,9 +330,14 @@ class SystemMessageWindow(ui.Window):
         self.SetPosition((screenWidth - 500) / 2, 150)
         self.AddFlag("not_pick")
         self.AddFlag("float")
-        
+
         self.currentColor = 0xFF0099FF  # Default blu
-        
+
+        # FIX: Sistema coda messaggi per evitare sovrapposizioni
+        self.messageQueue = []
+        self.currentMessage = None
+        self.messageDelay = 4.0  # 4 secondi per messaggio
+
         # Sfondo
         self.bg = ui.Bar()
         self.bg.SetParent(self)
@@ -340,7 +345,7 @@ class SystemMessageWindow(ui.Window):
         self.bg.SetSize(500, 60)
         self.bg.SetColor(COLOR_BG_DARK)
         self.bg.Show()
-        
+
         # Bordi (salvati per aggiornamento colori)
         self.borders = []
         color = FRACTURE_SCHEMES["BLUE"]["border"]
@@ -356,7 +361,7 @@ class SystemMessageWindow(ui.Window):
         # Right
         b4 = ui.Bar(); b4.SetParent(self); b4.SetPosition(498, 0); b4.SetSize(2, 60); b4.SetColor(color); b4.Show()
         self.borders.append(b4)
-        
+
         self.text = ui.TextLine()
         self.text.SetParent(self)
         self.text.SetPosition(250, 20)
@@ -364,36 +369,18 @@ class SystemMessageWindow(ui.Window):
         self.text.SetPackedFontColor(FRACTURE_SCHEMES["BLUE"]["title"])
         self.text.SetOutline()
         self.text.Show()
-        
+
         self.endTime = 0
-    
+
     def __UpdateColors(self, color):
         """Aggiorna i colori dei bordi e del testo"""
         self.currentColor = color
         for b in self.borders:
             b.SetColor(color)
         self.text.SetPackedFontColor(color)
-        
-    def ShowMessage(self, msg, color=None):
-        """Mostra messaggio con colore opzionale (basato sul rank del giocatore)"""
-        # Ricalcola posizione per sicurezza
-        screenWidth = wndMgr.GetScreenWidth()
-        self.SetPosition((screenWidth - 500) / 2, 150)
-        
-        # Aggiorna colori se specificato (supporta stringhe rank/frattura o interi)
-        if color:
-            if isinstance(color, int):
-                self.__UpdateColors(color)
-            else:
-                self.SetRankColor(color)
-        
-        self.text.SetText(msg.replace("+", " "))
-        self.endTime = app.GetTime() + 5.0
-        self.Show()
-        self.SetTop()
-    
-    def SetRankColor(self, colorKey):
-        """Imposta il colore e aggiorna visivamente - supporta sia rank (E,D,C...) che fratture (GREEN,BLUE...)"""
+
+    def __GetColorFromKey(self, colorKey):
+        """Converte chiave colore (E,D,C,BLUE,GREEN...) in intero"""
         # Colori per rank giocatore
         RANK_COLORS = {
             "E": 0xFF808080,  # Grigio
@@ -415,13 +402,75 @@ class SystemMessageWindow(ui.Window):
             "BLACKWHITE": 0xFFFFFFFF,  # Bianco
         }
         # Prova prima i colori frattura, poi i rank
-        color = FRACTURE_COLORS.get(colorKey, RANK_COLORS.get(colorKey, 0xFF808080))
+        return FRACTURE_COLORS.get(colorKey, RANK_COLORS.get(colorKey, 0xFF808080))
+
+    def ShowMessage(self, msg, color=None):
+        """
+        FIX: Aggiungi messaggio alla CODA invece di mostrare subito
+        Questo previene che i messaggi si sovrascrivano
+        """
+        # Ricalcola posizione per sicurezza
+        screenWidth = wndMgr.GetScreenWidth()
+        self.SetPosition((screenWidth - 500) / 2, 150)
+
+        # Determina colore
+        finalColor = self.currentColor
+        if color:
+            if isinstance(color, int):
+                finalColor = color
+            else:
+                finalColor = self.__GetColorFromKey(color)
+
+        # Aggiungi alla coda
+        self.messageQueue.append((msg.replace("+", " "), finalColor))
+
+        # Se non c'è messaggio corrente, mostra subito il prossimo
+        if not self.currentMessage:
+            self.ShowNextMessage()
+
+    def ShowNextMessage(self):
+        """Mostra il prossimo messaggio in coda"""
+        if len(self.messageQueue) > 0:
+            msg, color = self.messageQueue.pop(0)
+
+            # Aggiorna visuale
+            self.__UpdateColors(color)
+            self.text.SetText(msg)
+
+            # Salva messaggio corrente
+            self.currentMessage = msg
+            self.endTime = app.GetTime() + self.messageDelay
+
+            # Mostra finestra
+            self.Show()
+            self.SetTop()
+        else:
+            self.currentMessage = None
+
+    def SetRankColor(self, colorKey):
+        """Imposta il colore e aggiorna visivamente - supporta sia rank (E,D,C...) che fratture (GREEN,BLUE...)"""
+        color = self.__GetColorFromKey(colorKey)
         self.__UpdateColors(color)
-        
+
     def OnUpdate(self):
+        """FIX: Quando il messaggio scade, mostra il prossimo in coda"""
         if self.endTime > 0 and app.GetTime() > self.endTime:
             self.Hide()
             self.endTime = 0
+            self.currentMessage = None
+            # Mostra il prossimo messaggio se ce ne sono
+            self.ShowNextMessage()
+
+    def GetQueueLength(self):
+        """Ritorna il numero di messaggi in coda (per debug)"""
+        return len(self.messageQueue)
+
+    def ClearQueue(self):
+        """Svuota la coda messaggi (per situazioni speciali)"""
+        self.messageQueue = []
+        self.Hide()
+        self.currentMessage = None
+        self.endTime = 0
 
 
 class EmergencyQuestWindow(ui.Window):
@@ -521,10 +570,10 @@ class RivalTrackerWindow(ui.Window):
         ui.Window.__init__(self)
         self.SetSize(200, 80)
         self.screenWidth = wndMgr.GetScreenWidth()
-        
-        # Posizioni dinamiche
-        self.defaultY = 80  # Posizione senza evento
-        self.eventActiveY = 150  # Sotto EventStatusWindow
+
+        # FIX: Posizioni dinamiche corrette per evitare sovrapposizioni
+        self.defaultY = 80  # Posizione senza evento (top-right)
+        self.eventActiveY = 350  # Sotto EventStatusWindow (Y=280 + 60 + 10 padding = 350)
         self.SetPosition(self.screenWidth - 210, self.defaultY)
         self.AddFlag("float")
         
@@ -579,11 +628,13 @@ class RivalTrackerWindow(ui.Window):
         self.eventWndRef = eventWnd
         
     def ShowRival(self, name, diff, label="Gloria", mode="VICINO"):
-        # Calcola posizione dinamica basata su EventStatusWindow
+        # FIX: Calcola posizione dinamica basata su EventStatusWindow
         yPos = self.defaultY
         if self.eventWndRef and self.eventWndRef.IsShow():
-            yPos = self.eventActiveY  # Posiziona sotto l'evento
-        
+            yPos = self.eventActiveY  # Posiziona sotto l'evento (Y=270 = 200+60+10)
+
+        # Ricalcola screen width per risoluzioni diverse
+        self.screenWidth = wndMgr.GetScreenWidth()
         self.SetPosition(self.screenWidth - 210, yPos)
         
         self.nameText.SetText(name.replace("+", " "))
@@ -617,15 +668,17 @@ class RivalTrackerWindow(ui.Window):
 # ============================================================
 class EventStatusWindow(ui.ScriptWindow):
     """Mostra un popup sempre visibile quando c'è un evento attivo"""
-    
+
     def __init__(self):
         ui.ScriptWindow.__init__(self)
         self.SetSize(220, 60)
-        
+
         screenWidth = wndMgr.GetScreenWidth()
-        # Posizione: A destra, sotto minimappa e Auto Caccia
-        self.SetPosition(screenWidth - 235, 280)
+        # FIX: Posizione ottimizzata - A destra, sotto minimappa (circa Y=200)
+        # Lascia spazio per RivalTrackerWindow sopra (Y=80) e sotto (Y=350)
+        self.SetPosition(screenWidth - 230, 200)
         self.AddFlag("float")
+        self.endTime = 0
         
         # Background scuro
         self.bg = ui.Bar()
@@ -709,10 +762,10 @@ class EventStatusWindow(ui.ScriptWindow):
         else:
             self.timeText.SetText("")
         
-        # Ricalcola posizione (per sicurezza con risoluzioni diverse)
+        # FIX: Ricalcola posizione (per sicurezza con risoluzioni diverse)
         screenWidth = wndMgr.GetScreenWidth()
-        self.SetPosition(screenWidth - 235, 280)
-        
+        self.SetPosition(screenWidth - 230, 200)
+
         self.Show()
         self.SetTop()
     
@@ -747,10 +800,10 @@ class EventStatusWindow(ui.ScriptWindow):
         color = eventColors.get(eventType, 0xFF00FF88)
         self.SetEventColor(color)
         
-        # Ricalcola posizione
+        # FIX: Ricalcola posizione
         screenWidth = wndMgr.GetScreenWidth()
-        self.SetPosition(screenWidth - 235, 280)
-        
+        self.SetPosition(screenWidth - 230, 200)
+
         self.Show()
         self.SetTop()
     
