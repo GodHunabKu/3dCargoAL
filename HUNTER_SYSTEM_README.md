@@ -770,6 +770,120 @@ ORDER BY total DESC;
 
 ---
 
+## SECURITY - Sistema Ultra Sicuro v3.0
+
+### Vulnerabilita Fixate (7 Fix Critici)
+
+#### 1. Comandi Pericolosi Rimossi
+**PRIMA:** Comandi pubblici permettevano azioni pericolose senza GM check
+**DOPO:** Rimossi completamente:
+- `/hunter_whatif_answer` - Manipolava gate senza controlli
+- `/hunter_join_event` - Joinava eventi arbitrari
+- `/hunter_events_silent` - Duplicato inutile
+
+#### 2. Validazione Input `/hunter_claim`
+**PRIMA:** Accettava qualsiasi ID achievement senza validazione
+**DOPO:**
+- Whitelist range valido: ID 1-1000
+- Messaggi di errore chiari
+- Solo achievement del proprio player
+
+#### 3. Protezione `/hunter_request_data`
+**PRIMA:** Inviava TUTTI i dati del sistema (leak informazioni)
+**DOPO:** Solo dati personali + ranking top 10 pubblico
+
+#### 4. Fix `/hunter_missions`
+**PRIMA:** Permetteva di riassegnare missioni multiple volte
+**DOPO:** Solo visualizza missioni gia assegnate al login
+
+#### 5. Input Sanitization Potenziata
+**PRIMA:** `clean_str()` faceva solo replace spazi
+**DOPO:** Rimuove 10+ caratteri pericolosi:
+- Pipe `|` - cmdchat separator
+- Newline `\n\r` - injection
+- HTML tags `<>`
+- SQL chars `;'"`
+- Max 255 caratteri
+
+#### 6. Integer Overflow Protection
+**PRIMA:** `total_points` poteva overflow causando valori negativi
+**DOPO:**
+- Funzione `safe_add_points()` con cap MAX_RANK_POINTS
+- MySQL `LEAST()` nelle query UPDATE
+- Protezione underflow (valori negativi)
+
+#### 7. Race Condition Fix
+**PRIMA:** Claim achievement doppio se spam click
+**DOPO:**
+- UPDATE atomico con `claimed_at IS NULL`
+- Check DB-first prima di dare item
+- Impossibile claim doppio
+
+#### 8. Audit Logging
+**NUOVO:** Tabella `hunter_security_log` traccia:
+- Claim achievement (ID, vnum, count)
+- Gain points (amount, source)
+- Rank up (old → new)
+- IP address (futuro)
+
+### Test Sicurezza
+
+Comando in-game per verificare tutte le fix:
+```
+/hunter_security_test
+```
+
+**Output atteso:**
+```
+[SECURITY TEST] Hunter System v3.0
+  ✓ clean_str() OK - injection prevented
+  ✓ safe_add_points() OK - overflow prevented
+  ✓ Audit log creato
+  ✓ Comandi pericolosi rimossi
+  ✓ /hunter_claim validazione attiva
+[SECURITY] Sistema protetto al 100%!
+```
+
+### Query Audit Log
+
+```sql
+-- Ultimi 100 eventi sicurezza
+SELECT p.name, log.action_type, log.action_data, log.created_at
+FROM hunter_security_log log
+JOIN player p ON log.player_id = p.id
+ORDER BY log.created_at DESC
+LIMIT 100;
+
+-- Claim achievement per player
+SELECT p.name, COUNT(*) as claims
+FROM hunter_security_log log
+JOIN player p ON log.player_id = p.id
+WHERE log.action_type = 'claim_achievement'
+GROUP BY p.name
+ORDER BY claims DESC;
+
+-- Attivita sospetta (molti claim in poco tempo)
+SELECT player_id, COUNT(*) as events, MAX(created_at) as last_event
+FROM hunter_security_log
+WHERE action_type = 'claim_achievement'
+  AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+GROUP BY player_id
+HAVING events > 10
+ORDER BY events DESC;
+```
+
+### Principi di Sicurezza Applicati
+
+1. **Least Privilege**: Player possono solo azioni sui propri dati
+2. **Input Validation**: Tutti gli input sanitizzati e validati
+3. **Atomic Operations**: Race condition prevenute con UPDATE atomici
+4. **Audit Trail**: Ogni azione critica loggata
+5. **Defense in Depth**: Multiple layer di protezione
+6. **Fail Secure**: In caso di errore, nega azione invece di permettere
+7. **No Magic Numbers**: Costanti definite, overflow impossibili
+
+---
+
 ## Changelog
 
 ### v2.0.0 - REFACTORING MANIACALE (2025)
