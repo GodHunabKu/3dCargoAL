@@ -2999,6 +2999,125 @@ quest hunter_level_bridge begin
         end
 
         -- ============================================================
+        -- FIX 4: RANK THEME COLORS (56+ colors) - 100% CONFIGURABILE
+        -- ============================================================
+        function send_rank_colors()
+            local c, d = mysql_direct_query("SELECT rank_code, bg_dark, bg_medium, bg_light, border, accent, text_title, text_value, text_muted, bar_fill, glow, btn_normal, btn_hover, btn_down FROM srv1_hunabku.hunter_ui_rank_colors ORDER BY rank_code")
+
+            if c > 0 then
+                for i = 1, c do
+                    -- Format: rank_code|bg_dark|bg_medium|bg_light|border|accent|text_title|text_value|text_muted|bar_fill|glow|btn_normal|btn_hover|btn_down
+                    local data = d[i].rank_code .. "|" ..
+                                 d[i].bg_dark .. "|" ..
+                                 d[i].bg_medium .. "|" ..
+                                 d[i].bg_light .. "|" ..
+                                 d[i].border .. "|" ..
+                                 d[i].accent .. "|" ..
+                                 d[i].text_title .. "|" ..
+                                 d[i].text_value .. "|" ..
+                                 d[i].text_muted .. "|" ..
+                                 d[i].bar_fill .. "|" ..
+                                 d[i].glow .. "|" ..
+                                 d[i].btn_normal .. "|" ..
+                                 d[i].btn_hover .. "|" ..
+                                 d[i].btn_down
+
+                    cmdchat("HunterRankColor " .. data)
+                end
+                return c
+            end
+            return 0
+        end
+
+        -- ============================================================
+        -- FIX 5: UI STRINGS (35+ strings) - 100% CONFIGURABILE
+        -- ============================================================
+        function send_ui_texts()
+            -- Lista di tutte le chiavi da inviare
+            local text_keys = {
+                "ui_tab_stats", "ui_tab_achievements", "ui_tab_ranking", "ui_tab_events",
+                "ui_tab_missions", "ui_tab_guide",
+                "ui_section_today", "ui_section_total", "ui_section_economy", "ui_section_records",
+                "ui_section_personal_stats",
+                "ui_guide_ranks", "ui_guide_glory", "ui_guide_credits", "ui_guide_missions",
+                "ui_guide_emergency", "ui_guide_speedkill", "ui_guide_events", "ui_guide_chests",
+                "ui_guide_fractures", "ui_guide_shop",
+                "rank_E_title", "rank_E_desc", "rank_D_title", "rank_D_desc",
+                "rank_C_title", "rank_C_desc", "rank_B_title", "rank_B_desc",
+                "rank_A_title", "rank_A_desc", "rank_S_title", "rank_S_desc",
+                "rank_N_title", "rank_N_desc",
+                "ui_msg_all_complete", "ui_msg_how_participate", "ui_msg_rewards"
+            }
+
+            local count = 0
+            for _, key in ipairs(text_keys) do
+                local text = hunter_level_bridge.get_text(key)
+                if text then
+                    -- Format: key|text
+                    cmdchat("HunterUIText " .. key .. "|" .. text)
+                    count = count + 1
+                end
+            end
+
+            return count
+        end
+
+        -- ============================================================
+        -- FIX 6: UI DIMENSIONS (20+ dimensions) - 100% CONFIGURABILE
+        -- ============================================================
+        function send_ui_dimensions()
+            -- Carica tutte le dimensioni UI dal DB
+            local dims = {}
+
+            dims.window_width = tonumber(hunter_level_bridge.get_config("ui_window_width")) or 500
+            dims.window_height = tonumber(hunter_level_bridge.get_config("ui_window_height")) or 520
+            dims.header_height = tonumber(hunter_level_bridge.get_config("ui_header_height")) or 95
+            dims.content_height = tonumber(hunter_level_bridge.get_config("ui_content_height")) or 300
+            dims.tab_height = tonumber(hunter_level_bridge.get_config("ui_tab_height")) or 28
+            dims.footer_height = tonumber(hunter_level_bridge.get_config("ui_footer_height")) or 35
+            dims.stats_panel_width = tonumber(hunter_level_bridge.get_config("ui_stats_panel_width")) or 240
+            dims.stats_panel_height = tonumber(hunter_level_bridge.get_config("ui_stats_panel_height")) or 200
+            dims.achievement_popup_width = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_width")) or 500
+            dims.achievement_popup_height = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_height")) or 200
+            dims.window_center_x = tonumber(hunter_level_bridge.get_config("ui_window_center_x")) or 1
+            dims.window_center_y = tonumber(hunter_level_bridge.get_config("ui_window_center_y")) or 1
+            dims.header_y = tonumber(hunter_level_bridge.get_config("ui_header_y")) or 0
+            dims.content_y = tonumber(hunter_level_bridge.get_config("ui_content_y")) or 95
+            dims.footer_y = tonumber(hunter_level_bridge.get_config("ui_footer_y")) or 485
+            dims.font_size_title = tonumber(hunter_level_bridge.get_config("ui_font_size_title")) or 16
+            dims.font_size_label = tonumber(hunter_level_bridge.get_config("ui_font_size_label")) or 12
+            dims.font_size_value = tonumber(hunter_level_bridge.get_config("ui_font_size_value")) or 14
+            dims.padding_small = tonumber(hunter_level_bridge.get_config("ui_padding_small")) or 5
+            dims.padding_medium = tonumber(hunter_level_bridge.get_config("ui_padding_medium")) or 10
+            dims.padding_large = tonumber(hunter_level_bridge.get_config("ui_padding_large")) or 15
+
+            -- Format: pipe-separated (20+ values)
+            local data = dims.window_width .. "|" ..
+                         dims.window_height .. "|" ..
+                         dims.header_height .. "|" ..
+                         dims.content_height .. "|" ..
+                         dims.tab_height .. "|" ..
+                         dims.footer_height .. "|" ..
+                         dims.stats_panel_width .. "|" ..
+                         dims.stats_panel_height .. "|" ..
+                         dims.achievement_popup_width .. "|" ..
+                         dims.achievement_popup_height .. "|" ..
+                         dims.window_center_x .. "|" ..
+                         dims.window_center_y .. "|" ..
+                         dims.header_y .. "|" ..
+                         dims.content_y .. "|" ..
+                         dims.footer_y .. "|" ..
+                         dims.font_size_title .. "|" ..
+                         dims.font_size_label .. "|" ..
+                         dims.font_size_value .. "|" ..
+                         dims.padding_small .. "|" ..
+                         dims.padding_medium .. "|" ..
+                         dims.padding_large
+
+            cmdchat("HunterUIDimensions " .. data)
+        end
+
+        -- ============================================================
         -- 5. PENALTY VISIBILITY
         -- ============================================================
 
@@ -3248,6 +3367,15 @@ quest hunter_level_bridge begin
 
             -- 2. Send rank thresholds to Python UI
             hunter_level_bridge.send_rank_thresholds()
+
+            -- 2.1 FIX 4: Send rank colors (56+ colors)
+            hunter_level_bridge.send_rank_colors()
+
+            -- 2.2 FIX 5: Send UI texts (35+ strings)
+            hunter_level_bridge.send_ui_texts()
+
+            -- 2.3 FIX 6: Send UI dimensions (20+ dimensions)
+            hunter_level_bridge.send_ui_dimensions()
 
             -- 3. Check penalty expiration
             hunter_level_bridge.check_penalty_expiration()
