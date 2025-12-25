@@ -3444,3 +3444,143 @@ def GetAllMissionsCompleteWindow():
     if g_allMissionsCompleteWindow is None:
         g_allMissionsCompleteWindow = AllMissionsCompleteWindow()
     return g_allMissionsCompleteWindow
+
+# ============================================================
+# SPEED KILL TIMER WINDOW
+# ============================================================
+class SpeedKillTimerWindow(ui.BoardWithTitleBar):
+    """Timer countdown per Speed Kill Bonus (Boss/SuperMetin)"""
+
+    def __init__(self):
+        ui.BoardWithTitleBar.__init__(self)
+        self.SetSize(320, 130)
+        self.SetCenterPosition()
+        self.AddFlag("movable")
+        self.AddFlag("float")
+
+        # Timer data
+        self.timerType = ""  # "BOSS" o "METIN"
+        self.timeLimit = 0
+        self.startTime = 0
+        self.isActive = False
+
+        # Title
+        self.SetTitleName("SPEED KILL CHALLENGE")
+
+        # Type label (BOSS SPAWN / SUPER METIN SPAWN)
+        self.typeText = ui.TextLine()
+        self.typeText.SetParent(self)
+        self.typeText.SetPosition(160, 40)
+        self.typeText.SetHorizontalAlignCenter()
+        self.typeText.SetPackedFontColor(0xFFFFD700)  # Gold
+        self.typeText.SetOutline()
+        self.typeText.Show()
+
+        # Countdown text (BIG)
+        self.countdownText = ui.TextLine()
+        self.countdownText.SetParent(self)
+        self.countdownText.SetPosition(160, 65)
+        self.countdownText.SetHorizontalAlignCenter()
+        self.countdownText.SetPackedFontColor(0xFF00FF00)  # Green
+        self.countdownText.SetOutline()
+        self.countdownText.Show()
+
+        # Motivational text
+        self.motivationText = ui.TextLine()
+        self.motivationText.SetParent(self)
+        self.motivationText.SetPosition(160, 95)
+        self.motivationText.SetHorizontalAlignCenter()
+        self.motivationText.SetPackedFontColor(0xFF00FFFF)  # Cyan
+        self.motivationText.SetOutline()
+        self.motivationText.SetText("UCCIDI ENTRO IL TEMPO PER BONUS X2!")
+        self.motivationText.Show()
+
+        # Pulsing effect per urgenza
+        self.pulseTime = 0.0
+        self.pulseDirection = 1
+
+    def StartTimer(self, timerType, timeLimit):
+        """Avvia timer (timerType: 'BOSS' o 'METIN', timeLimit: secondi)"""
+        self.timerType = timerType
+        self.timeLimit = int(timeLimit)
+        self.startTime = app.GetTime()
+        self.isActive = True
+        self.pulseTime = 0.0
+        self.pulseDirection = 1
+
+        # Set type text
+        if timerType == "BOSS":
+            self.typeText.SetText("BOSS SPAWN - SPEED KILL!")
+        else:
+            self.typeText.SetText("SUPER METIN - SPEED KILL!")
+
+        # Reset motivational text
+        self.motivationText.SetText("UCCIDI ENTRO IL TEMPO PER BONUS X2!")
+        self.motivationText.SetPackedFontColor(0xFF00FFFF)  # Cyan
+
+        # Show window
+        self.Show()
+        self.SetTop()
+
+    def StopTimer(self):
+        """Ferma timer e chiudi window"""
+        self.isActive = False
+        self.Hide()
+
+    def OnUpdate(self):
+        """Update countdown ogni frame"""
+        if not self.isActive:
+            return
+
+        elapsed = app.GetTime() - self.startTime
+        remaining = self.timeLimit - elapsed
+
+        if remaining <= 0:
+            # Tempo scaduto
+            self.countdownText.SetText("TEMPO SCADUTO!")
+            self.countdownText.SetPackedFontColor(0xFFFF0000)  # Red
+            self.motivationText.SetText("Nessun bonus questa volta...")
+            self.motivationText.SetPackedFontColor(0xFFFF6600)  # Orange
+            # Auto-close dopo 3 secondi
+            if elapsed > self.timeLimit + 3:
+                self.StopTimer()
+        else:
+            # Update countdown
+            minutes = int(remaining / 60)
+            seconds = int(remaining % 60)
+
+            if minutes > 0:
+                self.countdownText.SetText("%d:%02d" % (minutes, seconds))
+            else:
+                self.countdownText.SetText("%d sec" % seconds)
+
+            # Color coding: Green -> Yellow -> Orange -> Red
+            if remaining > self.timeLimit * 0.5:
+                self.countdownText.SetPackedFontColor(0xFF00FF00)  # Green
+            elif remaining > self.timeLimit * 0.25:
+                self.countdownText.SetPackedFontColor(0xFFFFFF00)  # Yellow
+            else:
+                self.countdownText.SetPackedFontColor(0xFFFF6600)  # Orange
+
+            # PULSE EFFECT quando sotto 15 secondi
+            if remaining <= 15:
+                self.pulseTime += 0.15 * self.pulseDirection
+                if self.pulseTime > 1.0:
+                    self.pulseDirection = -1
+                elif self.pulseTime < 0.3:
+                    self.pulseDirection = 1
+
+                # Colore pulsante rosso intenso
+                brightness = int(155 + 100 * self.pulseTime)
+                self.countdownText.SetPackedFontColor(grp.GenerateColor(1.0, brightness/255.0, 0.0, 1.0))
+
+# ============================================================
+# SPEED KILL TIMER GLOBAL INSTANCE
+# ============================================================
+g_speedKillTimer = None
+
+def GetSpeedKillTimer():
+    global g_speedKillTimer
+    if g_speedKillTimer is None:
+        g_speedKillTimer = SpeedKillTimerWindow()
+    return g_speedKillTimer

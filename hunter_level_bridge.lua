@@ -1221,8 +1221,12 @@ quest hunter_level_bridge begin
             local speedkill_boss = hunter_level_bridge.get_config("speedkill_boss_seconds") or 60
             local time_limit = speedkill_boss
             if mob_info.type_name == "SUPER_METIN" then time_limit = speedkill_metin end
-            if elapsed > 0 and elapsed <= time_limit then 
-                base_pts = base_pts * 2 
+
+            local bonus_obtained = 0
+            local original_base_pts = base_pts
+            if elapsed > 0 and elapsed <= time_limit then
+                base_pts = base_pts * 2
+                bonus_obtained = 1
             end
             
             local streak_bonus = pc.getqf("hq_streak_bonus") or 0
@@ -1275,10 +1279,36 @@ quest hunter_level_bridge begin
             end
             
             local pending = pc.getqf("hq_pending_elite") or 0
-            if pending > 0 then 
-                pc.setqf("hq_pending_elite", pending - 1) 
+            if pending > 0 then
+                pc.setqf("hq_pending_elite", pending - 1)
             end
-            
+
+            -- *** SPEED KILL TIMER: Stop timer e mostra risultato dettagliato ***
+            if mob_info.type_name == "BOSS" or mob_info.type_name == "SUPER_METIN" then
+                local tipo = "BOSS"
+                if mob_info.type_name == "SUPER_METIN" then tipo = "METIN" end
+
+                -- Stop timer visivo
+                cmdchat("HunterSpeedKillEnd " .. tipo .. "|" .. elapsed .. "|" .. bonus_obtained .. "|" .. original_base_pts .. "|" .. base_pts)
+
+                -- Messaggio dettagliato nel syschat
+                if bonus_obtained == 1 then
+                    local speed_msg = string.format(
+                        "|cff00FF00[SPEED KILL BONUS!]|r Tempo: %d sec/%d sec. |cffFFD700+%d Gloria (x2)|r",
+                        elapsed, time_limit, base_pts
+                    )
+                    syschat(speed_msg)
+                else
+                    if elapsed > 0 then
+                        local slow_msg = string.format(
+                            "|cffFF6600[Bonus Scaduto]|r Tempo: %d sec (limite: %d sec). +%d Gloria",
+                            elapsed, time_limit, base_pts
+                        )
+                        syschat(slow_msg)
+                    end
+                end
+            end
+
             local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("[SISTEMA] Hai sconfitto " .. mob_info.name .. ". ESPERIENZA ACQUISITA: +" .. base_pts .. " Punti.")
             hunter_level_bridge.hunter_speak_color(msg, mob_info.rank_color or "BLUE")
             
@@ -1601,6 +1631,15 @@ quest hunter_level_bridge begin
                     -- *** NUOVO: ALERT BOSS A SCHERMO INTERO (Solo Leveling Style) ***
                     if sel_type == "BOSS" or sel_type == "METIN" then
                         cmdchat("HunterBossAlert " .. string.gsub(md[1].name, " ", "+"))
+
+                        -- *** SPEED KILL TIMER: Avvia countdown visivo ***
+                        local time_limit = 60  -- Default: 60 secondi per Boss
+                        if sel_type == "METIN" then
+                            time_limit = tonumber(hunter_level_bridge.get_config("speedkill_metin_seconds")) or 300
+                        else
+                            time_limit = tonumber(hunter_level_bridge.get_config("speedkill_boss_seconds")) or 60
+                        end
+                        cmdchat("HunterSpeedKillStart " .. sel_type .. "|" .. time_limit)
                     end
                     
                     local pname = pc.get_name()
