@@ -3555,6 +3555,17 @@ class Interface(object):
 		if self.wndHunterLevel:
 			self.wndHunterLevel.OpenEventsPanel()
 
+	# ==================== SPEED KILL TIMER ====================
+	def StartSpeedKillTimer(self, timerType, timeLimit):
+		"""Avvia Speed Kill Timer (Boss/SuperMetin)"""
+		if self.wndHunterLevel:
+			self.wndHunterLevel.StartSpeedKillTimer(timerType, timeLimit)
+
+	def StopSpeedKillTimer(self):
+		"""Ferma Speed Kill Timer"""
+		if self.wndHunterLevel:
+			self.wndHunterLevel.StopSpeedKillTimer()
+
 # ==============================================================
 
 	def ToggleHunterLevelWindow(self):
