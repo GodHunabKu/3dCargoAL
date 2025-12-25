@@ -3426,7 +3426,7 @@ class GameWindow(ui.ScriptWindow):
 			# Nuovo formato: "rank_key|messaggio" per colorare con il rank del player
 			if "|" in msg:
 				parts = msg.split("|", 1)
-				rank_key = parts[0]
+				rank_key = parts[0].strip()  # FIX: strip() whitespace per lookup corretto
 				actual_msg = parts[1] if len(parts) > 1 else ""
 				self.interface.HunterSystemSpeak(actual_msg, rank_key)
 			else:
@@ -3438,7 +3438,7 @@ class GameWindow(ui.ScriptWindow):
 		try:
 			parts = data.split("|")
 			if len(parts) >= 3:
-				rank_key = parts[0]
+				rank_key = parts[0].strip()  # FIX: strip() whitespace per lookup corretto
 				name = parts[1].replace("+", " ")
 				points = int(parts[2])
 				if self.interface:
