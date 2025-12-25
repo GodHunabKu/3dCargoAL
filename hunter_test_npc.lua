@@ -6,7 +6,7 @@
 
 quest hunter_test_npc begin
     state start begin
-        when 9009.chat."[TEST] Hunter System" begin
+        when 9009.chat begin
             local pid = pc.get_player_id()
             local pname = pc.get_name()
 
@@ -121,10 +121,32 @@ quest hunter_test_npc begin
                 local c, d = mysql_direct_query("SELECT total_points, spendable_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
                 if c > 0 then
                     local pts = tonumber(d[1].total_points) or 0
-                    local rank_key = hunter_level_bridge.get_rank_key(pts)
+
+                    -- Calcola rank inline
+                    local rank_key = "E"
+                    if pts >= 1500000 then rank_key = "N"
+                    elseif pts >= 500000 then rank_key = "S"
+                    elseif pts >= 150000 then rank_key = "A"
+                    elseif pts >= 50000 then rank_key = "B"
+                    elseif pts >= 10000 then rank_key = "C"
+                    elseif pts >= 2000 then rank_key = "D"
+                    end
+
+                    -- Nomi rank inline
+                    local rank_names = {
+                        ["E"] = "Risvegliato",
+                        ["D"] = "Apprendista",
+                        ["C"] = "Cacciatore",
+                        ["B"] = "Veterano",
+                        ["A"] = "Maestro",
+                        ["S"] = "Leggenda",
+                        ["N"] = "Monarca Nazionale"
+                    }
+                    local rank_name = rank_names[rank_key] or "Sconosciuto"
+
                     say("Totale: " .. pts)
                     say("Spendibili: " .. d[1].spendable_points)
-                    say("Rank: " .. rank_key .. " (" .. hunter_level_bridge.get_rank_name(rank_key) .. ")")
+                    say("Rank: " .. rank_key .. " (" .. rank_name .. ")")
                 end
                 wait()
                 hunter_test_npc.test_rank_points()
