@@ -3153,6 +3153,194 @@ g_awakeningWindow = None
 g_hunterActivationWindow = None
 g_rankUpWindow = None
 g_overtakeWindow = None
+g_achievementUnlockWindow = None
+
+# ============================================================================
+# ACHIEVEMENT UNLOCK POPUP WINDOW
+# ============================================================================
+class AchievementUnlockWindow(ui.Window):
+    """Finestra popup achievement sbloccato"""
+
+    def __init__(self):
+        ui.Window.__init__(self)
+
+        screenWidth = wndMgr.GetScreenWidth()
+        screenHeight = wndMgr.GetScreenHeight()
+
+        self.SetSize(screenWidth, screenHeight)
+        self.SetPosition(0, 0)
+
+        self.endTime = 0
+        self.startTime = 0
+        self.achId = 0
+        self.achName = ""
+        self.rewardVnum = 0
+        self.rewardCount = 0
+
+        self.__BuildUI()
+
+    def __BuildUI(self):
+        screenWidth = wndMgr.GetScreenWidth()
+        screenHeight = wndMgr.GetScreenHeight()
+
+        # Semi-transparent overlay
+        self.overlay = ui.Bar()
+        self.overlay.SetParent(self)
+        self.overlay.SetPosition(0, 0)
+        self.overlay.SetSize(screenWidth, screenHeight)
+        self.overlay.SetColor(0x88000000)
+        self.overlay.AddFlag("not_pick")
+        self.overlay.Show()
+
+        # Box centrale
+        boxWidth = 500
+        boxHeight = 200
+        boxX = (screenWidth - boxWidth) // 2
+        boxY = (screenHeight - boxHeight) // 2 - 80
+
+        self.boxBg = ui.Bar()
+        self.boxBg.SetParent(self)
+        self.boxBg.SetPosition(boxX, boxY)
+        self.boxBg.SetSize(boxWidth, boxHeight)
+        self.boxBg.SetColor(0xEE0F0F0F)
+        self.boxBg.AddFlag("not_pick")
+        self.boxBg.Show()
+
+        # Bordi animati (glow effect)
+        self.boxBorderTop = ui.Bar()
+        self.boxBorderTop.SetParent(self)
+        self.boxBorderTop.SetPosition(boxX, boxY)
+        self.boxBorderTop.SetSize(boxWidth, 4)
+        self.boxBorderTop.SetColor(0xFFFFD700)
+        self.boxBorderTop.AddFlag("not_pick")
+        self.boxBorderTop.Show()
+
+        self.boxBorderBot = ui.Bar()
+        self.boxBorderBot.SetParent(self)
+        self.boxBorderBot.SetPosition(boxX, boxY + boxHeight - 4)
+        self.boxBorderBot.SetSize(boxWidth, 4)
+        self.boxBorderBot.SetColor(0xFFFFD700)
+        self.boxBorderBot.AddFlag("not_pick")
+        self.boxBorderBot.Show()
+
+        self.boxBorderLeft = ui.Bar()
+        self.boxBorderLeft.SetParent(self)
+        self.boxBorderLeft.SetPosition(boxX, boxY)
+        self.boxBorderLeft.SetSize(4, boxHeight)
+        self.boxBorderLeft.SetColor(0xFFFFD700)
+        self.boxBorderLeft.AddFlag("not_pick")
+        self.boxBorderLeft.Show()
+
+        self.boxBorderRight = ui.Bar()
+        self.boxBorderRight.SetParent(self)
+        self.boxBorderRight.SetPosition(boxX + boxWidth - 4, boxY)
+        self.boxBorderRight.SetSize(4, boxHeight)
+        self.boxBorderRight.SetColor(0xFFFFD700)
+        self.boxBorderRight.AddFlag("not_pick")
+        self.boxBorderRight.Show()
+
+        # Titolo
+        self.titleText = ui.TextLine()
+        self.titleText.SetParent(self)
+        self.titleText.SetPosition(screenWidth // 2, boxY + 20)
+        self.titleText.SetHorizontalAlignCenter()
+        self.titleText.SetText(u"\U0001F3C6 ACHIEVEMENT SBLOCCATO!")
+        self.titleText.SetPackedFontColor(0xFFFFD700)
+        self.titleText.Show()
+
+        # Nome achievement
+        self.nameText = ui.TextLine()
+        self.nameText.SetParent(self)
+        self.nameText.SetPosition(screenWidth // 2, boxY + 60)
+        self.nameText.SetHorizontalAlignCenter()
+        self.nameText.SetText("")
+        self.nameText.SetPackedFontColor(0xFFFFFFFF)
+        self.nameText.Show()
+
+        # Ricompensa
+        self.rewardText = ui.TextLine()
+        self.rewardText.SetParent(self)
+        self.rewardText.SetPosition(screenWidth // 2, boxY + 95)
+        self.rewardText.SetHorizontalAlignCenter()
+        self.rewardText.SetText("")
+        self.rewardText.SetPackedFontColor(0xFF00FF00)
+        self.rewardText.Show()
+
+        # Bottone Riscuoti
+        self.claimBtn = ui.Button()
+        self.claimBtn.SetParent(self)
+        self.claimBtn.SetPosition((screenWidth - 100) // 2, boxY + 140)
+        self.claimBtn.SetUpVisual("d:/ymir work/ui/public/large_button_01.sub")
+        self.claimBtn.SetOverVisual("d:/ymir work/ui/public/large_button_02.sub")
+        self.claimBtn.SetDownVisual("d:/ymir work/ui/public/large_button_03.sub")
+        self.claimBtn.SetText("RISCUOTI")
+        self.claimBtn.SetEvent(self.__OnClaim)
+        self.claimBtn.Show()
+
+        self.Hide()
+
+    def ShowAchievementUnlock(self, achId, achName, rewardVnum, rewardCount):
+        """Mostra popup achievement unlock"""
+        self.achId = achId
+        self.achName = achName
+        self.rewardVnum = rewardVnum
+        self.rewardCount = rewardCount
+
+        self.nameText.SetText(achName)
+        self.rewardText.SetText("Ricompensa: x%d" % rewardCount)
+
+        self.startTime = app.GetTime()
+        self.endTime = self.startTime + 10.0  # Auto-close dopo 10 secondi
+        self.SetTop()
+        self.Show()
+
+    def __OnClaim(self):
+        """Riscuoti ricompensa"""
+        # Invia comando /hunter_claim
+        import net
+        net.SendChatPacket("/hunter_claim %d" % self.achId)
+        self.Hide()
+        self.endTime = 0
+
+    def OnUpdate(self):
+        if self.endTime == 0:
+            return
+
+        currentTime = app.GetTime()
+
+        if currentTime > self.endTime:
+            # Auto-close dopo 10 secondi
+            self.Hide()
+            self.endTime = 0
+            return
+
+        elapsed = currentTime - self.startTime
+
+        # Glow animation sui bordi (pulsazione)
+        cycle = (elapsed * 2) % 1
+        if cycle < 0.5:
+            brightness = 0.7 + cycle * 0.6  # 0.7 -> 1.0
+        else:
+            brightness = 1.0 - (cycle - 0.5) * 0.6  # 1.0 -> 0.7
+
+        alpha = int(brightness * 255)
+        glowColor = (alpha << 24) | 0xFFD700
+
+        self.boxBorderTop.SetColor(glowColor)
+        self.boxBorderBot.SetColor(glowColor)
+        self.boxBorderLeft.SetColor(glowColor)
+        self.boxBorderRight.SetColor(glowColor)
+
+        # Fade-in overlay (primi 300ms)
+        if elapsed < 0.3:
+            overlayAlpha = int((elapsed / 0.3) * 136)  # 0 -> 136 (0x88)
+            self.overlay.SetColor((overlayAlpha << 24) | 0x000000)
+
+def GetAchievementUnlockWindow():
+    global g_achievementUnlockWindow
+    if g_achievementUnlockWindow is None:
+        g_achievementUnlockWindow = AchievementUnlockWindow()
+    return g_achievementUnlockWindow
 
 def GetWhatIfWindow():
     global g_whatIfWindow
