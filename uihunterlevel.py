@@ -368,7 +368,11 @@ class HunterLevelWindow(ui.ScriptWindow):
         
         self.currentTab = 0
         self.currentRankingView = "daily_points"
-        
+
+        # Auto-apertura per progresso missioni
+        self.autoOpenedForMission = False
+        self.autoCloseTimer = 0.0
+
         self.bgElements = []
         self.headerElements = []
         self.tabButtons = []
@@ -689,7 +693,13 @@ class HunterLevelWindow(ui.ScriptWindow):
                 btn.Down()
             else:
                 btn.SetUp()
-        
+
+        # Se il player cambia tab manualmente, disabilita auto-close
+        # (significa che vuole esplorare e tenere la finestra aperta)
+        if self.currentTab != idx and self.autoOpenedForMission:
+            self.autoOpenedForMission = False
+            self.autoCloseTimer = 0.0
+
         self.currentTab = idx
         self.__LoadTabContent(idx)
     
@@ -1988,14 +1998,14 @@ class HunterLevelWindow(ui.ScriptWindow):
         missionId = int(missionId)
         current = int(current)
         target = int(target)
-        
+
         # Aggiorna nei dati locali
         for m in self.missionsData:
             if m["id"] == missionId:
                 m["current"] = current
                 m["target"] = target
                 break
-        
+
         # Mostra popup progresso (3 sec)
         if self.missionProgressWnd:
             # Trova nome missione
@@ -2005,7 +2015,14 @@ class HunterLevelWindow(ui.ScriptWindow):
                     missionName = m["name"]
                     break
             self.missionProgressWnd.ShowProgress(missionName, current, target, self.theme)
-        
+
+        # AUTO-APERTURA: Se finestra chiusa, aprila per 5 secondi
+        if not self.IsShow():
+            self.Open()
+            self.__OnClickTab(4)  # Tab "Eventi" con missioni
+            self.autoOpenedForMission = True
+            self.autoCloseTimer = 5.0  # 5 secondi
+
         # Aggiorna finestra missioni se aperta
         if self.missionsWnd and self.missionsWnd.IsShow():
             self.missionsWnd.UpdateProgress(missionId, current, target)
@@ -2204,7 +2221,17 @@ class HunterLevelWindow(ui.ScriptWindow):
         dt = ct - self.lastUpdateTime
         self.lastUpdateTime = ct
         self.timerUpdateAccum += dt
-        
+
+        # Auto-close timer per finestra missioni
+        if self.autoCloseTimer > 0.0:
+            self.autoCloseTimer -= dt
+            if self.autoCloseTimer <= 0.0:
+                self.autoCloseTimer = 0.0
+                # Chiudi solo se è stata aperta automaticamente e player non ha interagito
+                if self.autoOpenedForMission:
+                    self.Close()
+                    self.autoOpenedForMission = False
+
         if self.timerUpdateAccum >= 1.0:
             self.timerUpdateAccum = 0.0
             if self.dailyResetSeconds > 0:
@@ -2229,6 +2256,12 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.SetCenterPosition()
         self.SetTop()
         self.Show()
+
+        # Se il player apre manualmente mentre c'è un timer auto-close, disabilitalo
+        # Questo evita che la finestra si chiuda se il player vuole tenerla aperta
+        if self.IsShow() and self.autoCloseTimer > 0.0:
+            self.autoOpenedForMission = False
+            self.autoCloseTimer = 0.0
     
     def OnPressEscapeKey(self):
         self.Close()
