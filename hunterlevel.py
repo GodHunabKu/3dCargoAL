@@ -16,11 +16,24 @@ def _GetWindow():
 def HunterSystemSpeak(args):
     """
     Mostra un messaggio in stile Sistema (Solo Leveling).
-    Sintassi Lua: cmdchat("HunterSystemSpeak Messaggio")
+    Sintassi Lua: cmdchat("HunterSystemSpeak RANK_KEY|Messaggio")
     """
     wnd = _GetWindow()
     if wnd:
-        wnd.ShowSystemMessage(str(args).replace("+", " "))
+        try:
+            # FIX: Parsa RANK_KEY|MESSAGGIO invece di passare tutto insieme
+            parts = str(args).split("|", 1)
+            if len(parts) == 2:
+                rankKey = parts[0].strip()
+                msg = parts[1].replace("+", " ")
+                wnd.ShowSystemMessage(msg, rankKey)
+            else:
+                # Fallback se non c'è il pipe (retrocompatibilità)
+                wnd.ShowSystemMessage(str(args).replace("+", " "), "E")
+        except:
+            import dbg
+            dbg.TraceError("HunterSystemSpeak parse error: " + str(args))
+            wnd.ShowSystemMessage(str(args).replace("+", " "), "E")
 
 def HunterEmergency(args):
     """
