@@ -2487,8 +2487,8 @@ quest hunter_level_bridge begin
                     local start_time = hunter_level_bridge.format_time(start_hour, start_minute)
                     local end_time = hunter_level_bridge.format_time(end_hour, end_minute)
                     local reward_str = "+" .. (e.reward_glory_base or 50) .. "+Gloria"
-                    
-                    -- Formato compatto: id~name~start~end~type~reward~status~min_rank
+
+                    -- Formato compatto: id~name~start~end~type~reward~status~min_rank~desc~color
                     local pkt = tostring(tonumber(e.id) or 0) .. "~" ..
                         hunter_level_bridge.clean_str(e.event_name or "Evento") .. "~" ..
                         start_time .. "~" ..
@@ -2496,7 +2496,9 @@ quest hunter_level_bridge begin
                         (e.event_type or "glory_rush") .. "~" ..
                         reward_str .. "~" ..
                         status .. "~" ..
-                        (e.min_rank or "E")
+                        (e.min_rank or "E") .. "~" ..
+                        hunter_level_bridge.clean_str(e.event_desc or "") .. "~" ..
+                        (e.color_scheme or "GOLD")
                     
                     if batch ~= "" then batch = batch .. ";" end
                     batch = batch .. pkt

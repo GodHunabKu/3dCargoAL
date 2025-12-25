@@ -2942,24 +2942,38 @@ class EventsScheduleWindow(ui.Window):
                 slot["timeText"].SetPosition(20, yPos + 8)
                 slot["nameText"].SetPosition(80, yPos + 8)
                 slot["rewardText"].SetPosition(80, yPos + 28)
+                slot["descText"].SetPosition(20, yPos + 40)
                 slot["statusText"].SetPosition(320, yPos + 18)
                 slot["joinBtn"].SetPosition(300, yPos + 12)
-                
+
                 # Aggiorna dati slot con evento corretto
                 e = self.events[eventIdx]
-                etype = e.get("type", "glory_rush")
-                ecolor = getattr(self, 'TYPE_COLORS', {}).get(etype, 0xFFFFFFFF)
-                
+
+                # Usa color_scheme dal DB invece di TYPE_COLORS hardcoded
+                COLOR_MAP = {
+                    "GOLD": 0xFFFFD700,
+                    "PURPLE": 0xFF9932CC,
+                    "RED": 0xFFFF4444,
+                    "CYAN": 0xFF00CCFF,
+                    "ORANGE": 0xFFFF8800,
+                    "GREEN": 0xFF00FF00,
+                    "BLUE": 0xFF4444FF,
+                }
+                color_name = e.get("color", "GOLD")
+                ecolor = COLOR_MAP.get(color_name, 0xFFFFFFFF)
+
                 slot["timeText"].SetText(e.get("start_time", "--:--"))
                 slot["nameText"].SetText(e.get("name", "Evento")[:28])
                 slot["nameText"].SetPackedFontColor(ecolor)
                 slot["rewardText"].SetText("%s [%s+]" % (e.get("reward", ""), e.get("min_rank", "E")))
+                slot["descText"].SetText(e.get("desc", "")[:50])  # Mostra descrizione (max 50 char)
                 slot["eventId"] = e.get("id", 0)
-                
+
                 slot["bg"].Show()
                 slot["timeText"].Show()
                 slot["nameText"].Show()
                 slot["rewardText"].Show()
+                slot["descText"].Show()
                 
                 status = e.get("status", "pending")
                 if status == "active" and status != "joined":
@@ -2987,6 +3001,7 @@ class EventsScheduleWindow(ui.Window):
                 slot["timeText"].Hide()
                 slot["nameText"].Hide()
                 slot["rewardText"].Hide()
+                slot["descText"].Hide()
                 slot["statusText"].Hide()
                 slot["joinBtn"].Hide()
     
@@ -3050,7 +3065,16 @@ class EventsScheduleWindow(ui.Window):
         rewardText.SetPackedFontColor(0xFFAAAAAA)
         rewardText.Hide()
         slot["rewardText"] = rewardText
-        
+
+        # Descrizione evento
+        descText = ui.TextLine()
+        descText.SetParent(self)
+        descText.SetPosition(20, yBase + 40)
+        descText.SetText("")
+        descText.SetPackedFontColor(0xFF888888)
+        descText.Hide()
+        slot["descText"] = descText
+
         # Status
         statusText = ui.TextLine()
         statusText.SetParent(self)

@@ -3778,7 +3778,7 @@ class GameWindow(ui.ScriptWindow):
 			pass
 	
 	def __HunterEventBatch(self, data):
-		"""Riceve batch di eventi: event1;event2;event3... dove ogni evento e' id~name~start~end~type~reward~status~min_rank"""
+		"""Riceve batch di eventi: event1;event2;event3... dove ogni evento e' id~name~start~end~type~reward~status~min_rank~desc~color"""
 		try:
 			events = data.split(";")
 			for eventStr in events:
@@ -3792,9 +3792,9 @@ class GameWindow(ui.ScriptWindow):
 						"type": parts[4],
 						"reward": parts[5].replace("+", " "),
 						"status": parts[6],
-						"desc": "",
-						"color": "GOLD",
-						"min_rank": parts[7] if len(parts) > 7 else "E"
+						"min_rank": parts[7] if len(parts) > 7 else "E",
+						"desc": parts[8].replace("+", " ") if len(parts) > 8 else "",
+						"color": parts[9] if len(parts) > 9 else "GOLD"
 					}
 					if self.interface:
 						self.interface.HunterEventData(eventData)
