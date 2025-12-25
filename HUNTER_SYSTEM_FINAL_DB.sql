@@ -475,43 +475,68 @@ INSERT INTO `hunter_quest_spawns` VALUES (21, 200102, 'Cassa E-Rank', 'BAULE', 1
 INSERT INTO `hunter_quest_spawns` VALUES (22, 200101, 'Cassa S-Rank', 'BAULE', 1, 250, 50, 'PURPLE', 1);
 
 -- ----------------------------
--- Table structure for hunter_quest_tips
--- ----------------------------
+-- TABELLA: hunter_quest_tips (VERSIONE UNIFICATA)
+-- =====================================================================
 DROP TABLE IF EXISTS `hunter_quest_tips`;
-CREATE TABLE `hunter_quest_tips`  (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `tip_text` varchar(255) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Dynamic;
+CREATE TABLE `hunter_quest_tips` (
+  `tip_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `tip_text` TEXT NOT NULL,
+  `tip_category` VARCHAR(50) DEFAULT 'General',
+  `is_active` TINYINT(1) DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ----------------------------
--- Records of hunter_quest_tips
--- ----------------------------
-INSERT INTO `hunter_quest_tips` VALUES (1, 'Attenzione: Quando apri una Frattura, le tue coordinate vengono svelate a tutto il server!');
-INSERT INTO `hunter_quest_tips` VALUES (2, 'Non esiste onore nella caccia: rubare il Boss a un altro giocatore e una strategia valida.');
-INSERT INTO `hunter_quest_tips` VALUES (3, 'Chi infligge il maggior danno al Boss si aggiudica il bottino e i Punti Gloria.');
-INSERT INTO `hunter_quest_tips` VALUES (4, 'Se vedi un avviso di spawn vicino a te, corri! Potresti rubare un Super Metin.');
-INSERT INTO `hunter_quest_tips` VALUES (5, 'La Top 3 della Classifica Settimanale riceve Monete Drago (DR). Dacci dentro!');
-INSERT INTO `hunter_quest_tips` VALUES (6, 'SPEED KILL: Uccidi il Boss entro 60 secondi per RADDOPPIARE i punti ottenuti!');
-INSERT INTO `hunter_quest_tips` VALUES (7, 'Per i Super Metin hai 5 minuti di tempo per ottenere il bonus Speed Kill (x2 Punti).');
-INSERT INTO `hunter_quest_tips` VALUES (8, 'Consiglio: Attiva i buff e le rugiade PRIMA di cliccare sulla Frattura.');
-INSERT INTO `hunter_quest_tips` VALUES (9, 'Non spezzare la catena! Logga ogni giorno per un bonus punti passivo fino al +20%.');
-INSERT INTO `hunter_quest_tips` VALUES (10, 'Hai perso la streak di login? Dovrai ricominciare da zero per riavere il bonus.');
-INSERT INTO `hunter_quest_tips` VALUES (11, 'I Punti Gloria sono una valuta preziosa. Spendili con saggezza nel menu (N).');
-INSERT INTO `hunter_quest_tips` VALUES (12, 'Il Mercante Hunter in Capitale vende oggetti esclusivi non presenti nel menu rapido.');
-INSERT INTO `hunter_quest_tips` VALUES (13, 'I prezzi del Mercante potrebbero cambiare o apparire offerte speciali. Controllalo spesso.');
-INSERT INTO `hunter_quest_tips` VALUES (14, 'Puoi convertire i tuoi punti in Item, ma ricorda: scalare la classifica da prestigio.');
-INSERT INTO `hunter_quest_tips` VALUES (15, 'I Buoni Punti trovati nei bauli sono commerciabili? Scoprilo provando a scambiarli!');
-INSERT INTO `hunter_quest_tips` VALUES (16, 'Controlla spesso il menu Traguardi (tasto N): ci sono premi che aspettano solo di essere riscossi.');
-INSERT INTO `hunter_quest_tips` VALUES (17, 'Esistono due vie per i traguardi: la Via del Sangue (Kill) e la Via della Gloria (Punti).');
-INSERT INTO `hunter_quest_tips` VALUES (18, 'Sbloccare il titolo Monarca nei traguardi garantisce una ricompensa leggendaria.');
-INSERT INTO `hunter_quest_tips` VALUES (19, 'Anche aprire le Fratture conta per le statistiche del tuo Profilo Cacciatore.');
-INSERT INTO `hunter_quest_tips` VALUES (20, 'Le Fratture Rosse (Red Gates) sono molto rare ma hanno un drop rate aumentato.');
-INSERT INTO `hunter_quest_tips` VALUES (21, 'Un Red Gate puo spawnare Boss molto piu forti del normale. Non sottovalutarli.');
-INSERT INTO `hunter_quest_tips` VALUES (22, 'Se una Frattura evoca un Baule del Tesoro, considerati fortunato: e un Jackpot!');
-INSERT INTO `hunter_quest_tips` VALUES (23, 'I Bauli Dimensionali possono contenere Buoni DR (Monete Drago).');
-INSERT INTO `hunter_quest_tips` VALUES (24, 'Piu mostri uccidi nel mondo, piu alta e la probabilita che appaia una Frattura.');
-INSERT INTO `hunter_quest_tips` VALUES (25, 'Solo i veri Cacciatori sopravvivono ai Dungeon Break.');
+-- Popolamento hunter_quest_tips (30 tips originali + 15 nuovi = 45 totali)
+INSERT INTO `hunter_quest_tips` (`tip_text`, `tip_category`, `is_active`) VALUES
+-- Tips originali (30)
+('Attenzione: Quando apri una Frattura, le tue coordinate vengono svelate a tutto il server!', 'Fractures', 1),
+('Non esiste onore nella caccia: rubare il Boss a un altro giocatore e una strategia valida.', 'PvP', 1),
+('Chi infligge il maggior danno al Boss si aggiudica il bottino e i Punti Gloria.', 'Combat', 1),
+('Se vedi un avviso di spawn vicino a te, corri! Potresti rubare un Super Metin.', 'Strategy', 1),
+('La Top 3 della Classifica Settimanale riceve Monete Drago (DR). Dacci dentro!', 'Leaderboard', 1),
+('SPEED KILL: Uccidi il Boss entro 60 secondi per RADDOPPIARE i punti ottenuti!', 'SpeedKill', 1),
+('Per i Super Metin hai 5 minuti di tempo per ottenere il bonus Speed Kill (x2 Punti).', 'SpeedKill', 1),
+('Consiglio: Attiva i buff e le rugiade PRIMA di cliccare sulla Frattura.', 'Strategy', 1),
+('Non spezzare la catena! Logga ogni giorno per un bonus punti passivo fino al +20%.', 'Streak', 1),
+('Hai perso la streak di login? Dovrai ricominciare da zero per riavere il bonus.', 'Streak', 1),
+('I Punti Gloria sono una valuta preziosa. Spendili con saggezza nel menu (N).', 'Economy', 1),
+('Il Mercante Hunter in Capitale vende oggetti esclusivi non presenti nel menu rapido.', 'Shop', 1),
+('I prezzi del Mercante potrebbero cambiare o apparire offerte speciali. Controllalo spesso.', 'Shop', 1),
+('Puoi convertire i tuoi punti in Item, ma ricorda: scalare la classifica da prestigio.', 'Strategy', 1),
+('I Buoni Punti trovati nei bauli sono commerciabili? Scoprilo provando a scambiarli!', 'Economy', 1),
+('Controlla spesso il menu Traguardi (tasto N): ci sono premi che aspettano solo di essere riscossi.', 'Achievements', 1),
+('Esistono due vie per i traguardi: la Via del Sangue (Kill) e la Via della Gloria (Punti).', 'Achievements', 1),
+('Sbloccare il titolo Monarca nei traguardi garantisce una ricompensa leggendaria.', 'Achievements', 1),
+('Anche aprire le Fratture conta per le statistiche del tuo Profilo Cacciatore.', 'Stats', 1),
+('Le Fratture Rosse (Red Gates) sono molto rare ma hanno un drop rate aumentato.', 'Fractures', 1),
+('Un Red Gate puo spawnare Boss molto piu forti del normale. Non sottovalutarli.', 'Fractures', 1),
+('Se una Frattura evoca un Baule del Tesoro, considerati fortunato: e un Jackpot!', 'Fractures', 1),
+('I Bauli Dimensionali possono contenere Buoni DR (Monete Drago).', 'Rewards', 1),
+('Piu mostri uccidi nel mondo, piu alta e la probabilita che appaia una Frattura.', 'Mechanics', 1),
+('Solo i veri Cacciatori sopravvivono ai Dungeon Break.', 'Events', 1),
+('Il sistema Hunter premia la costanza, non solo la forza bruta.', 'General', 1),
+('Si narra che alcuni Boss Elite nascondano segreti antichi...', 'Lore', 1),
+('Il reset Giornaliero avviene ogni notte. Assicurati di aver massimizzato il punteggio.', 'Mechanics', 1),
+('Guardati le spalle mentre combatti un Boss... un nemico potrebbe essere in agguato.', 'PvP', 1),
+('Vuoi vedere il tuo nome in cima a tutti? Premi N e scala la Sala delle Leggende.', 'Leaderboard', 1),
+-- Tips nuovi (15)
+('Suggerimento: I boss danno piu punti Gloria delle creature normali!', 'Combat', 1),
+('Suggerimento: Mantieni un login streak per bonus Gloria extra!', 'Streak', 1),
+('Suggerimento: Completa le missioni quotidiane per massimizzare i punti!', 'Missions', 1),
+('Suggerimento: Gli achievement nascosti si sbloccano con azioni speciali!', 'Achievements', 1),
+('Suggerimento: Ogni rank ti da bonus permanenti a Gloria e Drop!', 'Ranks', 1),
+('Suggerimento: Usa il tab What-If per pianificare la tua progressione!', 'Strategy', 1),
+('Suggerimento: Evita di fallire le missioni per non ricevere penalita!', 'Penalties', 1),
+('Suggerimento: I Metin distrutti contano per achievement speciali!', 'Achievements', 1),
+('Suggerimento: Apri bauli per sbloccare achievement Treasure Hunter!', 'Achievements', 1),
+('Suggerimento: Partecipa agli eventi per punti Gloria bonus!', 'Events', 1),
+('Suggerimento: Il Rival Tracker ti mostra chi ti ha superato in classifica!', 'Leaderboard', 1),
+('Suggerimento: Puoi filtrare gli achievement per categoria nel tab dedicato!', 'UI', 1),
+('Suggerimento: Rank N e il massimo: +30% Gloria e +20% Drop!', 'Ranks', 1),
+('Suggerimento: Login streak di 365 giorni ti rende una Leggenda!', 'Streak', 1),
+('Suggerimento: Controlla le tue statistiche per vedere le fonti di Gloria!', 'Stats', 1);
+
 INSERT INTO `hunter_quest_tips` VALUES (26, 'Il sistema Hunter premia la costanza, non solo la forza bruta.');
 INSERT INTO `hunter_quest_tips` VALUES (27, 'Si narra che alcuni Boss Elite nascondano segreti antichi...');
 INSERT INTO `hunter_quest_tips` VALUES (28, 'Il reset Giornaliero avviene ogni notte. Assicurati di aver massimizzato il punteggio.');
@@ -1317,61 +1342,6 @@ UPDATE `hunter_quest_achievements_config` SET `is_hidden` = 1 WHERE `achievement
 -- 13. TABELLA: hunter_quest_tips
 -- Tips random mostrati al giocatore
 -- =====================================================================
-CREATE TABLE IF NOT EXISTS `hunter_quest_tips` (
-  `tip_id` INT AUTO_INCREMENT PRIMARY KEY,
-  `tip_text` TEXT NOT NULL,
-  `tip_category` VARCHAR(50) DEFAULT 'General',
-  `is_active` TINYINT(1) DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Popolamento hunter_quest_tips
-INSERT INTO `hunter_quest_tips` (`tip_text`, `tip_category`) VALUES
-('Suggerimento: I boss danno pi\u00f9 punti Gloria delle creature normali!', 'Combat'),
-('Suggerimento: Mantieni un login streak per bonus Gloria extra!', 'Streak'),
-('Suggerimento: Completa le missioni quotidiane per massimizzare i punti!', 'Missions'),
-('Suggerimento: Gli achievement nascosti si sbloccano con azioni speciali!', 'Achievements'),
-('Suggerimento: Ogni rank ti d\u00e0 bonus permanenti a Gloria e Drop!', 'Ranks'),
-('Suggerimento: Usa il tab What-If per pianificare la tua progressione!', 'Strategy'),
-('Suggerimento: Evita di fallire le missioni per non ricevere penalit\u00e0!', 'Penalties'),
-('Suggerimento: I Metin distrutti contano per achievement speciali!', 'Achievements'),
-('Suggerimento: Apri bauli per sbloccare achievement Treasure Hunter!', 'Achievements'),
-('Suggerimento: Partecipa agli eventi per punti Gloria bonus!', 'Events'),
-('Suggerimento: Il Rival Tracker ti mostra chi ti ha superato in classifica!', 'Leaderboard'),
-('Suggerimento: Puoi filtrare gli achievement per categoria nel tab dedicato!', 'UI'),
-('Suggerimento: Rank N \u00e8 il massimo: +30% Gloria e +20% Drop!', 'Ranks'),
-('Suggerimento: Login streak di 365 giorni ti rende una Leggenda!', 'Streak'),
-('Suggerimento: Controlla le tue statistiche per vedere le fonti di Gloria!', 'Stats');
-
--- =====================================================================
--- 14. TABELLA: hunter_gloria_sources_tracking
--- Traccia le fonti di punti Gloria per le statistiche
--- =====================================================================
-CREATE TABLE IF NOT EXISTS `hunter_gloria_sources_tracking` (
-  `player_id` INT NOT NULL,
-  `source_type` VARCHAR(50) NOT NULL COMMENT 'FRACTURE, MISSION, EVENT, EMERGENCY, BOSS, STREAK',
-  `total_gloria` BIGINT NOT NULL DEFAULT 0,
-  `count_events` INT NOT NULL DEFAULT 0,
-  PRIMARY KEY (`player_id`, `source_type`),
-  FOREIGN KEY (`player_id`) REFERENCES `player`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- =====================================================================
--- 15. INDICI PER PERFORMANCE
--- =====================================================================
-CREATE INDEX idx_achievement_type ON `hunter_quest_achievements_config` (`achievement_type`);
-CREATE INDEX idx_achievement_category ON `hunter_quest_achievements_config` (`achievement_category`);
-CREATE INDEX idx_is_hidden ON `hunter_quest_achievements_config` (`is_hidden`);
-CREATE INDEX idx_config_type ON `hunter_ui_config` (`config_type`);
-CREATE INDEX idx_rank_points ON `hunter_rank_bonuses` (`min_points`, `max_points`);
-CREATE INDEX idx_tip_active ON `hunter_quest_tips` (`is_active`);
-
--- =====================================================================
--- 16. FIX 4: RANK THEME COLORS (56+ colors) - 100% CONFIGURABILE
--- =====================================================================
-CREATE TABLE IF NOT EXISTS `hunter_ui_rank_colors` (
-  `rank_code` VARCHAR(1) PRIMARY KEY,
   `bg_dark` VARCHAR(10) NOT NULL,
   `bg_medium` VARCHAR(10) NOT NULL,
   `bg_light` VARCHAR(10) NOT NULL,

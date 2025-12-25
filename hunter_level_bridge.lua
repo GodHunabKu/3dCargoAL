@@ -932,10 +932,10 @@ quest hunter_level_bridge begin
         when hunter_tips_timer.timer begin
             local last = game.get_event_flag("hunter_last_tip_time") or 0
             if get_time() - last < 10 then return end
-            local c, d = mysql_direct_query("SELECT tip_text FROM srv1_hunabku.hunter_quest_tips ORDER BY RAND() LIMIT 1")
-            if c > 0 and d[1] then 
+            local c, d = mysql_direct_query("SELECT tip_text, tip_category FROM srv1_hunabku.hunter_quest_tips WHERE is_active=1 ORDER BY RAND() LIMIT 1")
+            if c > 0 and d[1] then
                 notice_all("|cffFFD700[HUNTER TIP]|r " .. d[1].tip_text)
-                game.set_event_flag("hunter_last_tip_time", get_time()) 
+                game.set_event_flag("hunter_last_tip_time", get_time())
             end
         end
         
@@ -3105,30 +3105,30 @@ quest hunter_level_bridge begin
         -- FIX 6: UI DIMENSIONS (20+ dimensions) - 100% CONFIGURABILE
         -- ============================================================
         function send_ui_dimensions()
-            -- Carica tutte le dimensioni UI dal DB
+            -- Carica tutte le dimensioni UI dal DB (usa cache per performance)
             local dims = {}
 
-            dims.window_width = tonumber(hunter_level_bridge.get_config("ui_window_width")) or 500
-            dims.window_height = tonumber(hunter_level_bridge.get_config("ui_window_height")) or 520
-            dims.header_height = tonumber(hunter_level_bridge.get_config("ui_header_height")) or 95
-            dims.content_height = tonumber(hunter_level_bridge.get_config("ui_content_height")) or 300
-            dims.tab_height = tonumber(hunter_level_bridge.get_config("ui_tab_height")) or 28
-            dims.footer_height = tonumber(hunter_level_bridge.get_config("ui_footer_height")) or 35
-            dims.stats_panel_width = tonumber(hunter_level_bridge.get_config("ui_stats_panel_width")) or 240
-            dims.stats_panel_height = tonumber(hunter_level_bridge.get_config("ui_stats_panel_height")) or 200
-            dims.achievement_popup_width = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_width")) or 500
-            dims.achievement_popup_height = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_height")) or 200
-            dims.window_center_x = tonumber(hunter_level_bridge.get_config("ui_window_center_x")) or 1
-            dims.window_center_y = tonumber(hunter_level_bridge.get_config("ui_window_center_y")) or 1
-            dims.header_y = tonumber(hunter_level_bridge.get_config("ui_header_y")) or 0
-            dims.content_y = tonumber(hunter_level_bridge.get_config("ui_content_y")) or 95
-            dims.footer_y = tonumber(hunter_level_bridge.get_config("ui_footer_y")) or 485
-            dims.font_size_title = tonumber(hunter_level_bridge.get_config("ui_font_size_title")) or 16
-            dims.font_size_label = tonumber(hunter_level_bridge.get_config("ui_font_size_label")) or 12
-            dims.font_size_value = tonumber(hunter_level_bridge.get_config("ui_font_size_value")) or 14
-            dims.padding_small = tonumber(hunter_level_bridge.get_config("ui_padding_small")) or 5
-            dims.padding_medium = tonumber(hunter_level_bridge.get_config("ui_padding_medium")) or 10
-            dims.padding_large = tonumber(hunter_level_bridge.get_config("ui_padding_large")) or 15
+            dims.window_width = tonumber(hunter_level_bridge.get_cached_config("ui_window_width", 500)) or 500
+            dims.window_height = tonumber(hunter_level_bridge.get_cached_config("ui_window_height", 520)) or 520
+            dims.header_height = tonumber(hunter_level_bridge.get_cached_config("ui_header_height", 95)) or 95
+            dims.content_height = tonumber(hunter_level_bridge.get_cached_config("ui_content_height", 300)) or 300
+            dims.tab_height = tonumber(hunter_level_bridge.get_cached_config("ui_tab_height", 28)) or 28
+            dims.footer_height = tonumber(hunter_level_bridge.get_cached_config("ui_footer_height", 35)) or 35
+            dims.stats_panel_width = tonumber(hunter_level_bridge.get_cached_config("ui_stats_panel_width", 240)) or 240
+            dims.stats_panel_height = tonumber(hunter_level_bridge.get_cached_config("ui_stats_panel_height", 200)) or 200
+            dims.achievement_popup_width = tonumber(hunter_level_bridge.get_cached_config("ui_achievement_popup_width", 500)) or 500
+            dims.achievement_popup_height = tonumber(hunter_level_bridge.get_cached_config("ui_achievement_popup_height", 200)) or 200
+            dims.window_center_x = tonumber(hunter_level_bridge.get_cached_config("ui_window_center_x", 1)) or 1
+            dims.window_center_y = tonumber(hunter_level_bridge.get_cached_config("ui_window_center_y", 1)) or 1
+            dims.header_y = tonumber(hunter_level_bridge.get_cached_config("ui_header_y", 0)) or 0
+            dims.content_y = tonumber(hunter_level_bridge.get_cached_config("ui_content_y", 95)) or 95
+            dims.footer_y = tonumber(hunter_level_bridge.get_cached_config("ui_footer_y", 485)) or 485
+            dims.font_size_title = tonumber(hunter_level_bridge.get_cached_config("ui_font_size_title", 16)) or 16
+            dims.font_size_label = tonumber(hunter_level_bridge.get_cached_config("ui_font_size_label", 12)) or 12
+            dims.font_size_value = tonumber(hunter_level_bridge.get_cached_config("ui_font_size_value", 14)) or 14
+            dims.padding_small = tonumber(hunter_level_bridge.get_cached_config("ui_padding_small", 5)) or 5
+            dims.padding_medium = tonumber(hunter_level_bridge.get_cached_config("ui_padding_medium", 10)) or 10
+            dims.padding_large = tonumber(hunter_level_bridge.get_cached_config("ui_padding_large", 15)) or 15
 
             -- Format: pipe-separated (20+ values)
             local data = dims.window_width .. "|" ..
