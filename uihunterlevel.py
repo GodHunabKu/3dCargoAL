@@ -453,6 +453,9 @@ class HunterLevelWindow(ui.ScriptWindow):
         # Collega RivalTrackerWindow a EventStatusWindow per gestione posizione dinamica
         if self.rivalWnd and self.eventWnd:
             self.rivalWnd.SetEventWindowRef(self.eventWnd)
+        # Collega EventStatusWindow al terminale per aprire la guida
+        if self.eventWnd:
+            self.eventWnd.SetParentWindow(self)
         
     def __del__(self):
         ui.ScriptWindow.__del__(self)
