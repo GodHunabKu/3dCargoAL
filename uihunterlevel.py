@@ -24,160 +24,79 @@ TAB_HEIGHT = 28
 FOOTER_HEIGHT = 35
 
 # ============================================================================
-#  RANK THEMES - Ogni rank ha il suo schema colori completo
+#  FIX 4: RANK THEMES - Popolato da server DB (100% configurabile)
 # ============================================================================
+# Inizializzato vuoto, popolato da HunterRankColor server command al login
 RANK_THEMES = {
-    "E": {
-        "name": "E-Rank",
-        "title": "Risvegliato",
-        "min": 0,
-        "max": 2000,
-        "bg_dark": 0xEE0D0D0D,
-        "bg_medium": 0xEE1A1A1A,
-        "bg_light": 0xEE2A2A2A,
-        "border": 0xFF555555,
-        "accent": 0xFF808080,
-        "text_title": 0xFF999999,
-        "text_value": 0xFFCCCCCC,
-        "text_muted": 0xFF666666,
-        "bar_fill": 0xFF808080,
-        "glow": 0x33808080,
-        "btn_normal": 0xFF333333,
-        "btn_hover": 0xFF444444,
-        "btn_down": 0xFF555555,
-    },
-    "D": {
-        "name": "D-Rank",
-        "title": "Apprendista",
-        "min": 2000,
-        "max": 10000,
-        "bg_dark": 0xEE0A1A0A,
-        "bg_medium": 0xEE0F2A0F,
-        "bg_light": 0xEE153A15,
-        "border": 0xFF00AA00,
-        "accent": 0xFF00FF00,
-        "text_title": 0xFF44FF44,
-        "text_value": 0xFFAAFFAA,
-        "text_muted": 0xFF337733,
-        "bar_fill": 0xFF00DD00,
-        "glow": 0x3300FF00,
-        "btn_normal": 0xFF0A2A0A,
-        "btn_hover": 0xFF0F3F0F,
-        "btn_down": 0xFF155515,
-    },
-    "C": {
-        "name": "C-Rank",
-        "title": "Cacciatore",
-        "min": 10000,
-        "max": 50000,
-        "bg_dark": 0xEE0A1A2A,
-        "bg_medium": 0xEE0F2A3A,
-        "bg_light": 0xEE153A4A,
-        "border": 0xFF00CCFF,
-        "accent": 0xFF00FFFF,
-        "text_title": 0xFF44DDFF,
-        "text_value": 0xFFAAEEFF,
-        "text_muted": 0xFF337799,
-        "bar_fill": 0xFF00CCFF,
-        "glow": 0x3300FFFF,
-        "btn_normal": 0xFF0A2A3A,
-        "btn_hover": 0xFF0F3A4A,
-        "btn_down": 0xFF154A5A,
-    },
-    "B": {
-        "name": "B-Rank",
-        "title": "Veterano",
-        "min": 50000,
-        "max": 150000,
-        "bg_dark": 0xEE0A0A2A,
-        "bg_medium": 0xEE0F0F3A,
-        "bg_light": 0xEE15154A,
-        "border": 0xFF0066FF,
-        "accent": 0xFF4488FF,
-        "text_title": 0xFF6699FF,
-        "text_value": 0xFFAABBFF,
-        "text_muted": 0xFF334477,
-        "bar_fill": 0xFF0066FF,
-        "glow": 0x330066FF,
-        "btn_normal": 0xFF0A0A3A,
-        "btn_hover": 0xFF0F0F4A,
-        "btn_down": 0xFF15155A,
-    },
-    "A": {
-        "name": "A-Rank",
-        "title": "Maestro",
-        "min": 150000,
-        "max": 500000,
-        "bg_dark": 0xEE1A0A2A,
-        "bg_medium": 0xEE2A0F3A,
-        "bg_light": 0xEE3A154A,
-        "border": 0xFFAA00FF,
-        "accent": 0xFFCC66FF,
-        "text_title": 0xFFDD88FF,
-        "text_value": 0xFFEEBBFF,
-        "text_muted": 0xFF773399,
-        "bar_fill": 0xFFAA00FF,
-        "glow": 0x33AA00FF,
-        "btn_normal": 0xFF2A0A3A,
-        "btn_hover": 0xFF3A0F4A,
-        "btn_down": 0xFF4A155A,
-    },
-    "S": {
-        "name": "S-Rank",
-        "title": "Leggenda",
-        "min": 500000,
-        "max": 1500000,
-        "bg_dark": 0xEE2A1A0A,
-        "bg_medium": 0xEE3A2A0F,
-        "bg_light": 0xEE4A3A15,
-        "border": 0xFFFF6600,
-        "accent": 0xFFFFAA00,
-        "text_title": 0xFFFFBB44,
-        "text_value": 0xFFFFDDAA,
-        "text_muted": 0xFF996633,
-        "bar_fill": 0xFFFF6600,
-        "glow": 0x33FF6600,
-        "btn_normal": 0xFF3A2A0A,
-        "btn_hover": 0xFF4A3A0F,
-        "btn_down": 0xFF5A4A15,
-    },
-    "N": {
-        "name": "NATIONAL",
-        "title": "Monarca Nazionale",
-        "min": 1500000,
-        "max": 5000000,
-        "bg_dark": 0xEE2A0A0A,
-        "bg_medium": 0xEE3A0F0F,
-        "bg_light": 0xEE4A1515,
-        "border": 0xFFFF0000,
-        "accent": 0xFFFF4444,
-        "text_title": 0xFFFF6666,
-        "text_value": 0xFFFFAAAA,
-        "text_muted": 0xFF993333,
-        "bar_fill": 0xFFFF0000,
-        "glow": 0x33FF0000,
-        "btn_normal": 0xFF3A0A0A,
-        "btn_hover": 0xFF4A0F0F,
-        "btn_down": 0xFF5A1515,
-    },
+    "E": {"name": "E-Rank", "title": "Risvegliato", "min": 0, "max": 2000},
+    "D": {"name": "D-Rank", "title": "Apprendista", "min": 2000, "max": 10000},
+    "C": {"name": "C-Rank", "title": "Cacciatore", "min": 10000, "max": 50000},
+    "B": {"name": "B-Rank", "title": "Veterano", "min": 50000, "max": 150000},
+    "A": {"name": "A-Rank", "title": "Maestro", "min": 150000, "max": 500000},
+    "S": {"name": "S-Rank", "title": "Leggenda", "min": 500000, "max": 1500000},
+    "N": {"name": "NATIONAL", "title": "Monarca Nazionale", "min": 1500000, "max": 5000000},
 }
 
 GOLD_COLOR = 0xFFFFD700
 SILVER_COLOR = 0xFFC0C0C0
 BRONZE_COLOR = 0xFFCD7F32
 
+# ============================================================================
+#  FIX 5: UI TEXTS - Popolato da server DB (100% configurabile)
+# ============================================================================
+UI_TEXTS = {}
+
+# ============================================================================
+#  FIX 6: UI DIMENSIONS - Popolato da server DB (100% configurabile)
+# ============================================================================
+UI_DIMENSIONS = {
+    "window_width": 500,
+    "window_height": 520,
+    "header_height": 95,
+    "content_height": 300,
+    "tab_height": 28,
+    "footer_height": 35,
+    "stats_panel_width": 240,
+    "stats_panel_height": 200,
+    "achievement_popup_width": 500,
+    "achievement_popup_height": 200,
+    "window_center_x": 1,
+    "window_center_y": 1,
+    "header_y": 0,
+    "content_y": 95,
+    "footer_y": 485,
+    "font_size_title": 16,
+    "font_size_label": 12,
+    "font_size_value": 14,
+    "padding_small": 5,
+    "padding_medium": 10,
+    "padding_large": 15,
+}
+
+# Soglie rank - Popolate da server al login (100% configurabili da DB)
+RANK_THRESHOLDS = {
+    "E": 0,
+    "D": 2000,
+    "C": 10000,
+    "B": 50000,
+    "A": 150000,
+    "S": 500000,
+    "N": 1500000,
+}
+
 def GetRankKey(points):
-    if points >= 1500000:
+    """Determina rank key da punti - USA SOGLIE DA DB"""
+    if points >= RANK_THRESHOLDS["N"]:
         return "N"
-    elif points >= 500000:
+    elif points >= RANK_THRESHOLDS["S"]:
         return "S"
-    elif points >= 150000:
+    elif points >= RANK_THRESHOLDS["A"]:
         return "A"
-    elif points >= 50000:
+    elif points >= RANK_THRESHOLDS["B"]:
         return "B"
-    elif points >= 10000:
+    elif points >= RANK_THRESHOLDS["C"]:
         return "C"
-    elif points >= 2000:
+    elif points >= RANK_THRESHOLDS["D"]:
         return "D"
     return "E"
 
@@ -446,6 +365,22 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.missionProgressWnd = uihunterlevel_whatif.MissionProgressPopup()
         self.missionCompleteWnd = uihunterlevel_whatif.MissionCompleteWindow()
         self.allMissionsCompleteWnd = uihunterlevel_whatif.AllMissionsCompleteWindow()
+
+        # ==============================================================================
+        # HUNTER SYSTEM COMPLETE OVERHAUL - NEW WINDOWS & DATA
+        # ==============================================================================
+        self.achievementUnlockWnd = None  # Achievement Unlock Popup
+        self.penaltyBox = None  # Penalty Status Box
+        self.rivalTrackerBox = None  # Rival Tracker Box
+        self.rankBonusIndicator = None  # Rank Bonus Indicator
+        self.gloriaSourcesChart = None  # Gloria Sources Pie Chart
+
+        # New data structures
+        self.penaltyData = {"active": 0, "expires": 0, "strikes": 0}
+        self.rivalData = {"name": "NONE", "diff": 0, "category": "total"}
+        self.rankBonusData = {"gloria_pct": 0, "drop_pct": 0, "next_rank_pts": 0}
+        self.achievementProgress = {}  # {type: current_value}
+        self.gloriaSourcesData = {}  # {source_type: {total, count}}
         
         # Collega OvertakeWindow a EventStatusWindow per gestione posizione dinamica
         if self.overtakeWnd and self.eventWnd:
@@ -2049,11 +1984,7 @@ class HunterLevelWindow(ui.ScriptWindow):
         """Mostra messaggio del Sistema con colore basato sul rank"""
         if self.systemMsgWnd:
             color = self.RANK_COLORS.get(rankKey, 0xFF808080)
-            # DEBUG: Log color lookup
-            import dbg
-            dbg.TraceError("[PY-DEBUG] ShowSystemMessage: rankKey='%s', color=0x%X" % (rankKey, color))
             self.systemMsgWnd.ShowMessage(msg, color)
-            # REMOVED: SetRankColor() era ridondante e causava override del colore
     
     def ShowWelcomeMessage(self, rankKey, name, points):
         """Mostra il messaggio di benvenuto epico basato sul rank"""
@@ -2146,7 +2077,234 @@ class HunterLevelWindow(ui.ScriptWindow):
         """Chiude la finestra stato evento"""
         if self.eventWnd:
             self.eventWnd.Hide()
-    
+
+    # ========================================================================
+    #  HUNTER SYSTEM COMPLETE OVERHAUL - NEW HANDLERS
+    # ========================================================================
+
+    def HunterPenaltyStatus(self, active, expires, strikes):
+        """Aggiorna stato penalita"""
+        self.penaltyData["active"] = int(active)
+        self.penaltyData["expires"] = int(expires)
+        self.penaltyData["strikes"] = int(strikes)
+        # Update penalty box UI if exists
+        if self.penaltyBox:
+            self.__UpdatePenaltyBox()
+
+    def HunterRivalInfo(self, rival_name, diff, category):
+        """Aggiorna rival tracker info"""
+        self.rivalData["name"] = str(rival_name)
+        self.rivalData["diff"] = int(diff)
+        self.rivalData["category"] = str(category)
+        # Update rival tracker box UI if exists
+        if self.rivalTrackerBox:
+            self.__UpdateRivalTrackerBox()
+
+    def HunterRankBonus(self, gloria_pct, drop_pct, next_rank_pts):
+        """Aggiorna bonus rank"""
+        self.rankBonusData["gloria_pct"] = int(gloria_pct)
+        self.rankBonusData["drop_pct"] = int(drop_pct)
+        self.rankBonusData["next_rank_pts"] = int(next_rank_pts)
+        # Update rank bonus indicator UI if exists
+        if self.rankBonusIndicator:
+            self.__UpdateRankBonusIndicator()
+
+    def SetRankThresholds(self, thresholds):
+        """Aggiorna soglie rank da server (100% configurabile da DB)"""
+        global RANK_THRESHOLDS
+        RANK_THRESHOLDS = thresholds
+        # Refresh UI con nuove soglie (se necessario)
+        if self.isLoaded:
+            self.RefreshPlayerInfo()
+
+    def HunterAchievementUnlock(self, ach_id, ach_name, reward_vnum, reward_count):
+        """Mostra popup achievement unlock"""
+        # Create achievement unlock popup window if not exists
+        if not self.achievementUnlockWnd:
+            import uihunterlevel_whatif
+            self.achievementUnlockWnd = uihunterlevel_whatif.AchievementUnlockWindow()
+
+        if self.achievementUnlockWnd:
+            self.achievementUnlockWnd.ShowAchievementUnlock(
+                int(ach_id),
+                str(ach_name),
+                int(reward_vnum),
+                int(reward_count)
+            )
+
+    def HunterAchievementProgress(self, ach_type, current):
+        """Aggiorna progresso achievement real-time"""
+        self.achievementProgress[int(ach_type)] = int(current)
+        # Refresh achievements tab if visible
+        if self.currentTab == 1:  # Achievements tab
+            self.__RefreshAchievementsTab()
+
+    def HunterAchievementClaimed(self, ach_id):
+        """Notifica che achievement e stato riscosso"""
+        # Refresh achievements tab
+        if self.currentTab == 1:
+            self.__RefreshAchievementsTab()
+
+    def HunterGloriaSources(self, data):
+        """Aggiorna statistiche sorgenti gloria"""
+        if str(data) == "NONE":
+            self.gloriaSourcesData = {}
+        else:
+            # Parse: "SOURCE1~total1~count1;SOURCE2~total2~count2;..."
+            self.gloriaSourcesData = {}
+            sources = str(data).split(";")
+            for source in sources:
+                parts = source.split("~")
+                if len(parts) >= 3:
+                    source_type = parts[0]
+                    total = int(parts[1])
+                    count = int(parts[2])
+                    self.gloriaSourcesData[source_type] = {"total": total, "count": count}
+
+        # Update gloria sources chart if visible
+        if self.currentTab == 0 and self.gloriaSourcesChart:  # Stats tab
+            self.__UpdateGloriaSourcesChart()
+
+    def __UpdatePenaltyBox(self):
+        """Update penalty box UI - Mostra penalty status"""
+        if not self.penaltyData:
+            return
+
+        active = self.penaltyData.get("active", 0)
+        expires = self.penaltyData.get("expires", 0)
+        strikes = self.penaltyData.get("strikes", 0)
+
+        # Se non attiva, nascondi
+        if not active:
+            return
+
+        # Calcola tempo rimasto
+        import app
+        remaining = expires - app.GetTime()
+        if remaining <= 0:
+            return
+
+        hours = int(remaining / 3600)
+        mins = int((remaining % 3600) / 60)
+
+        # Mostra messaggio penalty (se non esiste UI dedicata)
+        penalty_msg = "|cffFF0000[PENALTY ATTIVA] Strike %d/3 - Scade in %dh %dm - Malus attivo|r" % (strikes, hours, mins)
+        # Nota: Aggiungi rendering visuale se necessario (box rosso, etc.)
+        # Per ora usiamo solo il sistema di messaggi esistente
+
+    def __UpdateRivalTrackerBox(self):
+        """Update rival tracker box UI - Mostra info rivale che ti ha superato"""
+        if not self.rivalData:
+            return
+
+        rival_name = self.rivalData.get("name", "")
+        diff = self.rivalData.get("diff", 0)
+        category = self.rivalData.get("category", "")
+
+        if not rival_name or diff == 0:
+            return
+
+        # Formatta messaggio rival
+        if diff > 0:
+            rival_msg = "|cffFFAA00[RIVAL TRACKER] %s ti ha superato di %d punti in %s!|r" % (rival_name, diff, category)
+        else:
+            rival_msg = "|cff00FF00[RIVAL TRACKER] Sei avanti a %s di %d punti in %s!|r" % (rival_name, abs(diff), category)
+
+        # Nota: Aggiungi rendering visuale se necessario (box con info, badge, etc.)
+        # Per ora tracciamo solo i dati, la UI li mostrera' nel tab ranking
+
+    def __UpdateRankBonusIndicator(self):
+        """Update rank bonus indicator UI - Mostra bonus rank attuale nell'header"""
+        if not self.rankBonusData:
+            return
+
+        gloria_pct = self.rankBonusData.get("gloria_pct", 0)
+        drop_pct = self.rankBonusData.get("drop_pct", 0)
+        next_rank_pts = self.rankBonusData.get("next_rank_pts", 0)
+
+        if gloria_pct == 0 and drop_pct == 0:
+            return
+
+        # Formatta label bonus: "+X% Gloria, +Y% Drop"
+        bonus_label = "|cffFFD700+%d%% Gloria, +%d%% Drop|r" % (gloria_pct, drop_pct)
+
+        # Calcola punti mancanti al prossimo rank
+        if next_rank_pts > 0 and next_rank_pts < 999999999:
+            current_pts = self.playerData.get("gloria_points", 0)
+            pts_needed = next_rank_pts - current_pts
+            if pts_needed > 0:
+                tooltip = "Prossimo rank: %d punti mancanti" % pts_needed
+
+        # Nota: La label verra' mostrata nell'header della finestra principale
+        # Per ora salviamo solo i dati, il rendering avverra' nel RefreshPlayerInfo()
+
+    def __RefreshAchievementsTab(self):
+        """Refresh achievements tab content - Aggiorna barre progresso achievements"""
+        if not self.achievementProgressData:
+            return
+
+        # Loop attraverso tutti gli achievement progress ricevuti
+        for ach_id_str, progress_data in self.achievementProgressData.items():
+            ach_id = int(ach_id_str)
+            current = progress_data.get("current", 0)
+            required = progress_data.get("required", 1)
+            status = progress_data.get("status", "locked")  # locked/unlocked/claimed
+
+            # Calcola percentuale progresso
+            if required > 0:
+                progress_pct = min(100, int((float(current) / float(required)) * 100))
+            else:
+                progress_pct = 0
+
+            # Aggiorna UI elemento achievement (se esiste)
+            # Nota: Il tab achievements dovrebbe avere una lista di elementi achievement
+            # Ogni elemento ha: ID, Nome, Descrizione, BarraProgresso, Stato (locked/unlocked/claimed)
+            # Per ora salviamo solo i dati, il rendering completo richiederebbe creare la UI del tab
+
+            # Se achievement sbloccato ma non claimed, evidenzialo
+            if status == "unlocked":
+                pass  # Highlight achievement con colore diverso o icona notifica
+
+    def __UpdateGloriaSourcesChart(self):
+        """Update gloria sources pie chart - Render grafico fonti Gloria"""
+        if not self.gloriaSourcesData:
+            return
+
+        # Calcola totale punti Gloria da tutte le fonti
+        total_gloria = 0
+        sources = {}
+
+        for source_type, data in self.gloriaSourcesData.items():
+            total = data.get("total", 0)
+            total_gloria += total
+            sources[source_type] = total
+
+        if total_gloria == 0:
+            return
+
+        # Calcola percentuali per ogni fonte
+        percentages = {}
+        for source_type, total in sources.items():
+            pct = int((float(total) / float(total_gloria)) * 100)
+            percentages[source_type] = pct
+
+        # Formatta label per ogni fonte:
+        # FRACTURE: X% (Y punti)
+        # MISSION: X% (Y punti)
+        # EVENT: X% (Y punti)
+        # EMERGENCY: X% (Y punti)
+        # BOSS: X% (Y punti)
+
+        # Nota: Per renderizzare un vero pie chart servirebbero elementi UI grafici
+        # Per ora salviamo solo i dati, potrebbero essere mostrati come barre orizzontali
+        # o come lista testuale con percentuali
+        # Il rendering completo richiederebbe aggiungere elementi grafici alla UI
+
+        # Se hai elementi UI per il chart, aggiorna qui:
+        # self.gloriaChartFractures.SetPercentage(percentages.get("FRACTURE", 0))
+        # self.gloriaChartMissions.SetPercentage(percentages.get("MISSION", 0))
+        # etc.
+
     # ========================================================================
     #  DAILY MISSIONS SYSTEM
     # ========================================================================
@@ -2388,7 +2546,78 @@ class HunterLevelWindow(ui.ScriptWindow):
     
     def SetFractures(self, d):
         pass
-    
+
+    # ========================================================================
+    #  FIX 4-6: UPDATE METHODS FROM DB CONFIG
+    # ========================================================================
+    def UpdateRankColor(self, data):
+        """FIX 4: Aggiorna colori rank da server DB (56+ colors)"""
+        try:
+            parts = data.split("|")
+            if len(parts) == 14:  # rank_code + 13 colori
+                rank = parts[0]
+                if rank in RANK_THEMES:
+                    RANK_THEMES[rank]["bg_dark"] = int(parts[1], 16)
+                    RANK_THEMES[rank]["bg_medium"] = int(parts[2], 16)
+                    RANK_THEMES[rank]["bg_light"] = int(parts[3], 16)
+                    RANK_THEMES[rank]["border"] = int(parts[4], 16)
+                    RANK_THEMES[rank]["accent"] = int(parts[5], 16)
+                    RANK_THEMES[rank]["text_title"] = int(parts[6], 16)
+                    RANK_THEMES[rank]["text_value"] = int(parts[7], 16)
+                    RANK_THEMES[rank]["text_muted"] = int(parts[8], 16)
+                    RANK_THEMES[rank]["bar_fill"] = int(parts[9], 16)
+                    RANK_THEMES[rank]["glow"] = int(parts[10], 16)
+                    RANK_THEMES[rank]["btn_normal"] = int(parts[11], 16)
+                    RANK_THEMES[rank]["btn_hover"] = int(parts[12], 16)
+                    RANK_THEMES[rank]["btn_down"] = int(parts[13], 16)
+
+                    # Refresh tema UI se finestra già aperta e rank corrente
+                    if self.isLoaded and hasattr(self, 'currentRank') and self.currentRank == rank:
+                        self.__UpdateTheme()
+        except Exception as e:
+            pass
+
+    def UpdateUIText(self, data):
+        """FIX 5: Aggiorna stringhe UI da server DB (35+ strings)"""
+        try:
+            parts = data.split("|", 1)
+            if len(parts) == 2:
+                UI_TEXTS[parts[0]] = parts[1]
+        except:
+            pass
+
+    def UpdateUIDimensions(self, data):
+        """FIX 6: Aggiorna dimensioni UI da server DB (20+ dimensions)"""
+        try:
+            parts = data.split("|")
+            if len(parts) >= 21:
+                UI_DIMENSIONS["window_width"] = int(parts[0])
+                UI_DIMENSIONS["window_height"] = int(parts[1])
+                UI_DIMENSIONS["header_height"] = int(parts[2])
+                UI_DIMENSIONS["content_height"] = int(parts[3])
+                UI_DIMENSIONS["tab_height"] = int(parts[4])
+                UI_DIMENSIONS["footer_height"] = int(parts[5])
+                UI_DIMENSIONS["stats_panel_width"] = int(parts[6])
+                UI_DIMENSIONS["stats_panel_height"] = int(parts[7])
+                UI_DIMENSIONS["achievement_popup_width"] = int(parts[8])
+                UI_DIMENSIONS["achievement_popup_height"] = int(parts[9])
+                UI_DIMENSIONS["window_center_x"] = int(parts[10])
+                UI_DIMENSIONS["window_center_y"] = int(parts[11])
+                UI_DIMENSIONS["header_y"] = int(parts[12])
+                UI_DIMENSIONS["content_y"] = int(parts[13])
+                UI_DIMENSIONS["footer_y"] = int(parts[14])
+                UI_DIMENSIONS["font_size_title"] = int(parts[15])
+                UI_DIMENSIONS["font_size_label"] = int(parts[16])
+                UI_DIMENSIONS["font_size_value"] = int(parts[17])
+                UI_DIMENSIONS["padding_small"] = int(parts[18])
+                UI_DIMENSIONS["padding_medium"] = int(parts[19])
+                UI_DIMENSIONS["padding_large"] = int(parts[20])
+
+                # Note: Le dimensioni si applicano al prossimo load della finestra
+                # Per applicarle immediatamente servirebbe rebuild completo UI
+        except:
+            pass
+
     # ========================================================================
     #  UPDATE
     # ========================================================================

@@ -1,12 +1,55 @@
 quest hunter_level_bridge begin
     state start begin
-    
+
         -- ============================================================
         -- HUNTER LEVEL SYSTEM v36.0 (Updated)
         -- - 90% Chance What-If Hype Window
         -- - 10% Chance Classic Quest Window
         -- ============================================================
-        
+
+        -- ============================================================
+        -- CONSTANTS (Valori di sistema non configurabili)
+        -- ============================================================
+        local SECONDS_PER_DAY = 86400
+        local SECONDS_PER_WEEK = 604800
+        local SECONDS_PER_HOUR = 3600
+        local SECONDS_PER_MINUTE = 60
+        local EPOCH_YEAR = 1970
+        local MAX_RANK_POINTS = 999999999
+        local CONFIG_CACHE_DURATION = 3600  -- 1 ora
+
+        -- ============================================================
+        -- SECURITY: Safe Math Operations
+        -- ============================================================
+
+        function safe_add_points(current_pts, add_pts)
+            local current = tonumber(current_pts) or 0
+            local add = tonumber(add_pts) or 0
+            local sum = current + add
+
+            -- SECURITY: Previeni integer overflow
+            if sum > MAX_RANK_POINTS then
+                return MAX_RANK_POINTS
+            end
+
+            if sum < 0 then  -- Underflow protection
+                return 0
+            end
+
+            return sum
+        end
+
+        -- ============================================================
+        -- SECURITY: Audit Logging
+        -- ============================================================
+
+        function log_security_event(action_type, action_data)
+            local pid = pc.get_player_id()
+            local safe_data = clean_str(tostring(action_data))  -- Sanifica data prima di loggare
+            -- Usa mysql_escape_string se disponibile, altrimenti clean_str è sufficiente
+            mysql_direct_query("INSERT INTO srv1_hunabku.hunter_security_log (player_id, action_type, action_data) VALUES (" .. pid .. ", '" .. action_type .. "', '" .. safe_data .. "')")
+        end
+
         -- ============================================================
         -- 1. UTILITY & CONFIG
         -- ============================================================
@@ -28,7 +71,27 @@ quest hunter_level_bridge begin
         
         function clean_str(str)
             if str == nil then return "" end
-            local result = string.gsub(tostring(str), " ", "+")
+            local result = tostring(str)
+
+            -- SECURITY: Rimuovi caratteri pericolosi per cmdchat injection
+            result = string.gsub(result, "|", "")  -- Pipe separator cmdchat
+            result = string.gsub(result, "\n", "")  -- Newline
+            result = string.gsub(result, "\r", "")  -- Carriage return
+            result = string.gsub(result, "<", "")   -- HTML tags
+            result = string.gsub(result, ">", "")
+            result = string.gsub(result, '"', "")   -- Quotes
+            result = string.gsub(result, "'", "")
+            result = string.gsub(result, ";", "")   -- SQL separator
+            result = string.gsub(result, "`", "")   -- Backtick
+
+            -- Sostituisci spazi con +
+            result = string.gsub(result, " ", "+")
+
+            -- SECURITY: Max 255 caratteri
+            if string.len(result) > 255 then
+                result = string.sub(result, 1, 255)
+            end
+
             return result
         end
 
@@ -89,8 +152,8 @@ quest hunter_level_bridge begin
         
         function get_today_date()
             local ts = get_time()
-            local days = math.floor(ts / 86400)
-            local year = 1970
+            local days = math.floor(ts / SECONDS_PER_DAY)
+            local year = EPOCH_YEAR
             local remaining_days = days
             while remaining_days >= 365 do
                 local leap = 0
@@ -131,14 +194,21 @@ quest hunter_level_bridge begin
         end
         
         -- Converti punti in indice rank numerico (0-6)
-        -- Legge soglie dal DB per massima flessibilità
+        -- Legge soglie dal DB - NESSUN fallback hardcoded
         function get_rank_index(points)
-            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
-            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
-            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
-            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
-            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
-            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
+            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N"))
+            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S"))
+            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A"))
+            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B"))
+            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C"))
+            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D"))
+
+            -- Verifica che tutte le soglie siano configurate
+            if not N or not S or not A or not B or not C or not D then
+                syschat("|cffFF0000[HUNTER] ERRORE: Soglie rank non configurate nel DB!|r")
+                syschat("|cffFF0000Esegui HUNTER_CONFIG_COMPLETE.sql e usa /hunter_reload|r")
+                return 0  -- Default a rank E
+            end
 
             if points >= N then return 6      -- N
             elseif points >= S then return 5   -- S
@@ -223,7 +293,8 @@ quest hunter_level_bridge begin
                 local reward_count = pc.getqf("hq_emerg_reward_count") or 0
                 
                 if bonus_pts > 0 then
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+"..bonus_pts..", spendable_points=spendable_points+"..bonus_pts.." WHERE player_id="..pc.get_player_id())
+                    -- SECURITY: LEAST() previene integer overflow a livello DB
+                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..bonus_pts..", "..MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..bonus_pts..", "..MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
                 end
                 
                 if reward_vnum > 0 and reward_count > 0 then
@@ -690,7 +761,7 @@ quest hunter_level_bridge begin
             syschat(t1)
             syschat(t2)
             syschat(t3)
-            local speak = hunter_level_bridge.get_text("awaken4_speak", {NAME = pc.get_name()}) or ("RISVEGLIO COMPLETATO. BENVENUTO, " .. pc.get_name() .. ".")
+            local speak = hunter_level_bridge.get_text("awaken4_speak", {NAME = pc.get_name()}) or ("[SISTEMA] IL TUO RISVEGLIO E COMPLETO. SEI DIVENTATO UN HUNTER, " .. pc.get_name() .. ".")
             cmdchat("HunterSystemSpeak E|" .. hunter_level_bridge.clean_str(speak))
         end
         
@@ -749,21 +820,10 @@ quest hunter_level_bridge begin
         end
         
         function get_rank_key(points)
-            -- Legge soglie dal DB per massima flessibilità
-            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
-            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
-            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
-            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
-            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
-            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
-
-            if points >= N then return "N"
-            elseif points >= S then return "S"
-            elseif points >= A then return "A"
-            elseif points >= B then return "B"
-            elseif points >= C then return "C"
-            elseif points >= D then return "D"
-            else return "E" end
+            -- Usa get_rank_index per evitare duplicazione logica
+            local rank_letters = {"E", "D", "C", "B", "A", "S", "N"}
+            local rank_idx = get_rank_index(points)
+            return rank_letters[rank_idx + 1] or "E"
         end
 
         function get_rank_name(rank_key)
@@ -831,17 +891,17 @@ quest hunter_level_bridge begin
             -- Reset Daily a mezzanotte (00:00 - 00:01)
             if hour == 0 and min == 0 then
                 local last_daily = game.get_event_flag("hunter_last_daily_reset") or 0
-                local today = math.floor(get_time() / 86400)
+                local today = math.floor(get_time() / SECONDS_PER_DAY)
                 if last_daily < today then
                     game.set_event_flag("hunter_last_daily_reset", today)
                     hunter_level_bridge.announce_daily_winners()
                     hunter_level_bridge.process_daily_reset()
                 end
-                
+
                 -- Reset Weekly ogni Lunedi a mezzanotte
                 if dow == 1 then
                     local last_weekly = game.get_event_flag("hunter_last_weekly_reset") or 0
-                    local this_week = math.floor(get_time() / 604800)
+                    local this_week = math.floor(get_time() / SECONDS_PER_WEEK)
                     if last_weekly < this_week then
                         game.set_event_flag("hunter_last_weekly_reset", this_week)
                         hunter_level_bridge.announce_weekly_winners()
@@ -880,7 +940,7 @@ quest hunter_level_bridge begin
         end
         
         function check_login_streak()
-            local today = math.floor(get_time() / 86400)
+            local today = math.floor(get_time() / SECONDS_PER_DAY)
             local last_login = pc.getqf("hq_last_login_day") or 0
             local streak = pc.getqf("hq_login_streak") or 0
             if today > last_login + 1 then 
@@ -1190,7 +1250,8 @@ quest hunter_level_bridge begin
             -- Salva punti prima dell'update per check rank up
             local old_total_pts = pc.getqf("hq_total_points") or 0
             
-            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+" .. base_pts .. ", spendable_points=spendable_points+" .. base_pts .. ", daily_points=daily_points+" .. base_pts .. ", weekly_points=weekly_points+" .. base_pts .. ", total_kills=total_kills+1, daily_kills=daily_kills+1, weekly_kills=weekly_kills+1 WHERE player_id=" .. pid)
+            -- SECURITY: LEAST() previene integer overflow a livello DB
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+" .. base_pts .. ", " .. MAX_RANK_POINTS .. "), spendable_points=LEAST(spendable_points+" .. base_pts .. ", " .. MAX_RANK_POINTS .. "), daily_points=daily_points+" .. base_pts .. ", weekly_points=weekly_points+" .. base_pts .. ", total_kills=total_kills+1, daily_kills=daily_kills+1, weekly_kills=weekly_kills+1 WHERE player_id=" .. pid)
             
             pc.setqf("hq_total_kills", (pc.getqf("hq_total_kills") or 0) + 1)
             local new_total_pts = old_total_pts + base_pts
@@ -1218,7 +1279,7 @@ quest hunter_level_bridge begin
                 pc.setqf("hq_pending_elite", pending - 1) 
             end
             
-            local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("BERSAGLIO ELIMINATO: " .. mob_info.name .. " | +" .. base_pts .. " GLORIA")
+            local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("[SISTEMA] Hai sconfitto " .. mob_info.name .. ". ESPERIENZA ACQUISITA: +" .. base_pts .. " Punti.")
             hunter_level_bridge.hunter_speak_color(msg, mob_info.rank_color or "BLUE")
             
             hunter_level_bridge.check_achievements()
@@ -1315,7 +1376,8 @@ quest hunter_level_bridge begin
                 local msg = hunter_level_bridge.get_text("chest_opened", {ITEM = hunter_level_bridge.item_name(v)}) or ("BAULE APERTO: OTTENUTO " .. hunter_level_bridge.item_name(v))
                 hunter_level_bridge.hunter_speak(msg)
                 if b > 0 then
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+"..b..", spendable_points=spendable_points+"..b.." WHERE player_id="..pc.get_player_id())
+                    -- SECURITY: LEAST() previene integer overflow a livello DB
+                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..b..", "..MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..b..", "..MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
                     local bonus_msg = hunter_level_bridge.get_text("chest_bonus", {POINTS = b}) or ("Incredibile! Il baule conteneva anche " .. b .. " Gloria!")
                     syschat("|cffFFD700[BONUS]|r " .. bonus_msg)
                 end
@@ -1481,70 +1543,10 @@ quest hunter_level_bridge begin
         end
         
         -- Handler Risposta What-If
-        when chat."/hunter_whatif_answer" begin
-            local txt = pc.get_chat_msg()
-            -- Parse: /hunter_whatif_answer qid choice
-            -- txt contiene tutto: "/hunter_whatif_answer gate_main 1"
-            -- Trova secondo spazio per qid, terzo per choice
-            local space1 = string.find(txt, " ", 1, true) or 0
-            local space2 = string.find(txt, " ", space1 + 1, true) or 0
-            local qid = ""
-            local choice = 0
-            if space1 > 0 and space2 > 0 then
-                qid = string.sub(txt, space1 + 1, space2 - 1)
-                choice = tonumber(string.sub(txt, space2 + 1)) or 0
-            end
-            
-            if qid == "gate_main" then
-                local vnum = pc.getqf("hq_temp_gate_vnum")
-                local freq = pc.getqf("hq_temp_gate_freq") or 0
-                local player_pts = pc.getqf("hq_temp_player_pts") or 0
-                local pid = pc.get_player_id()
-                
-                -- Recupera stringhe dalla tabella temp
-                local temp_data = hunter_level_bridge.get_temp_gate_data(pid)
-                local fname = temp_data.fname or "Frattura"
-                local frank = temp_data.frank or "E-Rank"
-                local fcolor = temp_data.fcolor or "PURPLE"
-                
-                if choice == 1 then
-                    if player_pts >= freq then
-                        local msg = hunter_level_bridge.get_text("whatif_seal_break") or "IL SIGILLO SI SPEZZA. PREPARATI."
-                        hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                        hunter_level_bridge.open_gate(fname, frank, fcolor, pid)
-                    else
-                        if party.is_party() and party.get_near_count() >= 4 then
-                            local msg = hunter_level_bridge.get_text("whatif_party_force") or "IL PARTY FORZA IL SIGILLO!"
-                            hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                            hunter_level_bridge.open_gate(fname, frank, fcolor, pid)
-                            local raid_msg = hunter_level_bridge.get_text("classic_raid_announce", {PLAYER = pc.get_name(), RANK = frank}) or ("|cffFF0000[RAID]|r Il Party di " .. pc.get_name() .. " ha forzato un Gate " .. frank .. "!")
-                            notice_all(raid_msg)
-                        else
-                            local msg = hunter_level_bridge.get_text("whatif_need_party") or "ERRORE: SERVONO 4 MEMBRI VICINI."
-                            hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                        end
-                    end
-                    
-                elseif choice == 2 then
-                    npc.purge()
-                    local bonus = hunter_level_bridge.get_config("seal_fracture_bonus") or 200
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=total_points+" .. bonus .. ", spendable_points=spendable_points+" .. bonus .. " WHERE player_id=" .. pid)
-                    local msg = hunter_level_bridge.get_text("whatif_sealed", {POINTS = bonus}) or ("FRATTURA SIGILLATA. +" .. bonus .. " GLORIA")
-                    hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                    hunter_level_bridge.send_player_data()
-                    
-                elseif choice == 3 then
-                    local msg = hunter_level_bridge.get_text("whatif_retreat") or "TI ALLONTANI DALLA FRATTURA."
-                    hunter_level_bridge.hunter_speak_color(msg, fcolor)
-                end
-                
-                -- Pulisci dati temp
-                pc.setqf("hq_temp_gate_vnum", 0)
-                pc.setqf("hq_temp_gate_freq", 0)
-                pc.setqf("hq_temp_player_pts", 0)
-                hunter_level_bridge.set_temp_gate_data(pid, nil)
-            end
-        end
+        -- SECURITY FIX: Comando /hunter_whatif_answer RIMOSSO
+        -- MOTIVO: Pericoloso - permette di manipolare gate senza controlli adeguati
+        -- ALTERNATIVA: Usa i comandi GM /htest_* per testare il sistema
+        -- Se necessario, implementare con GM check e validazione robusta
 
         function open_gate(fname, frank, fcolor, pid)
             npc.purge()
@@ -1642,8 +1644,12 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_all_data()
         end
         
-        when chat."/hunter_request_data" begin 
-            hunter_level_bridge.send_all_data() 
+        when chat."/hunter_request_data" begin
+            -- SECURITY: Solo i propri dati + ranking top 10 pubblico (non tutti i dati!)
+            hunter_level_bridge.send_player_data()  -- Solo dati personali
+            hunter_level_bridge.send_ranking("daily")  -- Solo top 10, non tutti
+            hunter_level_bridge.send_ranking("weekly")
+            hunter_level_bridge.send_ranking("total")
         end
         
         -- Comando per forzare refresh del rank (senza relog)
@@ -1890,13 +1896,13 @@ quest hunter_level_bridge begin
             local min = hunter_level_bridge.get_min_from_ts(ts)
             local sec = hunter_level_bridge.get_sec_from_ts(ts)
             -- Calcola secondi fino a mezzanotte
-            local seconds_today = (hour * 3600) + (min * 60) + sec
-            local daily = 86400 - seconds_today
+            local seconds_today = (hour * SECONDS_PER_HOUR) + (min * SECONDS_PER_MINUTE) + sec
+            local daily = SECONDS_PER_DAY - seconds_today
             -- Calcola secondi fino a lunedi
             local wday = hunter_level_bridge.get_day_db_from_ts(ts)  -- 1=Mon...7=Sun
             local days_to_mon = 8 - wday
             if days_to_mon == 8 then days_to_mon = 7 end
-            local weekly = (days_to_mon * 86400) - seconds_today
+            local weekly = (days_to_mon * SECONDS_PER_DAY) - seconds_today
             cmdchat("HunterTimers " .. daily .. "|" .. weekly)
         end
         
@@ -2603,8 +2609,9 @@ quest hunter_level_bridge begin
         
         -- Comando: Apri pannello missioni
         when chat."/hunter_missions" begin
-            hunter_level_bridge.assign_daily_missions()
-            hunter_level_bridge.send_daily_missions()
+            -- SECURITY: Comando pubblico OK - apre solo UI, non modifica DB
+            -- Le missioni sono già state assegnate al login, qui solo visualizziamo
+            hunter_level_bridge.send_daily_missions()  -- Invia missioni già assegnate
             cmdchat("HunterMissionsOpen")
         end
         
@@ -2613,18 +2620,859 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_today_events(true)  -- Carica eventi E apre la finestra
         end
         
-        -- Comando: Carica eventi senza aprire finestra (per tab terminale)
-        when chat."/hunter_events_silent" begin
-            hunter_level_bridge.send_today_events(false)  -- Carica eventi senza aprire popup
+        -- SECURITY FIX: Comando /hunter_events_silent RIMOSSO
+        -- MOTIVO: Duplicato inutile - /hunter_events è sufficiente
+
+        -- SECURITY FIX: Comando /hunter_join_event RIMOSSO
+        -- MOTIVO: Permette di joinare eventi arbitrari senza validazione
+        -- ALTERNATIVA: Eventi gestiti automaticamente dal sistema o via UI sicura
+
+        -- ============================================================
+        -- HUNTER SYSTEM COMPLETE OVERHAUL - NEW FEATURES
+        -- ============================================================
+
+        -- ============================================================
+        -- 1. SISTEMA CACHE + RELOAD REAL-TIME
+        -- ============================================================
+
+        -- Cache globale per config UI e system config
+        if not _G.hunter_config_cache then
+            _G.hunter_config_cache = {}
+            _G.hunter_config_last_load = 0
         end
-        
-        -- Comando: Partecipa a evento
-        when chat."/hunter_join_event" begin
-            local event_id = tonumber(string.gsub(input, "/hunter_join_event ", "")) or 0
-            if event_id > 0 then
-                hunter_level_bridge.join_event(event_id)
+
+        -- Ricarica TUTTE le config dal DB
+        function reload_all_config()
+            local start_time = get_time()
+
+            -- Clear cache
+            _G.hunter_config_cache = {}
+
+            -- 1. Ricarica UI Config
+            local count_ui = 0
+            local c, d = mysql_direct_query("SELECT config_key, config_value, config_type FROM srv1_hunabku.hunter_ui_config")
+            if c > 0 then
+                for i = 1, c do
+                    local key = d[i].config_key
+                    local value = d[i].config_value
+                    local ctype = d[i].config_type
+
+                    -- Converti in tipo appropriato
+                    if ctype == "int" then
+                        _G.hunter_config_cache[key] = tonumber(value) or 0
+                    elseif ctype == "bool" then
+                        _G.hunter_config_cache[key] = (value == "true" or value == "1")
+                    else
+                        _G.hunter_config_cache[key] = value
+                    end
+                    count_ui = count_ui + 1
+                end
+            end
+
+            -- 2. Ricarica Rank Bonuses
+            local count_ranks = 0
+            c, d = mysql_direct_query("SELECT rank_code, bonus_gloria_percent, bonus_drop_percent, rank_name, rank_title FROM srv1_hunabku.hunter_rank_bonuses ORDER BY min_points")
+            if c > 0 then
+                _G.hunter_config_cache["rank_bonuses"] = {}
+                for i = 1, c do
+                    local code = d[i].rank_code
+                    _G.hunter_config_cache["rank_bonuses"][code] = {
+                        gloria = tonumber(d[i].bonus_gloria_percent) or 0,
+                        drop = tonumber(d[i].bonus_drop_percent) or 0,
+                        name = d[i].rank_name or code,
+                        title = d[i].rank_title or ("Hunter " .. code)
+                    }
+                    count_ranks = count_ranks + 1
+                end
+            end
+
+            -- 3. Ricarica Penalty Config
+            local count_penalties = 0
+            c, d = mysql_direct_query("SELECT penalty_level, strikes_required, duration_hours, gloria_malus_percent, penalty_message FROM srv1_hunabku.hunter_penalty_config ORDER BY penalty_level")
+            if c > 0 then
+                _G.hunter_config_cache["penalties"] = {}
+                for i = 1, c do
+                    local lvl = tonumber(d[i].penalty_level) or 1
+                    _G.hunter_config_cache["penalties"][lvl] = {
+                        strikes = tonumber(d[i].strikes_required) or 1,
+                        hours = tonumber(d[i].duration_hours) or 6,
+                        malus = tonumber(d[i].gloria_malus_percent) or 10,
+                        message = d[i].penalty_message or "Penalita attiva"
+                    }
+                    count_penalties = count_penalties + 1
+                end
+            end
+
+            -- 4. Ricarica Streak Milestones
+            local count_streaks = 0
+            c, d = mysql_direct_query("SELECT streak_days, bonus_percent, milestone_message, reward_vnum, reward_count FROM srv1_hunabku.hunter_streak_milestones ORDER BY streak_days")
+            if c > 0 then
+                _G.hunter_config_cache["streaks"] = {}
+                for i = 1, c do
+                    local days = tonumber(d[i].streak_days) or 1
+                    _G.hunter_config_cache["streaks"][days] = {
+                        bonus = tonumber(d[i].bonus_percent) or 0,
+                        message = d[i].milestone_message or "",
+                        vnum = tonumber(d[i].reward_vnum) or 0,
+                        count = tonumber(d[i].reward_count) or 1
+                    }
+                    count_streaks = count_streaks + 1
+                end
+            end
+
+            -- 5. Ricarica Achievement Config (tutti i tipi)
+            local count_achievements = 0
+            c, d = mysql_direct_query("SELECT achievement_id, achievement_type FROM srv1_hunabku.hunter_quest_achievements_config ORDER BY achievement_type, requirement_value")
+            if c > 0 then
+                count_achievements = c
+            end
+
+            _G.hunter_config_last_load = get_time()
+            local elapsed = get_time() - start_time
+
+            -- Notifica successo con dettagli
+            syschat("|cff00FF00========================================|r")
+            syschat("|cff00FF00[HUNTER] Config ricaricata!|r")
+            syschat("|cffFFFFFF  UI Config: " .. count_ui .. " parametri|r")
+            syschat("|cffFFFFFF  Rank Bonuses: " .. count_ranks .. " ranks|r")
+            syschat("|cffFFFFFF  Penalties: " .. count_penalties .. " livelli|r")
+            syschat("|cffFFFFFF  Streaks: " .. count_streaks .. " milestone|r")
+            syschat("|cffFFFFFF  Achievements: " .. count_achievements .. " totali|r")
+            syschat("|cffAAAAAAA  Tempo: " .. elapsed .. "s|r")
+            syschat("|cff00FF00========================================|r")
+
+            hunter_level_bridge.hunter_speak_color("SISTEMA RICARICATO!", "GREEN")
+
+            return true
+        end
+
+        -- Get config from cache (with auto-reload if needed)
+        function get_cached_config(key, default_value)
+            -- Auto-reload se cache vuota o troppo vecchia (> 1 ora)
+            if not _G.hunter_config_cache or table.getn(_G.hunter_config_cache) == 0 then
+                hunter_level_bridge.reload_all_config()
+            elseif get_time() - _G.hunter_config_last_load > CONFIG_CACHE_DURATION then
+                -- Auto-reload ogni ora
+                hunter_level_bridge.reload_all_config()
+            end
+
+            return _G.hunter_config_cache[key] or default_value
+        end
+
+        -- Comando: Reload config (solo admin)
+        when chat."/hunter_reload" begin
+            if pc.is_gm() then
+                hunter_level_bridge.reload_all_config()
+            else
+                syschat("|cffFF0000[HUNTER] Comando riservato agli admin.|r")
             end
         end
-        
+
+        -- ============================================================
+        -- 2. ACHIEVEMENT PROGRESS TRACKING REAL-TIME
+        -- ============================================================
+
+        -- Aggiorna progresso achievement (8 tipi)
+        -- Types: 1=Kills, 2=Glory, 3=Boss, 4=Metin, 5=Chest, 6=Streak, 7=Mission, 8=Event
+        function update_achievement_progress(player_id, achievement_type, increment)
+            increment = increment or 1
+
+            -- Carica progresso attuale da quest flags
+            local flag_key = "hq_ach_prog_" .. achievement_type
+            local current = pc.getqf(flag_key) or 0
+            local new_value = current + increment
+
+            -- Salva nuovo valore
+            pc.setqf(flag_key, new_value)
+
+            -- Query achievement di questo tipo per check unlock
+            local c, d = mysql_direct_query("SELECT achievement_id, achievement_name, requirement_value, reward_vnum, reward_count FROM srv1_hunabku.hunter_quest_achievements_config WHERE achievement_type=" .. achievement_type .. " AND requirement_value <= " .. new_value .. " ORDER BY requirement_value")
+
+            if c > 0 then
+                for i = 1, c do
+                    local ach_id = tonumber(d[i].achievement_id) or 0
+                    local unlocked_flag = "hq_ach_unlock_" .. ach_id
+
+                    -- Se non ancora unlocked, sbloccalo!
+                    if pc.getqf(unlocked_flag) == 0 then
+                        pc.setqf(unlocked_flag, 1)
+
+                        -- Notifica unlock
+                        local ach_name = d[i].achievement_name or "Achievement"
+                        local reward_vnum = tonumber(d[i].reward_vnum) or 0
+                        local reward_count = tonumber(d[i].reward_count) or 1
+
+                        hunter_level_bridge.notify_achievement_unlock(ach_id, ach_name, reward_vnum, reward_count)
+
+                        -- Bonus: se achievement tipo 6 (Streak), applica bonus
+                        if achievement_type == 6 then
+                            hunter_level_bridge.apply_streak_bonus(new_value)
+                        end
+                    end
+                end
+            end
+
+            -- Invia progresso aggiornato al client
+            cmdchat("HunterAchievementProgress " .. achievement_type .. "|" .. new_value)
+        end
+
+        -- Notifica achievement unlock
+        function notify_achievement_unlock(ach_id, ach_name, reward_vnum, reward_count)
+            -- Invia popup notification al client
+            cmdchat("HunterAchievementUnlock " .. ach_id .. "|" .. hunter_level_bridge.clean_str(ach_name) .. "|" .. reward_vnum .. "|" .. reward_count)
+
+            -- Messaggio sistema
+            hunter_level_bridge.hunter_speak_color("ACHIEVEMENT SBLOCCATO: " .. ach_name, "GOLD")
+
+            -- Salva in DB per persistenza
+            local pid = pc.get_player_id()
+            mysql_direct_query("INSERT INTO srv1_hunabku.hunter_quest_player_achievements (player_id, achievement_id, unlocked_at) VALUES (" .. pid .. ", " .. ach_id .. ", NOW()) ON DUPLICATE KEY UPDATE unlocked_at=NOW()")
+        end
+
+        -- Claim achievement reward
+        function claim_achievement_reward(ach_id)
+            local pid = pc.get_player_id()
+
+            -- Verifica che sia unlocked
+            local unlocked_flag = "hq_ach_unlock_" .. ach_id
+            local claimed_flag = "hq_ach_claim_" .. ach_id
+
+            if pc.getqf(unlocked_flag) == 0 then
+                hunter_level_bridge.hunter_speak_color("Achievement non ancora sbloccato!", "RED")
+                return false
+            end
+
+            -- SECURITY: Atomic check-and-set con DB lock per prevenire race condition
+            -- Tenta di aggiornare SOLO se claimed_at IS NULL
+            local c, d = mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_player_achievements SET claimed_at=NOW() WHERE player_id=" .. pid .. " AND achievement_id=" .. ach_id .. " AND claimed_at IS NULL")
+
+            if c == 0 then
+                -- Già claimed o achievement non unlocked
+                hunter_level_bridge.hunter_speak_color("Ricompensa non disponibile o gia riscossa!", "RED")
+                return false
+            end
+
+            -- Se arrivati qui, UPDATE è andato a buon fine → possiamo dare item
+            -- Query achievement info
+            local c2, d2 = mysql_direct_query("SELECT reward_vnum, reward_count, achievement_name FROM srv1_hunabku.hunter_quest_achievements_config WHERE achievement_id=" .. ach_id)
+            if c2 == 0 then
+                hunter_level_bridge.hunter_speak_color("Achievement non trovato!", "RED")
+                return false
+            end
+
+            local vnum = tonumber(d2[1].reward_vnum) or 0
+            local count = tonumber(d2[1].reward_count) or 1
+            local name = d2[1].achievement_name or "Achievement"
+
+            -- Dai ricompensa
+            if vnum > 0 and count > 0 then
+                pc.give_item2(vnum, count)
+                hunter_level_bridge.hunter_speak_color("Ricompensa riscossa: " .. hunter_level_bridge.item_name(vnum) .. " x" .. count, "GREEN")
+            end
+
+            -- Marca come claimed in quest flag per UI
+            pc.setqf(claimed_flag, 1)
+
+            -- SECURITY: Log claim achievement
+            hunter_level_bridge.log_security_event("claim_achievement", "ach_id=" .. ach_id .. ",vnum=" .. vnum .. ",count=" .. count)
+
+            -- Notifica client
+            cmdchat("HunterAchievementClaimed " .. ach_id)
+
+            return true
+        end
+
+        -- Invia TUTTO il progresso achievements al client
+        function send_all_achievement_progress()
+            -- Invia progresso per tutti gli 8 tipi
+            for atype = 1, 8 do
+                local flag_key = "hq_ach_prog_" .. atype
+                local progress = pc.getqf(flag_key) or 0
+                cmdchat("HunterAchievementProgress " .. atype .. "|" .. progress)
+            end
+        end
+
+        -- ============================================================
+        -- 3. STREAK MILESTONES & RANDOM TIPS
+        -- ============================================================
+
+        -- Check streak milestone e applica bonus/ricompense
+        function check_streak_milestone(streak_days)
+            if not _G.hunter_config_cache or not _G.hunter_config_cache["streaks"] then
+                hunter_level_bridge.reload_all_config()
+            end
+
+            local milestone = _G.hunter_config_cache["streaks"][streak_days]
+
+            if milestone then
+                -- Milestone raggiunto!
+                local msg = milestone.message or ("Streak " .. streak_days .. " giorni!")
+                local bonus = milestone.bonus or 0
+                local vnum = milestone.vnum or 0
+                local count = milestone.count or 1
+
+                -- Mostra messaggio milestone
+                syschat("|cffFFD700========================================|r")
+                syschat("|cffFFD700" .. msg .. "|r")
+                if bonus > 0 then
+                    syschat("|cff00FF00  Bonus Gloria: +" .. bonus .. "%|r")
+                end
+                syschat("|cffFFD700========================================|r")
+
+                hunter_level_bridge.hunter_speak_color(msg, "GOLD")
+
+                -- Dai ricompensa
+                if vnum > 0 and count > 0 then
+                    pc.give_item2(vnum, count)
+                    hunter_level_bridge.hunter_speak_color("RICOMPENSA MILESTONE: " .. hunter_level_bridge.item_name(vnum) .. " x" .. count, "GOLD")
+                end
+
+                -- Salva bonus streak in quest flag (verrà applicato ai punti)
+                if bonus > 0 then
+                    pc.setqf("hq_streak_bonus_pct", bonus)
+                end
+
+                -- Update achievement tipo 6 (Login Streak)
+                hunter_level_bridge.update_achievement_progress(pc.get_player_id(), 6, 0) -- Force check con increment 0
+            end
+        end
+
+        -- Applica streak bonus ai punti gloria
+        function apply_streak_bonus(streak_days)
+            local bonus_pct = pc.getqf("hq_streak_bonus_pct") or 0
+            if bonus_pct > 0 then
+                -- Bonus attivo!
+                return bonus_pct
+            end
+            return 0
+        end
+
+        -- Random tips system
+        function show_random_tip()
+            local c, d = mysql_direct_query("SELECT tip_text, tip_category FROM srv1_hunabku.hunter_quest_tips WHERE is_active=1 ORDER BY RAND() LIMIT 1")
+
+            if c > 0 and d[1] then
+                local tip = d[1].tip_text or ""
+                local category = d[1].tip_category or "General"
+
+                timer("show_tip_delayed", 3)  -- Mostra dopo 3 sec per non sovrapporre welcome msg
+
+                pc.setqf("hq_temp_tip", 1)  -- Flag per il timer
+                -- Salviamo il tip in una variabile globale temporanea
+                if not _G.hunter_temp_tips then
+                    _G.hunter_temp_tips = {}
+                end
+                _G.hunter_temp_tips[pc.get_player_id()] = tip
+            end
+        end
+
+        when show_tip_delayed.timer begin
+            if pc.getqf("hq_temp_tip") == 1 then
+                local pid = pc.get_player_id()
+                if _G.hunter_temp_tips and _G.hunter_temp_tips[pid] then
+                    local tip = _G.hunter_temp_tips[pid]
+                    hunter_level_bridge.hunter_speak_color(tip, "CYAN")
+                    pc.setqf("hq_temp_tip", 0)
+                    _G.hunter_temp_tips[pid] = nil
+                end
+            end
+        end
+
+        -- ============================================================
+        -- 4. RANK THRESHOLDS SYNC (Lua -> Python)
+        -- ============================================================
+
+        -- Invia soglie rank al client Python
+        function send_rank_thresholds()
+            local thresholds = {}
+            thresholds.E = 0
+            thresholds.D = tonumber(hunter_level_bridge.get_config("rank_threshold_D")) or 2000
+            thresholds.C = tonumber(hunter_level_bridge.get_config("rank_threshold_C")) or 10000
+            thresholds.B = tonumber(hunter_level_bridge.get_config("rank_threshold_B")) or 50000
+            thresholds.A = tonumber(hunter_level_bridge.get_config("rank_threshold_A")) or 150000
+            thresholds.S = tonumber(hunter_level_bridge.get_config("rank_threshold_S")) or 500000
+            thresholds.N = tonumber(hunter_level_bridge.get_config("rank_threshold_N")) or 1500000
+
+            -- Format: E|D|C|B|A|S|N
+            local data = thresholds.E .. "|" .. thresholds.D .. "|" .. thresholds.C .. "|" .. thresholds.B .. "|" .. thresholds.A .. "|" .. thresholds.S .. "|" .. thresholds.N
+            cmdchat("HunterRankThresholds " .. data)
+        end
+
+        -- ============================================================
+        -- FIX 4: RANK THEME COLORS (56+ colors) - 100% CONFIGURABILE
+        -- ============================================================
+        function send_rank_colors()
+            local c, d = mysql_direct_query("SELECT rank_code, bg_dark, bg_medium, bg_light, border, accent, text_title, text_value, text_muted, bar_fill, glow, btn_normal, btn_hover, btn_down FROM srv1_hunabku.hunter_ui_rank_colors ORDER BY rank_code")
+
+            if c > 0 then
+                for i = 1, c do
+                    -- Format: rank_code|bg_dark|bg_medium|bg_light|border|accent|text_title|text_value|text_muted|bar_fill|glow|btn_normal|btn_hover|btn_down
+                    local data = d[i].rank_code .. "|" ..
+                                 d[i].bg_dark .. "|" ..
+                                 d[i].bg_medium .. "|" ..
+                                 d[i].bg_light .. "|" ..
+                                 d[i].border .. "|" ..
+                                 d[i].accent .. "|" ..
+                                 d[i].text_title .. "|" ..
+                                 d[i].text_value .. "|" ..
+                                 d[i].text_muted .. "|" ..
+                                 d[i].bar_fill .. "|" ..
+                                 d[i].glow .. "|" ..
+                                 d[i].btn_normal .. "|" ..
+                                 d[i].btn_hover .. "|" ..
+                                 d[i].btn_down
+
+                    cmdchat("HunterRankColor " .. data)
+                end
+                return c
+            end
+            return 0
+        end
+
+        -- ============================================================
+        -- FIX 5: UI STRINGS (35+ strings) - 100% CONFIGURABILE
+        -- ============================================================
+        function send_ui_texts()
+            -- Lista di tutte le chiavi da inviare
+            local text_keys = {
+                "ui_tab_stats", "ui_tab_achievements", "ui_tab_ranking", "ui_tab_events",
+                "ui_tab_missions", "ui_tab_guide",
+                "ui_section_today", "ui_section_total", "ui_section_economy", "ui_section_records",
+                "ui_section_personal_stats",
+                "ui_guide_ranks", "ui_guide_glory", "ui_guide_credits", "ui_guide_missions",
+                "ui_guide_emergency", "ui_guide_speedkill", "ui_guide_events", "ui_guide_chests",
+                "ui_guide_fractures", "ui_guide_shop",
+                "rank_E_title", "rank_E_desc", "rank_D_title", "rank_D_desc",
+                "rank_C_title", "rank_C_desc", "rank_B_title", "rank_B_desc",
+                "rank_A_title", "rank_A_desc", "rank_S_title", "rank_S_desc",
+                "rank_N_title", "rank_N_desc",
+                "ui_msg_all_complete", "ui_msg_how_participate", "ui_msg_rewards"
+            }
+
+            local count = 0
+            for _, key in ipairs(text_keys) do
+                local text = hunter_level_bridge.get_text(key)
+                if text then
+                    -- Format: key|text
+                    cmdchat("HunterUIText " .. key .. "|" .. text)
+                    count = count + 1
+                end
+            end
+
+            return count
+        end
+
+        -- ============================================================
+        -- FIX 6: UI DIMENSIONS (20+ dimensions) - 100% CONFIGURABILE
+        -- ============================================================
+        function send_ui_dimensions()
+            -- Carica tutte le dimensioni UI dal DB
+            local dims = {}
+
+            dims.window_width = tonumber(hunter_level_bridge.get_config("ui_window_width")) or 500
+            dims.window_height = tonumber(hunter_level_bridge.get_config("ui_window_height")) or 520
+            dims.header_height = tonumber(hunter_level_bridge.get_config("ui_header_height")) or 95
+            dims.content_height = tonumber(hunter_level_bridge.get_config("ui_content_height")) or 300
+            dims.tab_height = tonumber(hunter_level_bridge.get_config("ui_tab_height")) or 28
+            dims.footer_height = tonumber(hunter_level_bridge.get_config("ui_footer_height")) or 35
+            dims.stats_panel_width = tonumber(hunter_level_bridge.get_config("ui_stats_panel_width")) or 240
+            dims.stats_panel_height = tonumber(hunter_level_bridge.get_config("ui_stats_panel_height")) or 200
+            dims.achievement_popup_width = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_width")) or 500
+            dims.achievement_popup_height = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_height")) or 200
+            dims.window_center_x = tonumber(hunter_level_bridge.get_config("ui_window_center_x")) or 1
+            dims.window_center_y = tonumber(hunter_level_bridge.get_config("ui_window_center_y")) or 1
+            dims.header_y = tonumber(hunter_level_bridge.get_config("ui_header_y")) or 0
+            dims.content_y = tonumber(hunter_level_bridge.get_config("ui_content_y")) or 95
+            dims.footer_y = tonumber(hunter_level_bridge.get_config("ui_footer_y")) or 485
+            dims.font_size_title = tonumber(hunter_level_bridge.get_config("ui_font_size_title")) or 16
+            dims.font_size_label = tonumber(hunter_level_bridge.get_config("ui_font_size_label")) or 12
+            dims.font_size_value = tonumber(hunter_level_bridge.get_config("ui_font_size_value")) or 14
+            dims.padding_small = tonumber(hunter_level_bridge.get_config("ui_padding_small")) or 5
+            dims.padding_medium = tonumber(hunter_level_bridge.get_config("ui_padding_medium")) or 10
+            dims.padding_large = tonumber(hunter_level_bridge.get_config("ui_padding_large")) or 15
+
+            -- Format: pipe-separated (20+ values)
+            local data = dims.window_width .. "|" ..
+                         dims.window_height .. "|" ..
+                         dims.header_height .. "|" ..
+                         dims.content_height .. "|" ..
+                         dims.tab_height .. "|" ..
+                         dims.footer_height .. "|" ..
+                         dims.stats_panel_width .. "|" ..
+                         dims.stats_panel_height .. "|" ..
+                         dims.achievement_popup_width .. "|" ..
+                         dims.achievement_popup_height .. "|" ..
+                         dims.window_center_x .. "|" ..
+                         dims.window_center_y .. "|" ..
+                         dims.header_y .. "|" ..
+                         dims.content_y .. "|" ..
+                         dims.footer_y .. "|" ..
+                         dims.font_size_title .. "|" ..
+                         dims.font_size_label .. "|" ..
+                         dims.font_size_value .. "|" ..
+                         dims.padding_small .. "|" ..
+                         dims.padding_medium .. "|" ..
+                         dims.padding_large
+
+            cmdchat("HunterUIDimensions " .. data)
+        end
+
+        -- ============================================================
+        -- 5. PENALTY VISIBILITY
+        -- ============================================================
+
+        -- Invia stato penalit\u00e0 al client
+        function send_penalty_status()
+            local pid = pc.get_player_id()
+
+            -- Query penalty attiva dal DB
+            local c, d = mysql_direct_query("SELECT penalty_active, penalty_expires, failed_missions FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+
+            if c > 0 and d[1] then
+                local active = tonumber(d[1].penalty_active) or 0
+                local expires = tonumber(d[1].penalty_expires) or 0
+                local strikes = tonumber(d[1].failed_missions) or 0
+
+                -- Invia al client
+                cmdchat("HunterPenaltyStatus " .. active .. "|" .. expires .. "|" .. strikes)
+            else
+                -- Nessun record, invia default
+                cmdchat("HunterPenaltyStatus 0|0|0")
+            end
+        end
+
+        -- Applica penalit\u00e0 per missione fallita
+        function apply_mission_failure_penalty()
+            local pid = pc.get_player_id()
+
+            -- Incrementa strike
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET failed_missions = failed_missions + 1 WHERE player_id=" .. pid)
+
+            -- Query strike count
+            local c, d = mysql_direct_query("SELECT failed_missions FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+            local strikes = 0
+            if c > 0 and d[1] then
+                strikes = tonumber(d[1].failed_missions) or 0
+            end
+
+            -- Trova penalty config appropriata
+            if not _G.hunter_config_cache or not _G.hunter_config_cache["penalties"] then
+                hunter_level_bridge.reload_all_config()
+            end
+
+            local penalty_level = 1
+            if strikes >= 3 then
+                penalty_level = 3
+            elseif strikes >= 2 then
+                penalty_level = 2
+            end
+
+            local penalty = _G.hunter_config_cache["penalties"][penalty_level]
+
+            if penalty and strikes >= penalty.strikes then
+                -- Attiva penalit\u00e0!
+                local duration_sec = penalty.hours * SECONDS_PER_HOUR
+                local expires = get_time() + duration_sec
+                local malus = penalty.malus
+                local msg = penalty.message or "Penalita attiva"
+
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET penalty_active=1, penalty_expires=" .. expires .. ", penalty_malus=" .. malus .. " WHERE player_id=" .. pid)
+
+                -- Notifica
+                syschat("|cffFF0000========================================|r")
+                syschat("|cffFF0000  PENALITA ATTIVATA!|r")
+                syschat("|cffFFFFFF  " .. msg .. "|r")
+                syschat("|cffFF6666  Malus Gloria: -" .. malus .. "%|r")
+                syschat("|cffFF6666  Durata: " .. penalty.hours .. " ore|r")
+                syschat("|cffFF6666  Strike: " .. strikes .. "/3|r")
+                syschat("|cffFF0000========================================|r")
+
+                hunter_level_bridge.hunter_speak_color("PENALITA ATTIVA: -" .. malus .. "% Gloria per " .. penalty.hours .. "h!", "RED")
+
+                -- Invia al client
+                hunter_level_bridge.send_penalty_status()
+            end
+        end
+
+        -- Check se penalty \u00e8 scaduta (chiamare al login e periodicamente)
+        function check_penalty_expiration()
+            local pid = pc.get_player_id()
+            local c, d = mysql_direct_query("SELECT penalty_active, penalty_expires FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+
+            if c > 0 and d[1] then
+                local active = tonumber(d[1].penalty_active) or 0
+                local expires = tonumber(d[1].penalty_expires) or 0
+
+                if active == 1 and get_time() >= expires then
+                    -- Penalit\u00e0 scaduta, rimuovi
+                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET penalty_active=0, penalty_malus=0 WHERE player_id=" .. pid)
+
+                    hunter_level_bridge.hunter_speak_color("Penalita scaduta! Torna a cacciare!", "GREEN")
+                    hunter_level_bridge.send_penalty_status()
+                end
+            end
+        end
+
+        -- ============================================================
+        -- 5. RIVAL TRACKER INTEGRATION
+        -- ============================================================
+
+        -- Invia info rival tracker al client
+        function send_rival_info()
+            local pid = pc.get_player_id()
+
+            -- Query chi ti ha superato recentemente
+            local c, d = mysql_direct_query("SELECT overtaken_by, overtaken_diff, overtaken_category FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+
+            if c > 0 and d[1] then
+                local rival_name = d[1].overtaken_by or ""
+                local diff = tonumber(d[1].overtaken_diff) or 0
+                local category = d[1].overtaken_category or "total"
+
+                if rival_name ~= "" and diff > 0 then
+                    -- C'\u00e8 un rival!
+                    cmdchat("HunterRivalInfo " .. hunter_level_bridge.clean_str(rival_name) .. "|" .. diff .. "|" .. category)
+                else
+                    -- Nessun rival
+                    cmdchat("HunterRivalInfo NONE|0|total")
+                end
+            else
+                cmdchat("HunterRivalInfo NONE|0|total")
+            end
+        end
+
+        -- Registra overtake (chiamare quando qualcuno ti supera)
+        function register_overtake(overtaker_name, point_diff, category)
+            local pid = pc.get_player_id()
+
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET overtaken_by='" .. overtaker_name .. "', overtaken_diff=" .. point_diff .. ", overtaken_category='" .. category .. "' WHERE player_id=" .. pid)
+
+            -- Notifica
+            hunter_level_bridge.hunter_speak_color(overtaker_name .. " ti ha superato in " .. category .. "! (-" .. point_diff .. " pts)", "ORANGE")
+            hunter_level_bridge.send_rival_info()
+        end
+
+        -- ============================================================
+        -- 6. RANK BONUS SENDER
+        -- ============================================================
+
+        -- Invia rank bonus attuale al client
+        function send_rank_bonus()
+            local pid = pc.get_player_id()
+
+            -- Query punti attuali
+            local c, d = mysql_direct_query("SELECT total_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+            local points = 0
+            if c > 0 and d[1] then
+                points = tonumber(d[1].total_points) or 0
+            end
+
+            -- Get rank attuale
+            local rank_num = hunter_level_bridge.get_rank_index(points)
+            local rank_letter = hunter_level_bridge.get_rank_letter(rank_num)
+
+            -- Get bonus dal cache
+            if not _G.hunter_config_cache or not _G.hunter_config_cache["rank_bonuses"] then
+                hunter_level_bridge.reload_all_config()
+            end
+
+            local rank_data = _G.hunter_config_cache["rank_bonuses"][rank_letter]
+
+            if rank_data then
+                local gloria_pct = rank_data.gloria or 0
+                local drop_pct = rank_data.drop or 0
+
+                -- Calcola punti per prossimo rank
+                local next_rank_pts = 0
+                if rank_num < 6 then
+                    local next_letter = hunter_level_bridge.get_rank_letter(rank_num + 1)
+                    -- Query min_points per next rank
+                    local nc, nd = mysql_direct_query("SELECT min_points FROM srv1_hunabku.hunter_rank_bonuses WHERE rank_code='" .. next_letter .. "'")
+                    if nc > 0 and nd[1] then
+                        next_rank_pts = tonumber(nd[1].min_points) or 0
+                    end
+                else
+                    next_rank_pts = MAX_RANK_POINTS  -- Massimo rank
+                end
+
+                -- Invia al client
+                cmdchat("HunterRankBonus " .. gloria_pct .. "|" .. drop_pct .. "|" .. next_rank_pts)
+            else
+                -- Default: no bonus
+                cmdchat("HunterRankBonus 0|0|0")
+            end
+        end
+
+        -- ============================================================
+        -- 7. GLORIA SOURCES TRACKING
+        -- ============================================================
+
+        -- Track sorgente punti gloria per statistiche
+        function track_gloria_source(source_type, gloria_amount)
+            local pid = pc.get_player_id()
+
+            -- source_type: FRACTURE, MISSION, EVENT, EMERGENCY, BOSS, STREAK
+            mysql_direct_query("INSERT INTO srv1_hunabku.hunter_gloria_sources_tracking (player_id, source_type, total_gloria, count_events) VALUES (" .. pid .. ", '" .. source_type .. "', " .. gloria_amount .. ", 1) ON DUPLICATE KEY UPDATE total_gloria = total_gloria + " .. gloria_amount .. ", count_events = count_events + 1")
+        end
+
+        -- Invia statistiche sorgenti gloria al client (per pie chart)
+        function send_gloria_sources_stats()
+            local pid = pc.get_player_id()
+
+            local c, d = mysql_direct_query("SELECT source_type, total_gloria, count_events FROM srv1_hunabku.hunter_gloria_sources_tracking WHERE player_id=" .. pid)
+
+            if c > 0 then
+                local batch = ""
+                for i = 1, c do
+                    local stype = d[i].source_type or "UNKNOWN"
+                    local total = tonumber(d[i].total_gloria) or 0
+                    local count = tonumber(d[i].count_events) or 0
+
+                    if batch ~= "" then batch = batch .. ";" end
+                    batch = batch .. stype .. "~" .. total .. "~" .. count
+                end
+
+                cmdchat("HunterGloriaSources " .. batch)
+            else
+                -- Nessun dato
+                cmdchat("HunterGloriaSources NONE")
+            end
+        end
+
+        -- ============================================================
+        -- 8. COMANDO CLAIM ACHIEVEMENT
+        -- ============================================================
+
+        when chat."/hunter_claim" begin
+            -- SECURITY: Solo player normali possono claim i PROPRI achievement
+            -- GM devono usare /htest_achievement per test
+            local ach_id = tonumber(string.gsub(input, "/hunter_claim ", "")) or 0
+
+            -- SECURITY: Whitelist range valido (ID achievement 1-1000)
+            if ach_id > 0 and ach_id <= 1000 then
+                hunter_level_bridge.claim_achievement_reward(ach_id)
+            else
+                hunter_level_bridge.hunter_speak_color("Uso: /hunter_claim <achievement_id> (ID validi: 1-1000)", "RED")
+            end
+        end
+
+        -- ============================================================
+        -- 9. INTEGRATION HELPERS - DA CHIAMARE NEL LOGIN HANDLER
+        -- ============================================================
+
+        -- Questa funzione deve essere chiamata nel login handler principale
+        function on_hunter_login()
+            local pid = pc.get_player_id()
+
+            -- 1. Ricarica config se necessario
+            if not _G.hunter_config_cache or table.getn(_G.hunter_config_cache) == 0 then
+                hunter_level_bridge.reload_all_config()
+            end
+
+            -- 2. Send rank thresholds to Python UI
+            hunter_level_bridge.send_rank_thresholds()
+
+            -- 2.1 FIX 4: Send rank colors (56+ colors)
+            hunter_level_bridge.send_rank_colors()
+
+            -- 2.2 FIX 5: Send UI texts (35+ strings)
+            hunter_level_bridge.send_ui_texts()
+
+            -- 2.3 FIX 6: Send UI dimensions (20+ dimensions)
+            hunter_level_bridge.send_ui_dimensions()
+
+            -- 3. Check penalty expiration
+            hunter_level_bridge.check_penalty_expiration()
+
+            -- 4. Send penalty status
+            hunter_level_bridge.send_penalty_status()
+
+            -- 5. Send rival info
+            hunter_level_bridge.send_rival_info()
+
+            -- 6. Send rank bonus
+            hunter_level_bridge.send_rank_bonus()
+
+            -- 7. Send gloria sources stats
+            hunter_level_bridge.send_gloria_sources_stats()
+
+            -- 8. Send all achievement progress
+            hunter_level_bridge.send_all_achievement_progress()
+
+            -- 9. Show random tip
+            hunter_level_bridge.show_random_tip()
+
+            -- 9. Check streak milestone
+            local streak = pc.getqf("hq_login_streak") or 0
+            if streak > 0 then
+                hunter_level_bridge.check_streak_milestone(streak)
+            end
+
+            -- 10. Update achievement tipo 6 (Login Streak) se streak \u00e8 nuovo record
+            local best_streak = pc.getqf("hq_best_streak") or 0
+            if streak > best_streak then
+                pc.setqf("hq_best_streak", streak)
+                hunter_level_bridge.update_achievement_progress(pid, 6, streak - best_streak)
+            end
+        end
+
+        -- ============================================================
+        -- 10. ACHIEVEMENT TRACKING INTEGRATION
+        -- ============================================================
+
+        -- Funzione helper da chiamare quando player uccide mob
+        function on_mob_kill_achievements(mob_vnum, mob_info)
+            local pid = pc.get_player_id()
+
+            -- Type 1: Kill Count
+            hunter_level_bridge.update_achievement_progress(pid, 1, 1)
+
+            -- Type 3: Boss Kills (se \u00e8 boss)
+            if mob_info and mob_info.type_name == "BOSS" then
+                hunter_level_bridge.update_achievement_progress(pid, 3, 1)
+            end
+
+            -- Type 4: Metin Destroyed (se \u00e8 metin)
+            if mob_info and (mob_info.type_name == "SUPER_METIN" or mob_info.type_name == "METIN") then
+                hunter_level_bridge.update_achievement_progress(pid, 4, 1)
+            end
+
+            -- Type 5: Chests Opened (se \u00e8 baule)
+            if mob_info and (mob_info.type_name == "BAULE" or mob_info.type_name == "CHEST") then
+                hunter_level_bridge.update_achievement_progress(pid, 5, 1)
+            end
+        end
+
+        -- Funzione helper da chiamare quando player guadagna punti gloria
+        function on_gloria_gained_achievements(gloria_amount, source_type)
+            local pid = pc.get_player_id()
+
+            -- Type 2: Glory Points
+            hunter_level_bridge.update_achievement_progress(pid, 2, gloria_amount)
+
+            -- Track source per statistiche
+            hunter_level_bridge.track_gloria_source(source_type or "UNKNOWN", gloria_amount)
+        end
+
+        -- Funzione helper da chiamare quando completa missione
+        function on_mission_complete_achievements()
+            local pid = pc.get_player_id()
+
+            -- Type 7: Missions Completed
+            hunter_level_bridge.update_achievement_progress(pid, 7, 1)
+        end
+
+        -- Funzione helper da chiamare quando partecipa a evento
+        function on_event_participate_achievements()
+            local pid = pc.get_player_id()
+
+            -- Type 8: Events Participated
+            hunter_level_bridge.update_achievement_progress(pid, 8, 1)
+        end
+
+        -- ============================================================
+        -- FINE NEW FEATURES
+        -- ============================================================
+
     end
 end

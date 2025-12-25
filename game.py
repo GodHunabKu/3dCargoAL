@@ -2381,13 +2381,22 @@ class GameWindow(ui.ScriptWindow):
 		serverCommandList["HunterBossAlert"]        = self.__HunterBossAlert
 		serverCommandList["HunterSystemInit"]       = self.__HunterSystemInit
 		serverCommandList["HunterAwakening"]        = self.__HunterAwakening
+
+		# FIX 4-6: Config 100% da DB
+		serverCommandList["HunterRankColor"]        = self.__HunterRankColor
+		serverCommandList["HunterUIText"]           = self.__HunterUIText
+		serverCommandList["HunterUIDimensions"]     = self.__HunterUIDimensions
 		serverCommandList["HunterActivation"]       = self.__HunterActivation
 		serverCommandList["HunterRankUp"]           = self.__HunterRankUp
 		serverCommandList["HunterOvertake"]         = self.__HunterOvertake
 		serverCommandList["HunterSysMsg"]           = self.__HunterSysMsg
 		serverCommandList["HunterEventStatus"]      = self.__HunterEventStatus
 		serverCommandList["HunterEventClose"]       = self.__HunterEventClose
-		
+		serverCommandList["HunterRankThresholds"]   = self.__HunterRankThresholds
+		serverCommandList["HunterPenaltyStatus"]    = self.__HunterPenaltyStatus
+		serverCommandList["HunterRivalInfo"]        = self.__HunterRivalInfo
+		serverCommandList["HunterRankBonus"]        = self.__HunterRankBonus
+
 		# Daily Missions & Events System
 		serverCommandList["HunterMissionsCount"]     = self.__HunterMissionsCount
 		serverCommandList["HunterMissionData"]       = self.__HunterMissionData
@@ -3426,11 +3435,8 @@ class GameWindow(ui.ScriptWindow):
 			# Nuovo formato: "rank_key|messaggio" per colorare con il rank del player
 			if "|" in msg:
 				parts = msg.split("|", 1)
-				rank_key = parts[0].strip()  # FIX: strip() whitespace per lookup corretto
+				rank_key = parts[0].strip()
 				actual_msg = parts[1] if len(parts) > 1 else ""
-				# DEBUG: Log rankKey per diagnosi colori
-				import dbg
-				dbg.TraceError("[PY-DEBUG] HunterSystemSpeak: rankKey='%s', msg='%s'" % (rank_key, actual_msg[:50]))
 				self.interface.HunterSystemSpeak(actual_msg, rank_key)
 			else:
 				# Retrocompatibilita: vecchio formato senza rank
@@ -3562,6 +3568,30 @@ class GameWindow(ui.ScriptWindow):
 				newRank = parts[1]
 				if self.interface:
 					self.interface.HunterRankUp(oldRank, newRank)
+		except:
+			pass
+
+	def __HunterRankColor(self, data):
+		"""FIX 4: Riceve colori rank da DB (56+ colors)"""
+		try:
+			if self.interface:
+				self.interface.UpdateRankColor(data)
+		except:
+			pass
+
+	def __HunterUIText(self, data):
+		"""FIX 5: Riceve stringhe UI da DB (35+ strings)"""
+		try:
+			if self.interface:
+				self.interface.UpdateUIText(data)
+		except:
+			pass
+
+	def __HunterUIDimensions(self, data):
+		"""FIX 6: Riceve dimensioni UI da DB (20+ dimensions)"""
+		try:
+			if self.interface:
+				self.interface.UpdateUIDimensions(data)
 		except:
 			pass
 
@@ -3765,5 +3795,109 @@ class GameWindow(ui.ScriptWindow):
 		try:
 			if self.interface:
 				self.interface.HunterEventsOpen()
+		except:
+			pass
+
+	# ==============================================================================
+	# HUNTER SYSTEM COMPLETE OVERHAUL - NEW COMMAND HANDLERS
+	# ==============================================================================
+
+	def __HunterPenaltyStatus(self, data):
+		"""Invia stato penalita al client"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 3:
+				active = int(parts[0])
+				expires = int(parts[1])
+				strikes = int(parts[2])
+				if self.interface:
+					self.interface.HunterPenaltyStatus(active, expires, strikes)
+		except:
+			pass
+
+	def __HunterRivalInfo(self, data):
+		"""Invia informazioni rival tracker"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 3:
+				rival_name = parts[0].replace("+", " ")
+				diff = int(parts[1])
+				category = parts[2]
+				if self.interface:
+					self.interface.HunterRivalInfo(rival_name, diff, category)
+		except:
+			pass
+
+	def __HunterRankBonus(self, data):
+		"""Invia bonus rank attuale (gloria %, drop %, pts prossimo rank)"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 3:
+				gloria_pct = int(parts[0])
+				drop_pct = int(parts[1])
+				next_rank_pts = int(parts[2])
+				if self.interface:
+					self.interface.HunterRankBonus(gloria_pct, drop_pct, next_rank_pts)
+		except:
+			pass
+
+	def __HunterRankThresholds(self, data):
+		"""Riceve soglie rank dal server - Format: E|D|C|B|A|S|N"""
+		try:
+			parts = data.split("|")
+			if len(parts) == 7:
+				thresholds = {
+					"E": int(parts[0]),
+					"D": int(parts[1]),
+					"C": int(parts[2]),
+					"B": int(parts[3]),
+					"A": int(parts[4]),
+					"S": int(parts[5]),
+					"N": int(parts[6]),
+				}
+				if self.interface:
+					self.interface.SetRankThresholds(thresholds)
+		except:
+			pass
+
+	def __HunterAchievementUnlock(self, data):
+		"""Mostra popup achievement unlock"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 4:
+				ach_id = int(parts[0])
+				ach_name = parts[1].replace("+", " ")
+				reward_vnum = int(parts[2])
+				reward_count = int(parts[3])
+				if self.interface:
+					self.interface.HunterAchievementUnlock(ach_id, ach_name, reward_vnum, reward_count)
+		except:
+			pass
+
+	def __HunterAchievementProgress(self, data):
+		"""Aggiorna progresso achievement real-time"""
+		try:
+			parts = data.split("|")
+			if len(parts) >= 2:
+				ach_type = int(parts[0])
+				current = int(parts[1])
+				if self.interface:
+					self.interface.HunterAchievementProgress(ach_type, current)
+		except:
+			pass
+
+	def __HunterAchievementClaimed(self, ach_id):
+		"""Notifica che achievement e stato riscosso"""
+		try:
+			if self.interface:
+				self.interface.HunterAchievementClaimed(int(ach_id))
+		except:
+			pass
+
+	def __HunterGloriaSources(self, data):
+		"""Invia statistiche sorgenti gloria per pie chart"""
+		try:
+			if self.interface:
+				self.interface.HunterGloriaSources(data)
 		except:
 			pass
