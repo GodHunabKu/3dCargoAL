@@ -520,8 +520,10 @@ class HunterLevelWindow(ui.ScriptWindow):
             self.__UpdateSpecialWindowsTheme()
     
     def __UpdateSpecialWindowsTheme(self):
-        if self.systemMsgWnd and hasattr(self.systemMsgWnd, 'SetRankColor'):
-            self.systemMsgWnd.SetRankColor(self.theme["accent"])
+        # REMOVED: Non aggiornare il colore del SystemMessageWindow con il tema
+        # I messaggi devono mantenere il colore del loro rank specifico (E,D,C,B,A,S,N)
+        # altrimenti quando il player cambia rank, tutti i messaggi cambiano colore!
+        pass
     
     def __BuildInterface(self):
         self.__ClearAll()
@@ -1853,7 +1855,7 @@ class HunterLevelWindow(ui.ScriptWindow):
         if self.systemMsgWnd:
             color = self.RANK_COLORS.get(rankKey, 0xFF808080)
             self.systemMsgWnd.ShowMessage(msg, color)
-            self.systemMsgWnd.SetRankColor(rankKey)
+            # REMOVED: SetRankColor() era ridondante e causava override del colore
     
     def ShowWelcomeMessage(self, rankKey, name, points):
         """Mostra il messaggio di benvenuto epico basato sul rank"""
