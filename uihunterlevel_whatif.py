@@ -422,10 +422,6 @@ class SystemMessageWindow(ui.Window):
             else:
                 finalColor = self.__GetColorFromKey(color)
 
-        # DEBUG: Log final color
-        import dbg
-        dbg.TraceError("[PY-DEBUG] SystemMessageWindow.ShowMessage: color=%s, finalColor=0x%X" % (str(color), finalColor))
-
         # Aggiungi alla coda
         self.messageQueue.append((msg.replace("+", " "), finalColor))
 
