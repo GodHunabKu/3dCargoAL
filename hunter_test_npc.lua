@@ -118,11 +118,13 @@ quest hunter_test_npc begin
 
             elseif opt == 7 then
                 say("Controlla i tuoi punti attuali:")
-                local c, d = mysql_direct_query("SELECT total_points, spendable_points, hunter_rank FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+                local c, d = mysql_direct_query("SELECT total_points, spendable_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
                 if c > 0 then
-                    say("Totale: " .. d[1].total_points)
+                    local pts = tonumber(d[1].total_points) or 0
+                    local rank_key = hunter_level_bridge.get_rank_key(pts)
+                    say("Totale: " .. pts)
                     say("Spendibili: " .. d[1].spendable_points)
-                    say("Rank: " .. d[1].hunter_rank)
+                    say("Rank: " .. rank_key .. " (" .. hunter_level_bridge.get_rank_name(rank_key) .. ")")
                 end
                 wait()
                 hunter_test_npc.test_rank_points()

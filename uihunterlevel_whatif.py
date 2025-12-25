@@ -572,8 +572,8 @@ class RivalTrackerWindow(ui.Window):
         self.screenWidth = wndMgr.GetScreenWidth()
 
         # FIX: Posizioni dinamiche corrette per evitare sovrapposizioni
-        self.defaultY = 80  # Posizione senza evento (top-right)
-        self.eventActiveY = 350  # Sotto EventStatusWindow (Y=280 + 60 + 10 padding = 350)
+        self.defaultY = 80  # Posizione senza evento (top-right, sotto AUTO CACCIA)
+        self.eventActiveY = 210  # Sotto EventStatusWindow (Y=140 + 60 + 10 padding = 210)
         self.SetPosition(self.screenWidth - 210, self.defaultY)
         self.AddFlag("float")
         
@@ -674,11 +674,12 @@ class EventStatusWindow(ui.ScriptWindow):
         self.SetSize(220, 60)
 
         screenWidth = wndMgr.GetScreenWidth()
-        # FIX: Posizione ottimizzata - A destra, sotto minimappa (circa Y=200)
-        # Lascia spazio per RivalTrackerWindow sopra (Y=80) e sotto (Y=350)
-        self.SetPosition(screenWidth - 230, 200)
+        # FIX: Posizione sotto pulsante AUTO CACCIA (Y=140)
+        # Ottimizzato per non sovrapporsi ad altri elementi UI
+        self.SetPosition(screenWidth - 230, 140)
         self.AddFlag("float")
         self.endTime = 0
+        self.parentWindow = None  # Per aprire la guida
         
         # Background scuro
         self.bg = ui.Bar()
@@ -762,9 +763,9 @@ class EventStatusWindow(ui.ScriptWindow):
         else:
             self.timeText.SetText("")
         
-        # FIX: Ricalcola posizione (per sicurezza con risoluzioni diverse)
+        # FIX: Ricalcola posizione (sotto pulsante AUTO CACCIA)
         screenWidth = wndMgr.GetScreenWidth()
-        self.SetPosition(screenWidth - 230, 200)
+        self.SetPosition(screenWidth - 230, 140)
 
         self.Show()
         self.SetTop()
@@ -799,10 +800,10 @@ class EventStatusWindow(ui.ScriptWindow):
         }
         color = eventColors.get(eventType, 0xFF00FF88)
         self.SetEventColor(color)
-        
-        # FIX: Ricalcola posizione
+
+        # FIX: Ricalcola posizione (sotto pulsante AUTO CACCIA)
         screenWidth = wndMgr.GetScreenWidth()
-        self.SetPosition(screenWidth - 230, 200)
+        self.SetPosition(screenWidth - 230, 140)
 
         self.Show()
         self.SetTop()
@@ -836,6 +837,56 @@ class EventStatusWindow(ui.ScriptWindow):
         alpha = int(abs((ct * 2) % 2 - 1) * 60) + 40  # 40-100
         glowColor = 0x00FF88 | (alpha << 24)
         self.glowBar.SetColor(glowColor)
+
+    def SetParentWindow(self, parent):
+        """Salva riferimento al terminale Hunter per aprire la guida"""
+        self.parentWindow = parent
+
+    def OnMouseOverIn(self):
+        """Mostra tooltip esplicativo quando passi il mouse sopra"""
+        import uiToolTip
+        if not hasattr(self, "toolTip"):
+            self.toolTip = uiToolTip.ToolTip()
+            self.toolTip.ClearToolTip()
+
+        # Tooltip completo stile Solo Leveling
+        self.toolTip.ClearToolTip()
+        self.toolTip.SetTitle("⚡ EVENTO HUNTER IN CORSO")
+        self.toolTip.AppendSpace(5)
+
+        if self.currentEvent:
+            self.toolTip.AppendTextLine("Nome: %s" % self.currentEvent, 0xFFFFD700)
+
+        self.toolTip.AppendSpace(5)
+        self.toolTip.AppendTextLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━", 0xFF00CCFF)
+        self.toolTip.AppendSpace(5)
+        self.toolTip.AppendTextLine("Durante questo evento ottieni bonus speciali:", 0xFFFFFFFF)
+        self.toolTip.AppendSpace(3)
+        self.toolTip.AppendTextLine("✓ Gloria x2 per ogni kill", 0xFF00FF00)
+        self.toolTip.AppendTextLine("✓ Spawn Elite aumentato", 0xFF00FF00)
+        self.toolTip.AppendTextLine("✓ Ricompense maggiorate", 0xFF00FF00)
+        self.toolTip.AppendSpace(5)
+        self.toolTip.AppendTextLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━", 0xFF00CCFF)
+        self.toolTip.AppendSpace(5)
+        self.toolTip.AppendTextLine("CLICCA per aprire la Guida Eventi", 0xFFFFAA00)
+        self.toolTip.AppendSpace(5)
+
+        self.toolTip.Show()
+
+    def OnMouseOverOut(self):
+        """Nasconde tooltip quando rimuovi il mouse"""
+        if hasattr(self, "toolTip"):
+            self.toolTip.Hide()
+
+    def OnMouseLeftButtonDown(self):
+        """Click apre direttamente la Guida nella sezione Eventi"""
+        if self.parentWindow:
+            # Apri terminale se chiuso
+            if not self.parentWindow.IsShow():
+                self.parentWindow.Open()
+            # Vai direttamente al tab Guida (indice 5)
+            self.parentWindow._HunterLevelWindow__OnClickTab(5)
+            # TODO: Scroll automatico alla sezione eventi se possibile
 
 
 # ============================================================
@@ -1845,9 +1896,9 @@ class OvertakeWindow(ui.Window):
         self.screenHeight = wndMgr.GetScreenHeight()
         self.SetSize(400, 80)
         
-        # Posizione di default: in alto a destra (sotto dove potrebbe essere EventStatus)
+        # Posizione di default: in alto a destra (sotto AUTO CACCIA)
         self.defaultY = 80
-        self.eventActiveY = 150  # Sotto EventStatusWindow (60 di altezza + 10 margine)
+        self.eventActiveY = 210  # Sotto EventStatusWindow (Y=140 + 60 altezza + 10 margine = 210)
         self.SetPosition(self.screenWidth - 410, self.defaultY)
         
         self.AddFlag("not_pick")
