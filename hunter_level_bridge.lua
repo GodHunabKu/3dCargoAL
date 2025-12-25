@@ -175,9 +175,7 @@ quest hunter_level_bridge begin
         function hunter_speak_color(msg, color_code)
             if msg == nil then return end
             -- color_code: GREEN, BLUE, ORANGE, RED, GOLD, PURPLE, BLACKWHITE
-            local final_color = color_code or "BLUE"
-            syschat("[LUA-1] hunter_speak_color: color=" .. final_color)
-            cmdchat("HunterSystemSpeak " .. final_color .. "|" .. hunter_level_bridge.clean_str(msg))
+            cmdchat("HunterSystemSpeak " .. (color_code or "BLUE") .. "|" .. hunter_level_bridge.clean_str(msg))
         end
         
         -- Colori HEX per ogni rank (usati nei syschat)
