@@ -1500,7 +1500,7 @@ CREATE TABLE `hunter_quest_player_achievements` (
   INDEX idx_achievement (achievement_id),
   INDEX idx_unlocked (unlocked_at),
   INDEX idx_claimed (claimed_at),
-  FOREIGN KEY (`achievement_id`) REFERENCES `hunter_quest_achievements_config`(`achievement_id`) ON DELETE CASCADE
+  FOREIGN KEY (`achievement_id`) REFERENCES `hunter_quest_achievements_config`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================================
