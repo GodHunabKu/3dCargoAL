@@ -26,15 +26,57 @@ FOOTER_HEIGHT = 35
 # ============================================================================
 #  FIX 4: RANK THEMES - Popolato da server DB (100% configurabile)
 # ============================================================================
-# Inizializzato vuoto, popolato da HunterRankColor server command al login
+# Inizializzato con valori di default, aggiornato da HunterRankColor al login
 RANK_THEMES = {
-    "E": {"name": "E-Rank", "title": "Risvegliato", "min": 0, "max": 2000},
-    "D": {"name": "D-Rank", "title": "Apprendista", "min": 2000, "max": 10000},
-    "C": {"name": "C-Rank", "title": "Cacciatore", "min": 10000, "max": 50000},
-    "B": {"name": "B-Rank", "title": "Veterano", "min": 50000, "max": 150000},
-    "A": {"name": "A-Rank", "title": "Maestro", "min": 150000, "max": 500000},
-    "S": {"name": "S-Rank", "title": "Leggenda", "min": 500000, "max": 1500000},
-    "N": {"name": "NATIONAL", "title": "Monarca Nazionale", "min": 1500000, "max": 5000000},
+    "E": {
+        "name": "E-Rank", "title": "Risvegliato", "min": 0, "max": 2000,
+        "bg_dark": 0xFF1A1A1A, "bg_medium": 0xFF2A2A2A, "bg_light": 0xFF3A3A3A,
+        "border": 0xFF808080, "accent": 0xFFA0A0A0, "text_title": 0xFFFFFFFF,
+        "text_value": 0xFFCCCCCC, "text_muted": 0xFF888888, "bar_fill": 0xFF666666,
+        "glow": 0xFF404040, "btn_normal": 0xFF2A2A2A, "btn_hover": 0xFF3A3A3A, "btn_down": 0xFF1A1A1A
+    },
+    "D": {
+        "name": "D-Rank", "title": "Apprendista", "min": 2000, "max": 10000,
+        "bg_dark": 0xFF0A1A0A, "bg_medium": 0xFF1A2A1A, "bg_light": 0xFF2A3A2A,
+        "border": 0xFF00FF00, "accent": 0xFF00CC00, "text_title": 0xFFFFFFFF,
+        "text_value": 0xFF00FF00, "text_muted": 0xFF008800, "bar_fill": 0xFF00AA00,
+        "glow": 0xFF00FF00, "btn_normal": 0xFF1A2A1A, "btn_hover": 0xFF2A3A2A, "btn_down": 0xFF0A1A0A
+    },
+    "C": {
+        "name": "C-Rank", "title": "Cacciatore", "min": 10000, "max": 50000,
+        "bg_dark": 0xFF0A1A1A, "bg_medium": 0xFF1A2A2A, "bg_light": 0xFF2A3A3A,
+        "border": 0xFF00FFFF, "accent": 0xFF00CCCC, "text_title": 0xFFFFFFFF,
+        "text_value": 0xFF00FFFF, "text_muted": 0xFF008888, "bar_fill": 0xFF00AAAA,
+        "glow": 0xFF00FFFF, "btn_normal": 0xFF1A2A2A, "btn_hover": 0xFF2A3A3A, "btn_down": 0xFF0A1A1A
+    },
+    "B": {
+        "name": "B-Rank", "title": "Veterano", "min": 50000, "max": 150000,
+        "bg_dark": 0xFF0A0A1A, "bg_medium": 0xFF1A1A2A, "bg_light": 0xFF2A2A3A,
+        "border": 0xFF0088FF, "accent": 0xFF0066CC, "text_title": 0xFFFFFFFF,
+        "text_value": 0xFF0088FF, "text_muted": 0xFF004488, "bar_fill": 0xFF0066AA,
+        "glow": 0xFF0088FF, "btn_normal": 0xFF1A1A2A, "btn_hover": 0xFF2A2A3A, "btn_down": 0xFF0A0A1A
+    },
+    "A": {
+        "name": "A-Rank", "title": "Maestro", "min": 150000, "max": 500000,
+        "bg_dark": 0xFF1A0A1A, "bg_medium": 0xFF2A1A2A, "bg_light": 0xFF3A2A3A,
+        "border": 0xFFAA00FF, "accent": 0xFF8800CC, "text_title": 0xFFFFFFFF,
+        "text_value": 0xFFAA00FF, "text_muted": 0xFF660088, "bar_fill": 0xFF8800AA,
+        "glow": 0xFFAA00FF, "btn_normal": 0xFF2A1A2A, "btn_hover": 0xFF3A2A3A, "btn_down": 0xFF1A0A1A
+    },
+    "S": {
+        "name": "S-Rank", "title": "Leggenda", "min": 500000, "max": 1500000,
+        "bg_dark": 0xFF1A1A0A, "bg_medium": 0xFF2A2A1A, "bg_light": 0xFF3A3A2A,
+        "border": 0xFFFFAA00, "accent": 0xFFCC8800, "text_title": 0xFFFFFFFF,
+        "text_value": 0xFFFFAA00, "text_muted": 0xFF886600, "bar_fill": 0xFFCC8800,
+        "glow": 0xFFFFAA00, "btn_normal": 0xFF2A2A1A, "btn_hover": 0xFF3A3A2A, "btn_down": 0xFF1A1A0A
+    },
+    "N": {
+        "name": "NATIONAL", "title": "Monarca Nazionale", "min": 1500000, "max": 5000000,
+        "bg_dark": 0xFF1A0A0A, "bg_medium": 0xFF2A1A1A, "bg_light": 0xFF3A2A2A,
+        "border": 0xFFFF0000, "accent": 0xFFCC0000, "text_title": 0xFFFFFFFF,
+        "text_value": 0xFFFF0000, "text_muted": 0xFF880000, "bar_fill": 0xFFCC0000,
+        "glow": 0xFFFF0000, "btn_normal": 0xFF2A1A1A, "btn_hover": 0xFF3A2A2A, "btn_down": 0xFF1A0A0A
+    },
 }
 
 GOLD_COLOR = 0xFFFFD700
