@@ -425,14 +425,26 @@ class HunterLevelWindow(ui.ScriptWindow):
         if self.isLoaded:
             return True
         try:
-            ui.PythonScriptLoader().LoadScriptFile(self, "uiscript/hunterlevel.py")
-            self.baseWindow = self.GetChild("BaseWindow")
-            self.__BuildInterface()
-        except:
             import dbg
+            dbg.TraceError("[DEBUG] LoadWindow: Loading UI script...")
+            ui.PythonScriptLoader().LoadScriptFile(self, "uiscript/hunterlevel.py")
+
+            dbg.TraceError("[DEBUG] LoadWindow: Getting BaseWindow child...")
+            self.baseWindow = self.GetChild("BaseWindow")
+
+            dbg.TraceError("[DEBUG] LoadWindow: Building interface...")
+            self.__BuildInterface()
+
+            dbg.TraceError("[DEBUG] LoadWindow: SUCCESS!")
+        except Exception as e:
+            import dbg
+            import traceback
             dbg.TraceError("HunterLevelWindow.LoadWindow() failed")
+            dbg.TraceError("Error: " + str(e))
+            dbg.TraceError("Traceback:")
+            traceback.print_exc()
             return False
-        
+
         self.isLoaded = True
         self.isDestroyed = False
         return True
@@ -472,15 +484,32 @@ class HunterLevelWindow(ui.ScriptWindow):
         pass
     
     def __BuildInterface(self):
+        import dbg
+        dbg.TraceError("[DEBUG] __BuildInterface: Clearing...")
         self.__ClearAll()
+
+        dbg.TraceError("[DEBUG] __BuildInterface: Setting theme for rank: " + str(self.currentRankKey))
         self.theme = RANK_THEMES[self.currentRankKey]
-        
+
+        dbg.TraceError("[DEBUG] __BuildInterface: Creating background...")
         self.__CreateBackground()
+
+        dbg.TraceError("[DEBUG] __BuildInterface: Creating header...")
         self.__CreateHeader()
+
+        dbg.TraceError("[DEBUG] __BuildInterface: Creating tabs...")
         self.__CreateTabs()
+
+        dbg.TraceError("[DEBUG] __BuildInterface: Creating content area...")
         self.__CreateContentArea()
+
+        dbg.TraceError("[DEBUG] __BuildInterface: Creating footer...")
         self.__CreateFooter()
+
+        dbg.TraceError("[DEBUG] __BuildInterface: Switching to tab: " + str(self.currentTab))
         self.__OnClickTab(self.currentTab)
+
+        dbg.TraceError("[DEBUG] __BuildInterface: DONE")
     
     # ========================================================================
     #  BACKGROUND
