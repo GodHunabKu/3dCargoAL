@@ -3235,7 +3235,12 @@ class GameWindow(ui.ScriptWindow):
 
 	def __HunterPlayerData(self, dataStr):
 		try:
+			import dbg
+			dbg.TraceError("[DEBUG] __HunterPlayerData: Received dataStr: " + str(dataStr))
+
 			parts = dataStr.split("|")
+			dbg.TraceError("[DEBUG] __HunterPlayerData: Split into " + str(len(parts)) + " parts")
+
 			if len(parts) >= 17:
 				data = {
 					"name": parts[0],
@@ -3251,15 +3256,28 @@ class GameWindow(ui.ScriptWindow):
 					"total_fractures": int(parts[10]),
 					"total_chests": int(parts[11]),
 					"total_metins": int(parts[12]),
-					"pending_daily_reward": int(parts[13]), 
+					"pending_daily_reward": int(parts[13]),
 					"pending_weekly_reward": int(parts[14]),
 					"daily_pos": int(parts[15]),
 					"weekly_pos": int(parts[16]),
 				}
+				dbg.TraceError("[DEBUG] __HunterPlayerData: Data parsed successfully")
+				dbg.TraceError("[DEBUG] __HunterPlayerData: Getting window...")
+
 				wnd = uihunterlevel.GetHunterLevelWindow()
-				if wnd: wnd.SetPlayerData(data)
-		except:
-			pass
+				if wnd:
+					dbg.TraceError("[DEBUG] __HunterPlayerData: Window found, calling SetPlayerData...")
+					wnd.SetPlayerData(data)
+				else:
+					dbg.TraceError("[ERROR] __HunterPlayerData: Window NOT found!")
+			else:
+				dbg.TraceError("[ERROR] __HunterPlayerData: Not enough parts! Expected 17, got " + str(len(parts)))
+		except Exception as e:
+			import dbg
+			import traceback
+			dbg.TraceError("[ERROR] __HunterPlayerData exception!")
+			dbg.TraceError("Error: " + str(e))
+			traceback.print_exc()
 
 	def __HunterRankingDaily(self, dataStr): self.__ParseHunterRankingData(dataStr, "daily")
 	def __HunterRankingWeekly(self, dataStr): self.__ParseHunterRankingData(dataStr, "weekly")
