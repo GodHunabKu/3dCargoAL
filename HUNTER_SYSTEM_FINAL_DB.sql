@@ -535,13 +535,12 @@ INSERT INTO `hunter_quest_tips` (`tip_text`, `tip_category`, `is_active`) VALUES
 ('Suggerimento: Puoi filtrare gli achievement per categoria nel tab dedicato!', 'UI', 1),
 ('Suggerimento: Rank N e il massimo: +30% Gloria e +20% Drop!', 'Ranks', 1),
 ('Suggerimento: Login streak di 365 giorni ti rende una Leggenda!', 'Streak', 1),
-('Suggerimento: Controlla le tue statistiche per vedere le fonti di Gloria!', 'Stats', 1);
-
-INSERT INTO `hunter_quest_tips` VALUES (26, 'Il sistema Hunter premia la costanza, non solo la forza bruta.');
-INSERT INTO `hunter_quest_tips` VALUES (27, 'Si narra che alcuni Boss Elite nascondano segreti antichi...');
-INSERT INTO `hunter_quest_tips` VALUES (28, 'Il reset Giornaliero avviene ogni notte. Assicurati di aver massimizzato il punteggio.');
-INSERT INTO `hunter_quest_tips` VALUES (29, 'Guardati le spalle mentre combatti un Boss... un nemico potrebbe essere in agguato.');
-INSERT INTO `hunter_quest_tips` VALUES (30, 'Vuoi vedere il tuo nome in cima a tutti? Premi N e scala la Sala delle Leggende.');
+('Suggerimento: Controlla le tue statistiche per vedere le fonti di Gloria!', 'Stats', 1),
+('Il sistema Hunter premia la costanza, non solo la forza bruta.', 'General', 1),
+('Si narra che alcuni Boss Elite nascondano segreti antichi...', 'Lore', 1),
+('Il reset Giornaliero avviene ogni notte. Assicurati di aver massimizzato il punteggio.', 'General', 1),
+('Guardati le spalle mentre combatti un Boss... un nemico potrebbe essere in agguato.', 'PvP', 1),
+('Vuoi vedere il tuo nome in cima a tutti? Premi N e scala la Sala delle Leggende.', 'Leaderboard', 1);
 
 -- ----------------------------
 -- Table structure for hunter_ranks
@@ -919,7 +918,7 @@ INSERT INTO `hunter_texts` VALUES ('winners_weekly_header', '[HUNTER SYSTEM] ** 
 -- View structure for v_missions_by_rank
 -- ----------------------------
 DROP VIEW IF EXISTS `v_missions_by_rank`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_missions_by_rank` AS select `srv1_hunabku`.`hunter_mission_definitions`.`id` AS `id`,`srv1_hunabku`.`hunter_mission_definitions`.`mission_name` AS `mission_name`,`srv1_hunabku`.`hunter_mission_definitions`.`mission_desc` AS `mission_desc`,`srv1_hunabku`.`hunter_mission_definitions`.`mission_type` AS `mission_type`,`srv1_hunabku`.`hunter_mission_definitions`.`min_rank` AS `min_rank`,`srv1_hunabku`.`hunter_mission_definitions`.`target_vnum` AS `target_vnum`,`srv1_hunabku`.`hunter_mission_definitions`.`target_count` AS `target_count`,`srv1_hunabku`.`hunter_mission_definitions`.`time_limit_sec` AS `time_limit_sec`,`srv1_hunabku`.`hunter_mission_definitions`.`reward_glory` AS `reward_glory`,`srv1_hunabku`.`hunter_mission_definitions`.`penalty_glory` AS `penalty_glory`,`srv1_hunabku`.`hunter_mission_definitions`.`difficulty` AS `difficulty`,`srv1_hunabku`.`hunter_mission_definitions`.`weight` AS `weight` from `hunter_mission_definitions` where `srv1_hunabku`.`hunter_mission_definitions`.`enabled` = 1 order by `srv1_hunabku`.`hunter_mission_definitions`.`min_rank`,`srv1_hunabku`.`hunter_mission_definitions`.`difficulty`,`srv1_hunabku`.`hunter_mission_definitions`.`id`;
+CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_missions_by_rank` AS select `hunter_mission_definitions`.`mission_id` AS `mission_id`,`hunter_mission_definitions`.`mission_name` AS `mission_name`,`hunter_mission_definitions`.`mission_type` AS `mission_type`,`hunter_mission_definitions`.`target_vnum` AS `target_vnum`,`hunter_mission_definitions`.`target_count` AS `target_count`,`hunter_mission_definitions`.`min_rank` AS `min_rank`,`hunter_mission_definitions`.`gloria_reward` AS `gloria_reward`,`hunter_mission_definitions`.`gloria_penalty` AS `gloria_penalty`,`hunter_mission_definitions`.`time_limit_minutes` AS `time_limit_minutes`,`hunter_mission_definitions`.`enabled` AS `enabled` from `hunter_mission_definitions` where `hunter_mission_definitions`.`enabled` = 1 order by `hunter_mission_definitions`.`min_rank`,`hunter_mission_definitions`.`gloria_reward`,`hunter_mission_definitions`.`mission_id`;
 
 -- ----------------------------
 -- View structure for v_today_events
