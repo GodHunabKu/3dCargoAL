@@ -1348,52 +1348,52 @@ INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `de
 -- =====================================================================
 
 -- Tab titles
-INSERT INTO `hunter_texts` VALUES ('ui_tab_stats', 'STATISTICHE PERSONALI');
-INSERT INTO `hunter_texts` VALUES ('ui_tab_achievements', 'TRAGUARDI');
-INSERT INTO `hunter_texts` VALUES ('ui_tab_ranking', 'SALA DELLE LEGGENDE');
-INSERT INTO `hunter_texts` VALUES ('ui_tab_events', 'EVENTI DEL GIORNO');
-INSERT INTO `hunter_texts` VALUES ('ui_tab_missions', 'MISSIONI');
-INSERT INTO `hunter_texts` VALUES ('ui_tab_guide', 'GUIDA');
+INSERT INTO `hunter_texts` VALUES ('ui_tab_stats', 'STATISTICHE PERSONALI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_tab_achievements', 'TRAGUARDI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_tab_ranking', 'SALA DELLE LEGGENDE', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_tab_events', 'EVENTI DEL GIORNO', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_tab_missions', 'MISSIONI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_tab_guide', 'GUIDA', 'ui', NULL, 1);
 
 -- Section titles
-INSERT INTO `hunter_texts` VALUES ('ui_section_today', 'OGGI');
-INSERT INTO `hunter_texts` VALUES ('ui_section_total', 'TOTALE');
-INSERT INTO `hunter_texts` VALUES ('ui_section_economy', 'ECONOMIA');
-INSERT INTO `hunter_texts` VALUES ('ui_section_records', 'RECORD');
-INSERT INTO `hunter_texts` VALUES ('ui_section_personal_stats', 'STATISTICHE PERSONALI');
+INSERT INTO `hunter_texts` VALUES ('ui_section_today', 'OGGI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_section_total', 'TOTALE', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_section_economy', 'ECONOMIA', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_section_records', 'RECORD', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_section_personal_stats', 'STATISTICHE PERSONALI', 'ui', NULL, 1);
 
 -- Guide sections
-INSERT INTO `hunter_texts` VALUES ('ui_guide_ranks', 'SISTEMA DEI RANGHI');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_glory', 'COME GUADAGNARE GLORIA');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_credits', 'COME GUADAGNARE CREDITI');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_missions', 'MISSIONI GIORNALIERE');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_emergency', 'EMERGENCY QUEST');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_speedkill', 'SPEED KILL BONUS');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_events', 'EVENTI SCHEDULATI');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_chests', 'BAULI DIMENSIONALI');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_fractures', 'FRATTURE DIMENSIONALI');
-INSERT INTO `hunter_texts` VALUES ('ui_guide_shop', 'MERCANTE HUNTER');
+INSERT INTO `hunter_texts` VALUES ('ui_guide_ranks', 'SISTEMA DEI RANGHI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_glory', 'COME GUADAGNARE GLORIA', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_credits', 'COME GUADAGNARE CREDITI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_missions', 'MISSIONI GIORNALIERE', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_emergency', 'EMERGENCY QUEST', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_speedkill', 'SPEED KILL BONUS', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_events', 'EVENTI SCHEDULATI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_chests', 'BAULI DIMENSIONALI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_fractures', 'FRATTURE DIMENSIONALI', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_guide_shop', 'MERCANTE HUNTER', 'ui', NULL, 1);
 
 -- Rank descriptions
-INSERT INTO `hunter_texts` VALUES ('rank_E_title', 'E-Rank');
-INSERT INTO `hunter_texts` VALUES ('rank_E_desc', 'Novizio - Inizi il tuo viaggio');
-INSERT INTO `hunter_texts` VALUES ('rank_D_title', 'D-Rank');
-INSERT INTO `hunter_texts` VALUES ('rank_D_desc', 'Principiante - Hai imparato le basi');
-INSERT INTO `hunter_texts` VALUES ('rank_C_title', 'C-Rank');
-INSERT INTO `hunter_texts` VALUES ('rank_C_desc', 'Cacciatore - Competente e affidabile');
-INSERT INTO `hunter_texts` VALUES ('rank_B_title', 'B-Rank');
-INSERT INTO `hunter_texts` VALUES ('rank_B_desc', 'Veterano - Rispettato dalla comunità');
-INSERT INTO `hunter_texts` VALUES ('rank_A_title', 'A-Rank');
-INSERT INTO `hunter_texts` VALUES ('rank_A_desc', 'Elite - Tra i migliori del regno');
-INSERT INTO `hunter_texts` VALUES ('rank_S_title', 'S-Rank');
-INSERT INTO `hunter_texts` VALUES ('rank_S_desc', 'Leggenda - Potere straordinario');
-INSERT INTO `hunter_texts` VALUES ('rank_N_title', 'N-Rank');
-INSERT INTO `hunter_texts` VALUES ('rank_N_desc', 'Monarca Nazionale - Hai raggiunto l apice del potere!');
+INSERT INTO `hunter_texts` VALUES ('rank_E_title', 'E-Rank', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_E_desc', 'Novizio - Inizi il tuo viaggio', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_D_title', 'D-Rank', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_D_desc', 'Principiante - Hai imparato le basi', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_C_title', 'C-Rank', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_C_desc', 'Cacciatore - Competente e affidabile', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_B_title', 'B-Rank', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_B_desc', 'Veterano - Rispettato dalla comunità', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_A_title', 'A-Rank', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_A_desc', 'Elite - Tra i migliori del regno', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_S_title', 'S-Rank', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_S_desc', 'Leggenda - Potere straordinario', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_N_title', 'N-Rank', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('rank_N_desc', 'Monarca Nazionale - Hai raggiunto l apice del potere!', 'ui', NULL, 1);
 
 -- Messages
-INSERT INTO `hunter_texts` VALUES ('ui_msg_all_complete', 'BONUS TUTTE COMPLETE');
-INSERT INTO `hunter_texts` VALUES ('ui_msg_how_participate', 'COME PARTECIPARE');
-INSERT INTO `hunter_texts` VALUES ('ui_msg_rewards', 'RICOMPENSE');
+INSERT INTO `hunter_texts` VALUES ('ui_msg_all_complete', 'BONUS TUTTE COMPLETE', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_msg_how_participate', 'COME PARTECIPARE', 'ui', NULL, 1);
+INSERT INTO `hunter_texts` VALUES ('ui_msg_rewards', 'RICOMPENSE', 'ui', NULL, 1);
 
 -- =====================================================================
 -- 18. FIX 6: UI DIMENSIONS (20+ dimensions) - 100% CONFIGURABILE
