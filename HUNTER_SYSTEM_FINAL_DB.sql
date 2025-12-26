@@ -1310,9 +1310,11 @@ INSERT INTO `hunter_quest_achievements_config` (`achievement_id`, `achievement_n
 UPDATE `hunter_quest_achievements_config` SET `is_hidden` = 1 WHERE `achievement_id` IN (706, 707, 708);
 
 -- =====================================================================
--- 13. TABELLA: hunter_quest_tips
--- Tips random mostrati al giocatore
+-- 13. TABELLA: hunter_ui_rank_colors
+-- Colori UI per ogni rank (100% configurabile)
 -- =====================================================================
+CREATE TABLE IF NOT EXISTS `hunter_ui_rank_colors` (
+  `rank_code` VARCHAR(1) PRIMARY KEY,
   `bg_dark` VARCHAR(10) NOT NULL,
   `bg_medium` VARCHAR(10) NOT NULL,
   `bg_light` VARCHAR(10) NOT NULL,
@@ -1495,6 +1497,22 @@ CREATE TABLE `hunter_quest_player_achievements` (
   INDEX idx_unlocked (unlocked_at),
   INDEX idx_claimed (claimed_at),
   FOREIGN KEY (`achievement_id`) REFERENCES `hunter_quest_achievements_config`(`achievement_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================================
+-- 26. TABELLA: hunter_gloria_sources_tracking
+-- Traccia sorgenti Gloria per statistiche avanzate
+-- =====================================================================
+DROP TABLE IF EXISTS `hunter_gloria_sources_tracking`;
+CREATE TABLE `hunter_gloria_sources_tracking` (
+  `player_id` INT NOT NULL,
+  `source_type` VARCHAR(50) NOT NULL,
+  `total_gloria` BIGINT NOT NULL DEFAULT 0,
+  `count_events` INT NOT NULL DEFAULT 0,
+  `last_update` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`player_id`, `source_type`),
+  INDEX idx_player (player_id),
+  INDEX idx_source (source_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================================
