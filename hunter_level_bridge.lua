@@ -22,6 +22,12 @@ quest hunter_level_bridge begin
                 _G.CONFIG_CACHE_DURATION = 3600  -- 1 ora
                 _G.HUNTER_CONSTANTS_LOADED = true
             end
+
+            -- Inizializza cache globale
+            if not _G.hunter_config_cache then
+                _G.hunter_config_cache = {}
+                _G.hunter_config_last_load = 0
+            end
         end
 
         -- ============================================================
@@ -2684,12 +2690,6 @@ quest hunter_level_bridge begin
         -- ============================================================
         -- 1. SISTEMA CACHE + RELOAD REAL-TIME
         -- ============================================================
-
-        -- Cache globale per config UI e system config
-        if not _G.hunter_config_cache then
-            _G.hunter_config_cache = {}
-            _G.hunter_config_last_load = 0
-        end
 
         -- Ricarica TUTTE le config dal DB
         function reload_all_config()
