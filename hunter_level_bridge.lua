@@ -57,7 +57,7 @@ quest hunter_level_bridge begin
 
         function log_security_event(action_type, action_data)
             local pid = pc.get_player_id()
-            local safe_data = clean_str(tostring(action_data))  -- Sanifica data prima di loggare
+            local safe_data = hunter_level_bridge.clean_str(tostring(action_data))  -- Sanifica data prima di loggare
             -- Usa mysql_escape_string se disponibile, altrimenti clean_str è sufficiente
             mysql_direct_query("INSERT INTO srv1_hunabku.hunter_security_log (player_id, action_type, action_data) VALUES (" .. pid .. ", '" .. action_type .. "', '" .. safe_data .. "')")
         end
@@ -817,7 +817,7 @@ quest hunter_level_bridge begin
         function get_rank_key(points)
             -- Usa get_rank_index per evitare duplicazione logica
             local rank_letters = {"E", "D", "C", "B", "A", "S", "N"}
-            local rank_idx = get_rank_index(points)
+            local rank_idx = hunter_level_bridge.get_rank_index(points)
             return rank_letters[rank_idx + 1] or "E"
         end
 
