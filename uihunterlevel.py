@@ -908,9 +908,9 @@ class HunterLevelWindow(ui.ScriptWindow):
         btn = SoloLevelingButton()
         btn.Create(self.contentPanel, x, y, 80, 22, text, self.theme)
         if arg is not None:
-            btn.SetEvent(callback, arg)
+            btn.SetEvent(ui.__mem_func__(callback), arg)
         else:
-            btn.SetEvent(callback)
+            btn.SetEvent(ui.__mem_func__(callback))
         self.contentElements.append(btn)
         return btn
     
