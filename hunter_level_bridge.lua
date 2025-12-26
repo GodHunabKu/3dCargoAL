@@ -1690,10 +1690,17 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_player_data()
             hunter_level_bridge.send_timers()
 
-            -- Invia classifiche giornaliere (caricamento lazy)
+            -- Invia classifiche (tab Rank)
             hunter_level_bridge.send_ranking("daily")
             hunter_level_bridge.send_ranking("weekly")
             hunter_level_bridge.send_ranking("total")
+
+            -- Invia shop e achievements (tab Shop e Achiev)
+            hunter_level_bridge.send_shop()
+            hunter_level_bridge.send_achievements()
+
+            -- Invia calendario eventi
+            hunter_level_bridge.send_calendar()
 
             syschat("[HUNTER] Terminale pronto! Usa i tab per navigare.")
         end
@@ -3527,6 +3534,600 @@ quest hunter_level_bridge begin
         -- ============================================================
         -- FINE NEW FEATURES
         -- ============================================================
+
+        -- ============================================================
+        -- TEST SYSTEM INTEGRATION
+        -- ============================================================
+
+        -- /hunter_test command - Opens comprehensive test menu
+        when chat."/hunter_test" with pc.is_gm() begin
+            timer("hunter_test_menu_show", 1)
+        end
+
+        when hunter_test_menu_show.timer begin
+            say_title("HUNTER SYSTEM - TEST MENU")
+            say("Menu completo per testare tutte le funzionalità")
+            say("")
+
+            local sel = select(
+                "Test 1: Soglie Rank (DB Config)",
+                "Test 2: Colori Rank (56+ colors)",
+                "Test 3: Stringhe UI (35+ strings)",
+                "Test 4: Dimensioni UI (20+ dims)",
+                "Test 5: Achievements Real-Time",
+                "Test 6: Send Rank Colors",
+                "Test 7: Send UI Texts",
+                "Test 8: Send UI Dimensions",
+                "Test 9: Reload All Config",
+                "Test 10: Security Functions",
+                "Chiudi"
+            )
+
+            if sel == 1 then
+                hunter_level_bridge.test_rank_thresholds()
+            elseif sel == 2 then
+                hunter_level_bridge.test_rank_colors()
+            elseif sel == 3 then
+                hunter_level_bridge.test_ui_texts()
+            elseif sel == 4 then
+                hunter_level_bridge.test_ui_dimensions()
+            elseif sel == 5 then
+                hunter_level_bridge.test_achievements()
+            elseif sel == 6 then
+                local count = hunter_level_bridge.send_rank_colors()
+                syschat("|cff00FF00[TEST] Inviati " .. count .. " colori rank al client|r")
+            elseif sel == 7 then
+                local count = hunter_level_bridge.send_ui_texts()
+                syschat("|cff00FF00[TEST] Inviate " .. count .. " stringhe UI al client|r")
+            elseif sel == 8 then
+                hunter_level_bridge.send_ui_dimensions()
+                syschat("|cff00FF00[TEST] Inviate dimensioni UI al client|r")
+            elseif sel == 9 then
+                hunter_level_bridge.reload_all_config()
+                syschat("|cff00FF00[TEST] Configurazione ricaricata dal database|r")
+            elseif sel == 10 then
+                hunter_level_bridge.test_security()
+            end
+        end
+
+        -- NPC 9009 - Complete Test Center
+        when 9009.chat begin
+            say_title("HUNTER TEST CENTER")
+            say("NPC di test per verificare tutte le funzionalità")
+            say("del Sistema Hunter (Solo Leveling)")
+            say("")
+
+            local selection = select(
+                "1. Test Rank e Punti Gloria",
+                "2. Test Missioni Giornaliere",
+                "3. Test Emergency Quest",
+                "4. Test Fratture Dimensionali",
+                "5. Test Spawn (Boss/Metin/Bauli)",
+                "6. Test Messaggi e Colori",
+                "7. Test Eventi Programmati",
+                "8. Visualizza Dati Player",
+                "9. Reset Dati (ADMIN)",
+                "Chiudi"
+            )
+
+            if selection == 1 then
+                hunter_level_bridge.npc_test_rank_points()
+            elseif selection == 2 then
+                hunter_level_bridge.npc_test_missions()
+            elseif selection == 3 then
+                hunter_level_bridge.npc_test_emergency()
+            elseif selection == 4 then
+                hunter_level_bridge.npc_test_fractures()
+            elseif selection == 5 then
+                hunter_level_bridge.npc_test_spawns()
+            elseif selection == 6 then
+                hunter_level_bridge.npc_test_messages()
+            elseif selection == 7 then
+                hunter_level_bridge.npc_test_events()
+            elseif selection == 8 then
+                hunter_level_bridge.npc_show_player_data()
+            elseif selection == 9 then
+                if pc.is_gm() then
+                    hunter_level_bridge.npc_reset_data()
+                else
+                    say("Solo gli admin possono resettare i dati.")
+                end
+            end
+        end
+
+        -- ============================================================
+        -- TEST HELPER FUNCTIONS
+        -- ============================================================
+
+        function test_rank_thresholds()
+            syschat("|cffFFD700========================================|r")
+            syschat("|cffFFD700[TEST 1] SOGLIE RANK|r")
+            syschat("|cffFFD700========================================|r")
+
+            local N = tonumber(hunter_level_bridge.get_config("rank_threshold_N"))
+            local S = tonumber(hunter_level_bridge.get_config("rank_threshold_S"))
+            local A = tonumber(hunter_level_bridge.get_config("rank_threshold_A"))
+            local B = tonumber(hunter_level_bridge.get_config("rank_threshold_B"))
+            local C = tonumber(hunter_level_bridge.get_config("rank_threshold_C"))
+            local D = tonumber(hunter_level_bridge.get_config("rank_threshold_D"))
+
+            if N and S and A and B and C and D then
+                syschat("|cff00FF00✓ Soglie rank caricate dal DB|r")
+                syschat("|cffFFFFFF  Rank N: " .. N .. " pts|r")
+                syschat("|cffFFFFFF  Rank S: " .. S .. " pts|r")
+                syschat("|cffFFFFFF  Rank A: " .. A .. " pts|r")
+                syschat("|cffFFFFFF  Rank B: " .. B .. " pts|r")
+                syschat("|cffFFFFFF  Rank C: " .. C .. " pts|r")
+                syschat("|cffFFFFFF  Rank D: " .. D .. " pts|r")
+
+                -- Test calcolo rank
+                local test_points = {0, 2000, 10000, 50000, 150000, 500000, 1500000}
+                local expected_ranks = {"E", "D", "C", "B", "A", "S", "N"}
+
+                for i, pts in ipairs(test_points) do
+                    local rank_idx = hunter_level_bridge.get_rank_index(pts)
+                    local rank_letter = hunter_level_bridge.get_rank_letter(rank_idx)
+                    local expected = expected_ranks[i]
+
+                    if rank_letter == expected then
+                        syschat("|cff00FF00  ✓ " .. pts .. " pts → " .. rank_letter .. "|r")
+                    else
+                        syschat("|cffFF0000  ✗ " .. pts .. " pts → " .. rank_letter .. " (atteso " .. expected .. ")|r")
+                    end
+                end
+            else
+                syschat("|cffFF0000✗ ERRORE: Soglie rank mancanti nel DB!|r")
+            end
+        end
+
+        function test_rank_colors()
+            syschat("|cffFFD700========================================|r")
+            syschat("|cffFFD700[TEST 2] COLORI RANK|r")
+            syschat("|cffFFD700========================================|r")
+
+            local c, d = mysql_direct_query("SELECT rank_code, border, accent, bg_dark FROM srv1_hunabku.hunter_ui_rank_colors ORDER BY rank_code")
+
+            if c == 7 then
+                syschat("|cff00FF00✓ Trovati 7 rank nel DB|r")
+                syschat("|cffFFFFFF  Totale colori: " .. (c * 13) .. " (56+)|r")
+                for i = 1, c do
+                    syschat("|cffFFFFFF  " .. d[i].rank_code .. "-Rank configurato|r")
+                end
+            else
+                syschat("|cffFF0000✗ ERRORE: Trovati solo " .. c .. " rank|r")
+            end
+        end
+
+        function test_ui_texts()
+            syschat("|cffFFD700========================================|r")
+            syschat("|cffFFD700[TEST 3] STRINGHE UI|r")
+            syschat("|cffFFD700========================================|r")
+
+            local test_keys = {
+                "ui_tab_stats",
+                "ui_tab_achievements",
+                "ui_tab_ranking",
+                "ui_guide_ranks",
+                "rank_S_title",
+                "rank_N_desc"
+            }
+            local found_count = 0
+
+            for _, key in ipairs(test_keys) do
+                local text = hunter_level_bridge.get_text(key)
+                if text and text ~= "" then
+                    syschat("|cff00FF00  ✓ " .. key .. " OK|r")
+                    found_count = found_count + 1
+                else
+                    syschat("|cffFF0000  ✗ " .. key .. " MANCANTE|r")
+                end
+            end
+
+            syschat("|cffFFFFFF  Trovate: " .. found_count .. "/" .. table.getn(test_keys) .. "|r")
+        end
+
+        function test_ui_dimensions()
+            syschat("|cffFFD700========================================|r")
+            syschat("|cffFFD700[TEST 4] DIMENSIONI UI|r")
+            syschat("|cffFFD700========================================|r")
+
+            local width = tonumber(hunter_level_bridge.get_config("ui_window_width"))
+            local height = tonumber(hunter_level_bridge.get_config("ui_window_height"))
+
+            if width and height then
+                syschat("|cff00FF00✓ Dimensioni UI caricate|r")
+                syschat("|cffFFFFFF  Window: " .. width .. "x" .. height .. "|r")
+            else
+                syschat("|cffFF0000✗ ERRORE: Dimensioni UI mancanti|r")
+            end
+        end
+
+        function test_achievements()
+            syschat("|cffFFD700========================================|r")
+            syschat("|cffFFD700[TEST 5] ACHIEVEMENTS|r")
+            syschat("|cffFFD700========================================|r")
+
+            local pid = pc.get_player_id()
+            syschat("|cffFFFFFF  Testing achievement update...|r")
+
+            hunter_level_bridge.update_achievement_progress(pid, 1, 1)
+            syschat("|cff00FF00✓ Achievement progress aggiornato|r")
+        end
+
+        function test_security()
+            syschat("|cffFFD700========================================|r")
+            syschat("|cffFFD700[TEST 10] SECURITY FUNCTIONS|r")
+            syschat("|cffFFD700========================================|r")
+
+            -- Test clean_str
+            local test_input = "Hello World | Test"
+            local cleaned = hunter_level_bridge.clean_str(test_input)
+            syschat("|cffFFFFFF  clean_str: '" .. test_input .. "' → '" .. cleaned .. "'|r")
+
+            -- Test safe_add_points
+            local test_overflow = hunter_level_bridge.safe_add_points(999999999, 1000000)
+            syschat("|cffFFFFFF  safe_add: overflow protected = " .. test_overflow .. "|r")
+
+            -- Test log_security_event
+            hunter_level_bridge.log_security_event("test_event", "security_test")
+            syschat("|cff00FF00✓ Security log written|r")
+        end
+
+        -- ============================================================
+        -- NPC TEST HELPER FUNCTIONS
+        -- ============================================================
+
+        function npc_test_rank_points()
+            say_title("TEST: Rank e Punti Gloria")
+            say("")
+
+            local opt = select(
+                "Aggiungi 100 Gloria",
+                "Aggiungi 1000 Gloria",
+                "Aggiungi 10000 Gloria",
+                "Aggiungi 50000 Gloria (Rank B)",
+                "Aggiungi 500000 Gloria (Rank S)",
+                "Verifica Rank Attuale",
+                "Indietro"
+            )
+
+            local pid = pc.get_player_id()
+
+            if opt == 1 then
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + 100, spendable_points = spendable_points + 100 WHERE player_id=" .. pid)
+                say("✅ +100 Gloria aggiunta!")
+                hunter_level_bridge.send_player_data()
+                wait()
+                hunter_level_bridge.npc_test_rank_points()
+
+            elseif opt == 2 then
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + 1000, spendable_points = spendable_points + 1000 WHERE player_id=" .. pid)
+                say("✅ +1000 Gloria aggiunta!")
+                hunter_level_bridge.send_player_data()
+                wait()
+                hunter_level_bridge.npc_test_rank_points()
+
+            elseif opt == 3 then
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + 10000, spendable_points = spendable_points + 10000 WHERE player_id=" .. pid)
+                say("✅ +10000 Gloria! Rank C")
+                hunter_level_bridge.send_player_data()
+                wait()
+                hunter_level_bridge.npc_test_rank_points()
+
+            elseif opt == 4 then
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = 55000, spendable_points = spendable_points + 55000 WHERE player_id=" .. pid)
+                say("✅ Settato a 55000 Gloria = Rank B!")
+                hunter_level_bridge.send_player_data()
+                wait()
+                hunter_level_bridge.npc_test_rank_points()
+
+            elseif opt == 5 then
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = 550000, spendable_points = spendable_points + 550000 WHERE player_id=" .. pid)
+                say("✅ Settato a 550000 Gloria = Rank S!")
+                say("Riapri il Terminale per vedere il cambio!")
+                hunter_level_bridge.send_player_data()
+                wait()
+                hunter_level_bridge.npc_test_rank_points()
+
+            elseif opt == 6 then
+                local c, d = mysql_direct_query("SELECT total_points, spendable_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+                if c > 0 then
+                    local pts = tonumber(d[1].total_points) or 0
+                    local rank_idx = hunter_level_bridge.get_rank_index(pts)
+                    local rank_letter = hunter_level_bridge.get_rank_letter(rank_idx)
+
+                    say("Punti Totali: " .. pts)
+                    say("Punti Spendibili: " .. d[1].spendable_points)
+                    say("Rank: " .. rank_letter)
+                end
+                wait()
+                hunter_level_bridge.npc_test_rank_points()
+            end
+        end
+
+        function npc_test_missions()
+            say_title("TEST: Missioni Giornaliere")
+            say("")
+
+            local opt = select(
+                "Assegna Nuove Missioni",
+                "Completa Missione Random",
+                "Visualizza Missioni Attive",
+                "Indietro"
+            )
+
+            local pid = pc.get_player_id()
+            local today = hunter_level_bridge.get_today_date()
+
+            if opt == 1 then
+                hunter_level_bridge.assign_daily_missions()
+                say("✅ Missioni giornaliere assegnate!")
+
+            elseif opt == 2 then
+                local c, d = mysql_direct_query("SELECT id FROM srv1_hunabku.hunter_player_missions WHERE player_id=" .. pid .. " AND assigned_date='" .. today .. "' AND status='ACTIVE' LIMIT 1")
+                if c > 0 then
+                    hunter_level_bridge.complete_mission(tonumber(d[1].id))
+                    say("✅ Missione completata!")
+                else
+                    say("❌ Nessuna missione attiva!")
+                end
+
+            elseif opt == 3 then
+                local c, d = mysql_direct_query("SELECT id, mission_text, progress, required FROM srv1_hunabku.hunter_player_missions WHERE player_id=" .. pid .. " AND assigned_date='" .. today .. "'")
+                if c > 0 then
+                    say("Missioni di oggi (" .. c .. "):")
+                    for i = 1, c do
+                        say(i .. ". " .. d[i].mission_text .. " (" .. d[i].progress .. "/" .. d[i].required .. ")")
+                    end
+                else
+                    say("Nessuna missione assegnata")
+                end
+            end
+            wait()
+            hunter_level_bridge.npc_test_missions()
+        end
+
+        function npc_test_emergency()
+            say_title("TEST: Emergency Quest")
+            say("")
+
+            local opt = select(
+                "Trigger Random Emergency",
+                "Start Custom Emergency",
+                "End Current Emergency (Success)",
+                "End Current Emergency (Fail)",
+                "Indietro"
+            )
+
+            if opt == 1 then
+                hunter_level_bridge.trigger_random_emergency()
+                say("✅ Emergency quest random lanciata!")
+
+            elseif opt == 2 then
+                hunter_level_bridge.start_emergency("Prova del Novizio", 60, 0, 30)
+                say("✅ Emergency personalizzata avviata!")
+                say("Durata: 60 secondi")
+
+            elseif opt == 3 then
+                hunter_level_bridge.end_emergency("SUCCESS")
+                say("✅ Emergency completata con successo!")
+
+            elseif opt == 4 then
+                hunter_level_bridge.end_emergency("FAIL")
+                say("❌ Emergency fallita!")
+            end
+
+            if opt ~= 5 then
+                wait()
+                hunter_level_bridge.npc_test_emergency()
+            end
+        end
+
+        function npc_test_fractures()
+            say_title("TEST: Fratture Dimensionali")
+            say("")
+
+            local opt = select(
+                "Spawn Frattura E-Rank (Verde)",
+                "Spawn Frattura D-Rank (Blu)",
+                "Spawn Frattura C-Rank (Arancione)",
+                "Spawn Frattura S-Rank (Viola)",
+                "Spawn Frattura National (Nero/Bianco)",
+                "Trigger Fracture Seal Event",
+                "Indietro"
+            )
+
+            if opt == 1 then
+                hunter_level_bridge.spawn_gate_mob_and_alert("E-Rank", "GREEN")
+                say("✅ Frattura E-Rank spawnata!")
+
+            elseif opt == 2 then
+                hunter_level_bridge.spawn_gate_mob_and_alert("D-Rank", "BLUE")
+                say("✅ Frattura D-Rank spawnata!")
+
+            elseif opt == 3 then
+                hunter_level_bridge.spawn_gate_mob_and_alert("C-Rank", "ORANGE")
+                say("✅ Frattura C-Rank spawnata!")
+
+            elseif opt == 4 then
+                hunter_level_bridge.spawn_gate_mob_and_alert("S-Rank", "PURPLE")
+                say("✅ Frattura S-Rank spawnata!")
+
+            elseif opt == 5 then
+                hunter_level_bridge.spawn_gate_mob_and_alert("National", "BLACKWHITE")
+                say("✅ Frattura National spawnata!")
+
+            elseif opt == 6 then
+                hunter_level_bridge.on_fracture_seal()
+                say("✅ Evento Fracture Seal triggerato!")
+            end
+
+            if opt ~= 7 then
+                wait()
+                hunter_level_bridge.npc_test_fractures()
+            end
+        end
+
+        function npc_test_spawns()
+            say_title("TEST: Spawn System")
+            say("")
+
+            local opt = select(
+                "Test Boss Kill Trigger",
+                "Test Metin Kill Trigger",
+                "Give Chest Reward",
+                "Check Spawn Thresholds",
+                "Indietro"
+            )
+
+            if opt == 1 then
+                hunter_level_bridge.on_boss_kill(6831)
+                say("✅ Boss kill triggerato!")
+
+            elseif opt == 2 then
+                hunter_level_bridge.on_metin_kill(4705)
+                say("✅ Metin kill triggerato!")
+
+            elseif opt == 3 then
+                hunter_level_bridge.give_chest_reward()
+                say("✅ Chest reward dato!")
+
+            elseif opt == 4 then
+                local threshold = hunter_level_bridge.get_config("spawn_threshold_normal") or 0
+                local emerg_chance = hunter_level_bridge.get_config("emergency_chance_percent") or 0
+                say("Spawn Threshold: " .. threshold)
+                say("Emergency Chance: " .. emerg_chance .. "%")
+            end
+
+            if opt ~= 5 then
+                wait()
+                hunter_level_bridge.npc_test_spawns()
+            end
+        end
+
+        function npc_test_messages()
+            say_title("TEST: Messaggi e Colori")
+            say("")
+
+            local opt = select(
+                "Messaggio Verde (Success)",
+                "Messaggio Rosso (Error)",
+                "Messaggio Oro (Warning)",
+                "Messaggio Blu (Info)",
+                "Messaggio Viola (Special)",
+                "Indietro"
+            )
+
+            if opt == 1 then
+                hunter_level_bridge.hunter_speak_color("Test messaggio verde!", "GREEN")
+            elseif opt == 2 then
+                hunter_level_bridge.hunter_speak_color("Test messaggio rosso!", "RED")
+            elseif opt == 3 then
+                hunter_level_bridge.hunter_speak_color("Test messaggio oro!", "GOLD")
+            elseif opt == 4 then
+                hunter_level_bridge.hunter_speak_color("Test messaggio blu!", "BLUE")
+            elseif opt == 5 then
+                hunter_level_bridge.hunter_speak_color("Test messaggio viola!", "PURPLE")
+            end
+
+            if opt ~= 6 then
+                wait()
+                hunter_level_bridge.npc_test_messages()
+            end
+        end
+
+        function npc_test_events()
+            say_title("TEST: Eventi Programmati")
+            say("")
+
+            local opt = select(
+                "Lista Eventi di Oggi",
+                "Join Evento Random",
+                "Send Event Calendar",
+                "Indietro"
+            )
+
+            if opt == 1 then
+                hunter_level_bridge.send_today_events(false)
+                say("✅ Eventi di oggi inviati!")
+
+            elseif opt == 2 then
+                local pid = pc.get_player_id()
+                local c, d = mysql_direct_query("SELECT id FROM srv1_hunabku.hunter_quest_event_calendar LIMIT 1")
+                if c > 0 then
+                    hunter_level_bridge.join_event(tonumber(d[1].id))
+                    say("✅ Iscritto all'evento!")
+                else
+                    say("❌ Nessun evento disponibile")
+                end
+
+            elseif opt == 3 then
+                hunter_level_bridge.send_calendar()
+                say("✅ Calendario eventi inviato!")
+            end
+
+            if opt ~= 4 then
+                wait()
+                hunter_level_bridge.npc_test_events()
+            end
+        end
+
+        function npc_show_player_data()
+            local pid = pc.get_player_id()
+            local c, d = mysql_direct_query("SELECT total_points, spendable_points, daily_points, weekly_points, total_kills, daily_kills, weekly_kills FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+
+            if c > 0 then
+                local pts = tonumber(d[1].total_points) or 0
+                local rank_idx = hunter_level_bridge.get_rank_index(pts)
+                local rank_letter = hunter_level_bridge.get_rank_letter(rank_idx)
+
+                say_title("DATI PLAYER - " .. pc.get_name())
+                say("")
+                say("Rank: " .. rank_letter)
+                say("Gloria Totale: " .. d[1].total_points)
+                say("Gloria Spendibile: " .. d[1].spendable_points)
+                say("Gloria Giornaliera: " .. d[1].daily_points)
+                say("Gloria Settimanale: " .. d[1].weekly_points)
+                say("")
+                say("Kill Totali: " .. d[1].total_kills)
+                say("Kill Giornaliere: " .. d[1].daily_kills)
+                say("Kill Settimanali: " .. d[1].weekly_kills)
+            else
+                say("Dati player non trovati!")
+            end
+        end
+
+        function npc_reset_data()
+            say_title("RESET DATI")
+            say("ATTENZIONE: Questa azione resetterà i tuoi dati!")
+            say("")
+
+            local opt = select(
+                "Reset TUTTO (punti, missioni, stat)",
+                "Reset Solo Missioni di Oggi",
+                "Reset Solo Punti Daily/Weekly",
+                "Annulla"
+            )
+
+            local pid = pc.get_player_id()
+            local today = hunter_level_bridge.get_today_date()
+
+            if opt == 1 then
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=0, spendable_points=0, daily_points=0, weekly_points=0, total_kills=0, daily_kills=0, weekly_kills=0, total_fractures=0, total_chests=0, total_metins=0, login_streak=0, penalty_strikes=0 WHERE player_id=" .. pid)
+                mysql_direct_query("DELETE FROM srv1_hunabku.hunter_player_missions WHERE player_id=" .. pid)
+                say("✅ RESET COMPLETO eseguito!")
+                hunter_level_bridge.send_player_data()
+
+            elseif opt == 2 then
+                mysql_direct_query("DELETE FROM srv1_hunabku.hunter_player_missions WHERE player_id=" .. pid .. " AND assigned_date='" .. today .. "'")
+                say("✅ Missioni di oggi cancellate")
+
+            elseif opt == 3 then
+                mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET daily_points=0, weekly_points=0, daily_kills=0, weekly_kills=0 WHERE player_id=" .. pid)
+                say("✅ Punti Daily/Weekly resettati")
+                hunter_level_bridge.send_player_data()
+            end
+        end
 
     end
 end
