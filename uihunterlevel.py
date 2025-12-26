@@ -462,7 +462,20 @@ class HunterLevelWindow(ui.ScriptWindow):
         
     def Close(self):
         self.Hide()
-        
+
+    def Show(self):
+        """Override Show() to request data from server when window opens"""
+        if not self.LoadWindow():
+            return
+
+        ui.ScriptWindow.Show(self)
+
+        # Request all data from server
+        import net
+        import dbg
+        dbg.TraceError("[DEBUG] Show: Requesting data from server...")
+        net.SendChatPacket("/hunter_request_data")
+
     def LoadWindow(self):
         if self.isLoaded:
             return True
