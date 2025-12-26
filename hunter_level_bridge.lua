@@ -928,8 +928,9 @@ quest hunter_level_bridge begin
             local last = game.get_event_flag("hunter_last_tip_time") or 0
             if get_time() - last < 10 then return end
             local c, d = mysql_direct_query("SELECT tip_text, tip_category FROM srv1_hunabku.hunter_quest_tips WHERE is_active=1 ORDER BY RAND() LIMIT 1")
-            if c > 0 and d[1] then
-                notice_all("|cffFFD700[HUNTER TIP]|r " .. d[1].tip_text)
+            if c > 0 and d[1] and d[1].tip_text then
+                local tip = tostring(d[1].tip_text)
+                notice_all("|cffFFD700[HUNTER TIP]|r " .. tip)
                 game.set_event_flag("hunter_last_tip_time", get_time())
             end
         end
@@ -1655,36 +1656,46 @@ quest hunter_level_bridge begin
         end
         
         when button or info begin
-            -- TEMPORARY: Minimal test - only open window, no data
-            syschat("[DEBUG] Hunter: Opening window...")
-            cmdchat("HunterOpenWindow")
-            syschat("[DEBUG] Hunter: Window opened!")
-            return
-
-            -- ORIGINAL CODE DISABLED FOR TESTING:
-            --[[
             local pid = pc.get_player_id()
+
+            -- Gestione acquisti shop
             local buy_id = tonumber(game.get_event_flag("hunter_buy_id_"..pid)) or 0
             if buy_id > 0 then
                 game.set_event_flag("hunter_buy_id_"..pid, 0)
                 hunter_level_bridge.shop_buy_confirm(buy_id)
                 return
             end
+
+            -- Gestione claim achievement
             local clm_id = tonumber(game.get_event_flag("hunter_claim_id_"..pid)) or 0
             if clm_id > 0 then
                 game.set_event_flag("hunter_claim_id_"..pid, 0)
                 hunter_level_bridge.achiev_claim(clm_id)
                 return
             end
+
+            -- Gestione smart claim
             local smart_btn = tonumber(game.get_event_flag("hunter_claim_btn_"..pid)) or 0
             if smart_btn > 0 then
                 game.set_event_flag("hunter_claim_btn_"..pid, 0)
                 hunter_level_bridge.smart_claim_reward()
                 return
             end
+
+            -- Apri finestra e invia dati essenziali
+            syschat("[HUNTER] Apertura terminale...")
             cmdchat("HunterOpenWindow")
-            hunter_level_bridge.send_all_data()
-            --]]
+
+            -- Invia dati player + timers (veloce)
+            hunter_level_bridge.send_player_data()
+            hunter_level_bridge.send_timers()
+
+            -- Invia classifiche giornaliere (caricamento lazy)
+            hunter_level_bridge.send_ranking("daily")
+            hunter_level_bridge.send_ranking("weekly")
+            hunter_level_bridge.send_ranking("total")
+
+            syschat("[HUNTER] Terminale pronto! Usa i tab per navigare.")
         end
         
         when chat."/hunter_request_data" begin

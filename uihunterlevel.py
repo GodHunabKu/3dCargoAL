@@ -391,28 +391,27 @@ class HunterLevelWindow(ui.ScriptWindow):
 
         self.onUpdateCrashed = False
 
-        # TEMPORARY: Disable all sub-windows to isolate crash
-        self.systemMsgWnd = None  # uihunterlevel_whatif.SystemMessageWindow()
-        self.emergencyWnd = None  # uihunterlevel_whatif.EmergencyQuestWindow()
-        self.whatIfWnd = None  # uihunterlevel_whatif.WhatIfChoiceWindow()
-        self.rivalWnd = None  # uihunterlevel_whatif.RivalTrackerWindow()
-        self.eventWnd = None  # uihunterlevel_whatif.EventStatusWindow()
-        self.bossAlertWnd = None  # uihunterlevel_whatif.BossAlertWindow()
-        self.systemInitWnd = None  # uihunterlevel_whatif.SystemInitWindow()
-        self.awakeningWnd = None  # uihunterlevel_whatif.AwakeningWindow()
-        self.activationWnd = None  # uihunterlevel_whatif.HunterActivationWindow()
-        self.rankUpWnd = None  # uihunterlevel_whatif.RankUpWindow()
-        self.overtakeWnd = None  # uihunterlevel_whatif.OvertakeWindow()
+        self.systemMsgWnd = uihunterlevel_whatif.SystemMessageWindow()
+        self.emergencyWnd = uihunterlevel_whatif.EmergencyQuestWindow()
+        self.whatIfWnd = uihunterlevel_whatif.WhatIfChoiceWindow()
+        self.rivalWnd = uihunterlevel_whatif.RivalTrackerWindow()
+        self.eventWnd = uihunterlevel_whatif.EventStatusWindow()
+        self.bossAlertWnd = uihunterlevel_whatif.BossAlertWindow()
+        self.systemInitWnd = uihunterlevel_whatif.SystemInitWindow()
+        self.awakeningWnd = uihunterlevel_whatif.AwakeningWindow()
+        self.activationWnd = uihunterlevel_whatif.HunterActivationWindow()
+        self.rankUpWnd = uihunterlevel_whatif.RankUpWindow()
+        self.overtakeWnd = uihunterlevel_whatif.OvertakeWindow()
 
         # Daily Missions Windows
-        self.missionsWnd = None  # uihunterlevel_whatif.DailyMissionsWindow()
-        self.eventsWnd = None  # uihunterlevel_whatif.EventsScheduleWindow()
-        self.missionProgressWnd = None  # uihunterlevel_whatif.MissionProgressPopup()
-        self.missionCompleteWnd = None  # uihunterlevel_whatif.MissionCompleteWindow()
-        self.allMissionsCompleteWnd = None  # uihunterlevel_whatif.AllMissionsCompleteWindow()
+        self.missionsWnd = uihunterlevel_whatif.DailyMissionsWindow()
+        self.eventsWnd = uihunterlevel_whatif.EventsScheduleWindow()
+        self.missionProgressWnd = uihunterlevel_whatif.MissionProgressPopup()
+        self.missionCompleteWnd = uihunterlevel_whatif.MissionCompleteWindow()
+        self.allMissionsCompleteWnd = uihunterlevel_whatif.AllMissionsCompleteWindow()
 
         # Speed Kill Timer Window
-        self.speedKillTimer = None  # uihunterlevel_whatif.SpeedKillTimerWindow()
+        self.speedKillTimer = uihunterlevel_whatif.SpeedKillTimerWindow()
 
         # ==============================================================================
         # HUNTER SYSTEM COMPLETE OVERHAUL - NEW WINDOWS & DATA
@@ -2742,18 +2741,16 @@ class HunterLevelWindow(ui.ScriptWindow):
             if not self.isLoaded or self.isDestroyed:
                 return
 
-            # TEMPORARY FIX: Disabled sub-window OnUpdate to prevent crash
-            # Re-enable these one by one to find which one crashes
-            # if self.systemMsgWnd:
-            #     self.systemMsgWnd.OnUpdate()
-            # if self.emergencyWnd:
-            #     self.emergencyWnd.OnUpdate()
-            # if self.rivalWnd:
-            #     self.rivalWnd.OnUpdate()
-            # if self.eventWnd:
-            #     self.eventWnd.OnUpdate()
-            # if self.speedKillTimer and hasattr(self.speedKillTimer, 'isActive') and self.speedKillTimer.isActive:
-            #     self.speedKillTimer.OnUpdate()
+            if self.systemMsgWnd:
+                self.systemMsgWnd.OnUpdate()
+            if self.emergencyWnd:
+                self.emergencyWnd.OnUpdate()
+            if self.rivalWnd:
+                self.rivalWnd.OnUpdate()
+            if self.eventWnd:
+                self.eventWnd.OnUpdate()
+            if self.speedKillTimer and hasattr(self.speedKillTimer, 'isActive') and self.speedKillTimer.isActive:
+                self.speedKillTimer.OnUpdate()
 
             ct = app.GetTime()
             dt = ct - self.lastUpdateTime
