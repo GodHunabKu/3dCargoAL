@@ -1686,24 +1686,34 @@ quest hunter_level_bridge begin
             syschat("[HUNTER] Apertura terminale...")
             cmdchat("HunterOpenWindow")
 
-            -- Invia dati player + timers (veloce)
+            -- SOLO dati player + timers all'apertura (minimo indispensabile)
             hunter_level_bridge.send_player_data()
             hunter_level_bridge.send_timers()
 
-            -- Invia classifiche (tab Rank)
+            -- NON inviare nulla altro all'apertura - troppi cmdchat() causano crash!
+            -- Tutto il resto viene caricato on-demand quando clicchi sui tab
+            -- hunter_level_bridge.send_ranking("daily")
+            -- hunter_level_bridge.send_ranking("weekly")
+            -- hunter_level_bridge.send_ranking("total")
+            -- hunter_level_bridge.send_shop()
+            -- hunter_level_bridge.send_achievements()
+            -- hunter_level_bridge.send_calendar()
+
+            syschat("[HUNTER] Terminale pronto! I dati si caricano quando clicchi sui tab.")
+        end
+
+        -- Carica rankings (quando clicchi tab Ranking)
+        when chat."/hunter_load_rankings" begin
             hunter_level_bridge.send_ranking("daily")
             hunter_level_bridge.send_ranking("weekly")
             hunter_level_bridge.send_ranking("total")
+            syschat("[HUNTER] Classifiche caricate!")
+        end
 
-            -- NON inviare shop/achievements all'apertura - troppi dati!
-            -- Li caricheremo quando clicchi sul tab specifico
-            -- hunter_level_bridge.send_shop()
-            -- hunter_level_bridge.send_achievements()
-
-            -- Invia calendario eventi (limitato a 21 entries)
+        -- Carica calendar (quando clicchi tab Eventi)
+        when chat."/hunter_load_calendar" begin
             hunter_level_bridge.send_calendar()
-
-            syschat("[HUNTER] Terminale pronto! Usa i tab per navigare.")
+            syschat("[HUNTER] Calendario caricato!")
         end
         
         when chat."/hunter_request_data" begin
