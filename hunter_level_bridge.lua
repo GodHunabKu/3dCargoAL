@@ -932,10 +932,10 @@ quest hunter_level_bridge begin
         when hunter_tips_timer.timer begin
             local last = game.get_event_flag("hunter_last_tip_time") or 0
             if get_time() - last < 10 then return end
-            local c, d = mysql_direct_query("SELECT tip_text FROM srv1_hunabku.hunter_quest_tips ORDER BY RAND() LIMIT 1")
-            if c > 0 and d[1] then 
+            local c, d = mysql_direct_query("SELECT tip_text, tip_category FROM srv1_hunabku.hunter_quest_tips WHERE is_active=1 ORDER BY RAND() LIMIT 1")
+            if c > 0 and d[1] then
                 notice_all("|cffFFD700[HUNTER TIP]|r " .. d[1].tip_text)
-                game.set_event_flag("hunter_last_tip_time", get_time()) 
+                game.set_event_flag("hunter_last_tip_time", get_time())
             end
         end
         
@@ -1221,8 +1221,12 @@ quest hunter_level_bridge begin
             local speedkill_boss = hunter_level_bridge.get_config("speedkill_boss_seconds") or 60
             local time_limit = speedkill_boss
             if mob_info.type_name == "SUPER_METIN" then time_limit = speedkill_metin end
-            if elapsed > 0 and elapsed <= time_limit then 
-                base_pts = base_pts * 2 
+
+            local bonus_obtained = 0
+            local original_base_pts = base_pts
+            if elapsed > 0 and elapsed <= time_limit then
+                base_pts = base_pts * 2
+                bonus_obtained = 1
             end
             
             local streak_bonus = pc.getqf("hq_streak_bonus") or 0
@@ -1275,10 +1279,36 @@ quest hunter_level_bridge begin
             end
             
             local pending = pc.getqf("hq_pending_elite") or 0
-            if pending > 0 then 
-                pc.setqf("hq_pending_elite", pending - 1) 
+            if pending > 0 then
+                pc.setqf("hq_pending_elite", pending - 1)
             end
-            
+
+            -- *** SPEED KILL TIMER: Stop timer e mostra risultato dettagliato ***
+            if mob_info.type_name == "BOSS" or mob_info.type_name == "SUPER_METIN" then
+                local tipo = "BOSS"
+                if mob_info.type_name == "SUPER_METIN" then tipo = "METIN" end
+
+                -- Stop timer visivo
+                cmdchat("HunterSpeedKillEnd " .. tipo .. "|" .. elapsed .. "|" .. bonus_obtained .. "|" .. original_base_pts .. "|" .. base_pts)
+
+                -- Messaggio dettagliato nel syschat
+                if bonus_obtained == 1 then
+                    local speed_msg = string.format(
+                        "|cff00FF00[SPEED KILL BONUS!]|r Tempo: %d sec/%d sec. |cffFFD700+%d Gloria (x2)|r",
+                        elapsed, time_limit, base_pts
+                    )
+                    syschat(speed_msg)
+                else
+                    if elapsed > 0 then
+                        local slow_msg = string.format(
+                            "|cffFF6600[Bonus Scaduto]|r Tempo: %d sec (limite: %d sec). +%d Gloria",
+                            elapsed, time_limit, base_pts
+                        )
+                        syschat(slow_msg)
+                    end
+                end
+            end
+
             local msg = hunter_level_bridge.get_text("target_eliminated", {NAME = mob_info.name, POINTS = base_pts}) or ("[SISTEMA] Hai sconfitto " .. mob_info.name .. ". ESPERIENZA ACQUISITA: +" .. base_pts .. " Punti.")
             hunter_level_bridge.hunter_speak_color(msg, mob_info.rank_color or "BLUE")
             
@@ -1601,6 +1631,15 @@ quest hunter_level_bridge begin
                     -- *** NUOVO: ALERT BOSS A SCHERMO INTERO (Solo Leveling Style) ***
                     if sel_type == "BOSS" or sel_type == "METIN" then
                         cmdchat("HunterBossAlert " .. string.gsub(md[1].name, " ", "+"))
+
+                        -- *** SPEED KILL TIMER: Avvia countdown visivo ***
+                        local time_limit = 60  -- Default: 60 secondi per Boss
+                        if sel_type == "METIN" then
+                            time_limit = tonumber(hunter_level_bridge.get_config("speedkill_metin_seconds")) or 300
+                        else
+                            time_limit = tonumber(hunter_level_bridge.get_config("speedkill_boss_seconds")) or 60
+                        end
+                        cmdchat("HunterSpeedKillStart " .. sel_type .. "|" .. time_limit)
                     end
                     
                     local pname = pc.get_name()
@@ -2448,8 +2487,8 @@ quest hunter_level_bridge begin
                     local start_time = hunter_level_bridge.format_time(start_hour, start_minute)
                     local end_time = hunter_level_bridge.format_time(end_hour, end_minute)
                     local reward_str = "+" .. (e.reward_glory_base or 50) .. "+Gloria"
-                    
-                    -- Formato compatto: id~name~start~end~type~reward~status~min_rank
+
+                    -- Formato compatto: id~name~start~end~type~reward~status~min_rank~desc~color
                     local pkt = tostring(tonumber(e.id) or 0) .. "~" ..
                         hunter_level_bridge.clean_str(e.event_name or "Evento") .. "~" ..
                         start_time .. "~" ..
@@ -2457,7 +2496,9 @@ quest hunter_level_bridge begin
                         (e.event_type or "glory_rush") .. "~" ..
                         reward_str .. "~" ..
                         status .. "~" ..
-                        (e.min_rank or "E")
+                        (e.min_rank or "E") .. "~" ..
+                        hunter_level_bridge.clean_str(e.event_desc or "") .. "~" ..
+                        (e.color_scheme or "GOLD")
                     
                     if batch ~= "" then batch = batch .. ";" end
                     batch = batch .. pkt
@@ -2671,14 +2712,13 @@ quest hunter_level_bridge begin
 
             -- 2. Ricarica Rank Bonuses
             local count_ranks = 0
-            c, d = mysql_direct_query("SELECT rank_code, bonus_gloria_percent, bonus_drop_percent, rank_name, rank_title FROM srv1_hunabku.hunter_rank_bonuses ORDER BY min_points")
+            c, d = mysql_direct_query("SELECT rank_code, bonus_gloria, rank_name, rank_title FROM srv1_hunabku.hunter_ranks ORDER BY min_points")
             if c > 0 then
                 _G.hunter_config_cache["rank_bonuses"] = {}
                 for i = 1, c do
                     local code = d[i].rank_code
                     _G.hunter_config_cache["rank_bonuses"][code] = {
-                        gloria = tonumber(d[i].bonus_gloria_percent) or 0,
-                        drop = tonumber(d[i].bonus_drop_percent) or 0,
+                        gloria = tonumber(d[i].bonus_gloria) or 0,
                         name = d[i].rank_name or code,
                         title = d[i].rank_title or ("Hunter " .. code)
                     }
@@ -3066,30 +3106,30 @@ quest hunter_level_bridge begin
         -- FIX 6: UI DIMENSIONS (20+ dimensions) - 100% CONFIGURABILE
         -- ============================================================
         function send_ui_dimensions()
-            -- Carica tutte le dimensioni UI dal DB
+            -- Carica tutte le dimensioni UI dal DB (usa cache per performance)
             local dims = {}
 
-            dims.window_width = tonumber(hunter_level_bridge.get_config("ui_window_width")) or 500
-            dims.window_height = tonumber(hunter_level_bridge.get_config("ui_window_height")) or 520
-            dims.header_height = tonumber(hunter_level_bridge.get_config("ui_header_height")) or 95
-            dims.content_height = tonumber(hunter_level_bridge.get_config("ui_content_height")) or 300
-            dims.tab_height = tonumber(hunter_level_bridge.get_config("ui_tab_height")) or 28
-            dims.footer_height = tonumber(hunter_level_bridge.get_config("ui_footer_height")) or 35
-            dims.stats_panel_width = tonumber(hunter_level_bridge.get_config("ui_stats_panel_width")) or 240
-            dims.stats_panel_height = tonumber(hunter_level_bridge.get_config("ui_stats_panel_height")) or 200
-            dims.achievement_popup_width = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_width")) or 500
-            dims.achievement_popup_height = tonumber(hunter_level_bridge.get_config("ui_achievement_popup_height")) or 200
-            dims.window_center_x = tonumber(hunter_level_bridge.get_config("ui_window_center_x")) or 1
-            dims.window_center_y = tonumber(hunter_level_bridge.get_config("ui_window_center_y")) or 1
-            dims.header_y = tonumber(hunter_level_bridge.get_config("ui_header_y")) or 0
-            dims.content_y = tonumber(hunter_level_bridge.get_config("ui_content_y")) or 95
-            dims.footer_y = tonumber(hunter_level_bridge.get_config("ui_footer_y")) or 485
-            dims.font_size_title = tonumber(hunter_level_bridge.get_config("ui_font_size_title")) or 16
-            dims.font_size_label = tonumber(hunter_level_bridge.get_config("ui_font_size_label")) or 12
-            dims.font_size_value = tonumber(hunter_level_bridge.get_config("ui_font_size_value")) or 14
-            dims.padding_small = tonumber(hunter_level_bridge.get_config("ui_padding_small")) or 5
-            dims.padding_medium = tonumber(hunter_level_bridge.get_config("ui_padding_medium")) or 10
-            dims.padding_large = tonumber(hunter_level_bridge.get_config("ui_padding_large")) or 15
+            dims.window_width = tonumber(hunter_level_bridge.get_cached_config("ui_window_width", 500)) or 500
+            dims.window_height = tonumber(hunter_level_bridge.get_cached_config("ui_window_height", 520)) or 520
+            dims.header_height = tonumber(hunter_level_bridge.get_cached_config("ui_header_height", 95)) or 95
+            dims.content_height = tonumber(hunter_level_bridge.get_cached_config("ui_content_height", 300)) or 300
+            dims.tab_height = tonumber(hunter_level_bridge.get_cached_config("ui_tab_height", 28)) or 28
+            dims.footer_height = tonumber(hunter_level_bridge.get_cached_config("ui_footer_height", 35)) or 35
+            dims.stats_panel_width = tonumber(hunter_level_bridge.get_cached_config("ui_stats_panel_width", 240)) or 240
+            dims.stats_panel_height = tonumber(hunter_level_bridge.get_cached_config("ui_stats_panel_height", 200)) or 200
+            dims.achievement_popup_width = tonumber(hunter_level_bridge.get_cached_config("ui_achievement_popup_width", 500)) or 500
+            dims.achievement_popup_height = tonumber(hunter_level_bridge.get_cached_config("ui_achievement_popup_height", 200)) or 200
+            dims.window_center_x = tonumber(hunter_level_bridge.get_cached_config("ui_window_center_x", 1)) or 1
+            dims.window_center_y = tonumber(hunter_level_bridge.get_cached_config("ui_window_center_y", 1)) or 1
+            dims.header_y = tonumber(hunter_level_bridge.get_cached_config("ui_header_y", 0)) or 0
+            dims.content_y = tonumber(hunter_level_bridge.get_cached_config("ui_content_y", 95)) or 95
+            dims.footer_y = tonumber(hunter_level_bridge.get_cached_config("ui_footer_y", 485)) or 485
+            dims.font_size_title = tonumber(hunter_level_bridge.get_cached_config("ui_font_size_title", 16)) or 16
+            dims.font_size_label = tonumber(hunter_level_bridge.get_cached_config("ui_font_size_label", 12)) or 12
+            dims.font_size_value = tonumber(hunter_level_bridge.get_cached_config("ui_font_size_value", 14)) or 14
+            dims.padding_small = tonumber(hunter_level_bridge.get_cached_config("ui_padding_small", 5)) or 5
+            dims.padding_medium = tonumber(hunter_level_bridge.get_cached_config("ui_padding_medium", 10)) or 10
+            dims.padding_large = tonumber(hunter_level_bridge.get_cached_config("ui_padding_large", 15)) or 15
 
             -- Format: pipe-separated (20+ values)
             local data = dims.window_width .. "|" ..
@@ -3287,7 +3327,7 @@ quest hunter_level_bridge begin
                 if rank_num < 6 then
                     local next_letter = hunter_level_bridge.get_rank_letter(rank_num + 1)
                     -- Query min_points per next rank
-                    local nc, nd = mysql_direct_query("SELECT min_points FROM srv1_hunabku.hunter_rank_bonuses WHERE rank_code='" .. next_letter .. "'")
+                    local nc, nd = mysql_direct_query("SELECT min_points FROM srv1_hunabku.hunter_ranks WHERE rank_code='" .. next_letter .. "'")
                     if nc > 0 and nd[1] then
                         next_rank_pts = tonumber(nd[1].min_points) or 0
                     end

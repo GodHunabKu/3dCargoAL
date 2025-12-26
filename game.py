@@ -2392,6 +2392,8 @@ class GameWindow(ui.ScriptWindow):
 		serverCommandList["HunterSysMsg"]           = self.__HunterSysMsg
 		serverCommandList["HunterEventStatus"]      = self.__HunterEventStatus
 		serverCommandList["HunterEventClose"]       = self.__HunterEventClose
+		serverCommandList["HunterSpeedKillStart"]   = self.__HunterSpeedKillStart
+		serverCommandList["HunterSpeedKillEnd"]     = self.__HunterSpeedKillEnd
 		serverCommandList["HunterRankThresholds"]   = self.__HunterRankThresholds
 		serverCommandList["HunterPenaltyStatus"]    = self.__HunterPenaltyStatus
 		serverCommandList["HunterRivalInfo"]        = self.__HunterRivalInfo
@@ -3644,6 +3646,28 @@ class GameWindow(ui.ScriptWindow):
 		except:
 			pass
 
+	def __HunterSpeedKillStart(self, data):
+		"""Start speed kill timer (format: tipo|secondi)"""
+		try:
+			parts = data.split("|")
+			if len(parts) == 2:
+				timerType = parts[0]  # "BOSS" o "METIN"
+				timeLimit = parts[1]   # "60" o "300"
+				if self.interface:
+					self.interface.StartSpeedKillTimer(timerType, timeLimit)
+		except:
+			import dbg
+			dbg.TraceError("Failed to start speed kill timer")
+
+	def __HunterSpeedKillEnd(self, data):
+		"""End speed kill timer and show result"""
+		try:
+			if self.interface:
+				self.interface.StopSpeedKillTimer()
+		except:
+			import dbg
+			dbg.TraceError("Failed to stop speed kill timer")
+
 	# ====================================================================================
 	# DAILY MISSIONS & EVENTS HANDLERS
 	# ====================================================================================
@@ -3754,7 +3778,7 @@ class GameWindow(ui.ScriptWindow):
 			pass
 	
 	def __HunterEventBatch(self, data):
-		"""Riceve batch di eventi: event1;event2;event3... dove ogni evento e' id~name~start~end~type~reward~status~min_rank"""
+		"""Riceve batch di eventi: event1;event2;event3... dove ogni evento e' id~name~start~end~type~reward~status~min_rank~desc~color"""
 		try:
 			events = data.split(";")
 			for eventStr in events:
@@ -3768,9 +3792,9 @@ class GameWindow(ui.ScriptWindow):
 						"type": parts[4],
 						"reward": parts[5].replace("+", " "),
 						"status": parts[6],
-						"desc": "",
-						"color": "GOLD",
-						"min_rank": parts[7] if len(parts) > 7 else "E"
+						"min_rank": parts[7] if len(parts) > 7 else "E",
+						"desc": parts[8].replace("+", " ") if len(parts) > 8 else "",
+						"color": parts[9] if len(parts) > 9 else "GOLD"
 					}
 					if self.interface:
 						self.interface.HunterEventData(eventData)

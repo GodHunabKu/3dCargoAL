@@ -584,5 +584,122 @@ quest hunter_test_quest begin
             syschat("|cff00FF00[SECURITY] Sistema protetto al 100%!|r")
             syschat("|cffFFD700========================================|r")
         end
+
+        -- ============================================================
+        -- SPEED KILL TIMER TEST COMMANDS
+        -- ============================================================
+
+        when chat."/htest_speedkill_boss" with pc.is_gm() begin
+            syschat("|cffFFD700========================================|r")
+            syschat("|cff00FF00[TEST] Simulazione spawn Boss|r")
+            syschat("|cffFFD700========================================|r")
+
+            -- Simula spawn
+            pc.setqf("hq_elite_spawn_time", get_time())
+            cmdchat("HunterSpeedKillStart BOSS|60")
+
+            syschat("|cff00FFFF✓ Timer avviato (60 secondi)|r")
+            syschat("|cffFFFFFFUsa /htest_speedkill_kill per simulare uccisione|r")
+            syschat("|cffFFFFFFOppure attendi per vedere il timeout|r")
+        end
+
+        when chat."/htest_speedkill_metin" with pc.is_gm() begin
+            syschat("|cffFFD700========================================|r")
+            syschat("|cff00FF00[TEST] Simulazione spawn SuperMetin|r")
+            syschat("|cffFFD700========================================|r")
+
+            -- Simula spawn
+            pc.setqf("hq_elite_spawn_time", get_time())
+            cmdchat("HunterSpeedKillStart METIN|300")
+
+            syschat("|cff00FFFF✓ Timer avviato (300 secondi)|r")
+            syschat("|cffFFFFFFUsa /htest_speedkill_kill per simulare uccisione|r")
+            syschat("|cffFFFFFFOppure attendi per vedere il timeout|r")
+        end
+
+        when chat."/htest_speedkill_kill" with pc.is_gm() begin
+            local spawn_time = pc.getqf("hq_elite_spawn_time") or 0
+            if spawn_time == 0 then
+                syschat("|cffFF0000Nessun Boss/Metin attivo! Usa /htest_speedkill_boss o /htest_speedkill_metin prima|r")
+                return
+            end
+
+            local elapsed = get_time() - spawn_time
+
+            syschat("|cffFFD700========================================|r")
+            syschat("|cff00FF00[TEST] Simulazione uccisione|r")
+            syschat("|cffFFD700========================================|r")
+
+            -- Determina tipo e limite
+            local time_limit = 60  -- Default Boss
+            local tipo = "BOSS"
+
+            -- Simula uccisione Boss (60 secondi limite)
+            if elapsed <= 60 then
+                -- In tempo! Bonus x2
+                cmdchat("HunterSpeedKillEnd BOSS|" .. elapsed .. "|1|120|240")
+                local speed_msg = string.format(
+                    "|cff00FF00[SPEED KILL BONUS!]|r Tempo: %d sec/60 sec. |cffFFD700+240 Gloria (x2)|r",
+                    elapsed
+                )
+                syschat(speed_msg)
+            else
+                -- Troppo tardi
+                cmdchat("HunterSpeedKillEnd BOSS|" .. elapsed .. "|0|120|120")
+                local slow_msg = string.format(
+                    "|cffFF6600[Bonus Scaduto]|r Tempo: %d sec (limite: 60 sec). +120 Gloria",
+                    elapsed
+                )
+                syschat(slow_msg)
+            end
+
+            -- Reset spawn time
+            pc.setqf("hq_elite_spawn_time", 0)
+        end
+
+        when chat."/htest_speedkill_force_fast" with pc.is_gm() begin
+            syschat("|cff00FFFF[TEST] Forza Speed Kill SUCCESS (tempo: 25 secondi)|r")
+
+            pc.setqf("hq_elite_spawn_time", get_time() - 25)
+            cmdchat("HunterSpeedKillStart BOSS|60")
+
+            timer("force_kill_fast", 2)
+        end
+
+        when force_kill_fast.timer begin
+            local spawn_time = pc.getqf("hq_elite_spawn_time")
+            local elapsed = get_time() - spawn_time
+
+            cmdchat("HunterSpeedKillEnd BOSS|" .. elapsed .. "|1|120|240")
+            local speed_msg = string.format(
+                "|cff00FF00[SPEED KILL BONUS!]|r Tempo: %d sec/60 sec. |cffFFD700+240 Gloria (x2)|r",
+                elapsed
+            )
+            syschat(speed_msg)
+            pc.setqf("hq_elite_spawn_time", 0)
+        end
+
+        when chat."/htest_speedkill_force_slow" with pc.is_gm() begin
+            syschat("|cffFF6600[TEST] Forza Speed Kill FAIL (tempo: 75 secondi)|r")
+
+            pc.setqf("hq_elite_spawn_time", get_time() - 75)
+            cmdchat("HunterSpeedKillStart BOSS|60")
+
+            timer("force_kill_slow", 2)
+        end
+
+        when force_kill_slow.timer begin
+            local spawn_time = pc.getqf("hq_elite_spawn_time")
+            local elapsed = get_time() - spawn_time
+
+            cmdchat("HunterSpeedKillEnd BOSS|" .. elapsed .. "|0|120|120")
+            local slow_msg = string.format(
+                "|cffFF6600[Bonus Scaduto]|r Tempo: %d sec (limite: 60 sec). +120 Gloria",
+                elapsed
+            )
+            syschat(slow_msg)
+            pc.setqf("hq_elite_spawn_time", 0)
+        end
+
     end
 end

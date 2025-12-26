@@ -2942,24 +2942,38 @@ class EventsScheduleWindow(ui.Window):
                 slot["timeText"].SetPosition(20, yPos + 8)
                 slot["nameText"].SetPosition(80, yPos + 8)
                 slot["rewardText"].SetPosition(80, yPos + 28)
+                slot["descText"].SetPosition(20, yPos + 40)
                 slot["statusText"].SetPosition(320, yPos + 18)
                 slot["joinBtn"].SetPosition(300, yPos + 12)
-                
+
                 # Aggiorna dati slot con evento corretto
                 e = self.events[eventIdx]
-                etype = e.get("type", "glory_rush")
-                ecolor = getattr(self, 'TYPE_COLORS', {}).get(etype, 0xFFFFFFFF)
-                
+
+                # Usa color_scheme dal DB invece di TYPE_COLORS hardcoded
+                COLOR_MAP = {
+                    "GOLD": 0xFFFFD700,
+                    "PURPLE": 0xFF9932CC,
+                    "RED": 0xFFFF4444,
+                    "CYAN": 0xFF00CCFF,
+                    "ORANGE": 0xFFFF8800,
+                    "GREEN": 0xFF00FF00,
+                    "BLUE": 0xFF4444FF,
+                }
+                color_name = e.get("color", "GOLD")
+                ecolor = COLOR_MAP.get(color_name, 0xFFFFFFFF)
+
                 slot["timeText"].SetText(e.get("start_time", "--:--"))
                 slot["nameText"].SetText(e.get("name", "Evento")[:28])
                 slot["nameText"].SetPackedFontColor(ecolor)
                 slot["rewardText"].SetText("%s [%s+]" % (e.get("reward", ""), e.get("min_rank", "E")))
+                slot["descText"].SetText(e.get("desc", "")[:50])  # Mostra descrizione (max 50 char)
                 slot["eventId"] = e.get("id", 0)
-                
+
                 slot["bg"].Show()
                 slot["timeText"].Show()
                 slot["nameText"].Show()
                 slot["rewardText"].Show()
+                slot["descText"].Show()
                 
                 status = e.get("status", "pending")
                 if status == "active" and status != "joined":
@@ -2987,6 +3001,7 @@ class EventsScheduleWindow(ui.Window):
                 slot["timeText"].Hide()
                 slot["nameText"].Hide()
                 slot["rewardText"].Hide()
+                slot["descText"].Hide()
                 slot["statusText"].Hide()
                 slot["joinBtn"].Hide()
     
@@ -3050,7 +3065,16 @@ class EventsScheduleWindow(ui.Window):
         rewardText.SetPackedFontColor(0xFFAAAAAA)
         rewardText.Hide()
         slot["rewardText"] = rewardText
-        
+
+        # Descrizione evento
+        descText = ui.TextLine()
+        descText.SetParent(self)
+        descText.SetPosition(20, yBase + 40)
+        descText.SetText("")
+        descText.SetPackedFontColor(0xFF888888)
+        descText.Hide()
+        slot["descText"] = descText
+
         # Status
         statusText = ui.TextLine()
         statusText.SetParent(self)
@@ -3444,3 +3468,143 @@ def GetAllMissionsCompleteWindow():
     if g_allMissionsCompleteWindow is None:
         g_allMissionsCompleteWindow = AllMissionsCompleteWindow()
     return g_allMissionsCompleteWindow
+
+# ============================================================
+# SPEED KILL TIMER WINDOW
+# ============================================================
+class SpeedKillTimerWindow(ui.BoardWithTitleBar):
+    """Timer countdown per Speed Kill Bonus (Boss/SuperMetin)"""
+
+    def __init__(self):
+        ui.BoardWithTitleBar.__init__(self)
+        self.SetSize(320, 130)
+        self.SetCenterPosition()
+        self.AddFlag("movable")
+        self.AddFlag("float")
+
+        # Timer data
+        self.timerType = ""  # "BOSS" o "METIN"
+        self.timeLimit = 0
+        self.startTime = 0
+        self.isActive = False
+
+        # Title
+        self.SetTitleName("SPEED KILL CHALLENGE")
+
+        # Type label (BOSS SPAWN / SUPER METIN SPAWN)
+        self.typeText = ui.TextLine()
+        self.typeText.SetParent(self)
+        self.typeText.SetPosition(160, 40)
+        self.typeText.SetHorizontalAlignCenter()
+        self.typeText.SetPackedFontColor(0xFFFFD700)  # Gold
+        self.typeText.SetOutline()
+        self.typeText.Show()
+
+        # Countdown text (BIG)
+        self.countdownText = ui.TextLine()
+        self.countdownText.SetParent(self)
+        self.countdownText.SetPosition(160, 65)
+        self.countdownText.SetHorizontalAlignCenter()
+        self.countdownText.SetPackedFontColor(0xFF00FF00)  # Green
+        self.countdownText.SetOutline()
+        self.countdownText.Show()
+
+        # Motivational text
+        self.motivationText = ui.TextLine()
+        self.motivationText.SetParent(self)
+        self.motivationText.SetPosition(160, 95)
+        self.motivationText.SetHorizontalAlignCenter()
+        self.motivationText.SetPackedFontColor(0xFF00FFFF)  # Cyan
+        self.motivationText.SetOutline()
+        self.motivationText.SetText("UCCIDI ENTRO IL TEMPO PER BONUS X2!")
+        self.motivationText.Show()
+
+        # Pulsing effect per urgenza
+        self.pulseTime = 0.0
+        self.pulseDirection = 1
+
+    def StartTimer(self, timerType, timeLimit):
+        """Avvia timer (timerType: 'BOSS' o 'METIN', timeLimit: secondi)"""
+        self.timerType = timerType
+        self.timeLimit = int(timeLimit)
+        self.startTime = app.GetTime()
+        self.isActive = True
+        self.pulseTime = 0.0
+        self.pulseDirection = 1
+
+        # Set type text
+        if timerType == "BOSS":
+            self.typeText.SetText("BOSS SPAWN - SPEED KILL!")
+        else:
+            self.typeText.SetText("SUPER METIN - SPEED KILL!")
+
+        # Reset motivational text
+        self.motivationText.SetText("UCCIDI ENTRO IL TEMPO PER BONUS X2!")
+        self.motivationText.SetPackedFontColor(0xFF00FFFF)  # Cyan
+
+        # Show window
+        self.Show()
+        self.SetTop()
+
+    def StopTimer(self):
+        """Ferma timer e chiudi window"""
+        self.isActive = False
+        self.Hide()
+
+    def OnUpdate(self):
+        """Update countdown ogni frame"""
+        if not self.isActive:
+            return
+
+        elapsed = app.GetTime() - self.startTime
+        remaining = self.timeLimit - elapsed
+
+        if remaining <= 0:
+            # Tempo scaduto
+            self.countdownText.SetText("TEMPO SCADUTO!")
+            self.countdownText.SetPackedFontColor(0xFFFF0000)  # Red
+            self.motivationText.SetText("Nessun bonus questa volta...")
+            self.motivationText.SetPackedFontColor(0xFFFF6600)  # Orange
+            # Auto-close dopo 3 secondi
+            if elapsed > self.timeLimit + 3:
+                self.StopTimer()
+        else:
+            # Update countdown
+            minutes = int(remaining / 60)
+            seconds = int(remaining % 60)
+
+            if minutes > 0:
+                self.countdownText.SetText("%d:%02d" % (minutes, seconds))
+            else:
+                self.countdownText.SetText("%d sec" % seconds)
+
+            # Color coding: Green -> Yellow -> Orange -> Red
+            if remaining > self.timeLimit * 0.5:
+                self.countdownText.SetPackedFontColor(0xFF00FF00)  # Green
+            elif remaining > self.timeLimit * 0.25:
+                self.countdownText.SetPackedFontColor(0xFFFFFF00)  # Yellow
+            else:
+                self.countdownText.SetPackedFontColor(0xFFFF6600)  # Orange
+
+            # PULSE EFFECT quando sotto 15 secondi
+            if remaining <= 15:
+                self.pulseTime += 0.15 * self.pulseDirection
+                if self.pulseTime > 1.0:
+                    self.pulseDirection = -1
+                elif self.pulseTime < 0.3:
+                    self.pulseDirection = 1
+
+                # Colore pulsante rosso intenso
+                brightness = int(155 + 100 * self.pulseTime)
+                self.countdownText.SetPackedFontColor(grp.GenerateColor(1.0, brightness/255.0, 0.0, 1.0))
+
+# ============================================================
+# SPEED KILL TIMER GLOBAL INSTANCE
+# ============================================================
+g_speedKillTimer = None
+
+def GetSpeedKillTimer():
+    global g_speedKillTimer
+    if g_speedKillTimer is None:
+        g_speedKillTimer = SpeedKillTimerWindow()
+    return g_speedKillTimer

@@ -366,6 +366,9 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.missionCompleteWnd = uihunterlevel_whatif.MissionCompleteWindow()
         self.allMissionsCompleteWnd = uihunterlevel_whatif.AllMissionsCompleteWindow()
 
+        # Speed Kill Timer Window
+        self.speedKillTimer = uihunterlevel_whatif.SpeedKillTimerWindow()
+
         # ==============================================================================
         # HUNTER SYSTEM COMPLETE OVERHAUL - NEW WINDOWS & DATA
         # ==============================================================================
@@ -402,7 +405,7 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.Hide()
         self.__ClearAll()
         
-        for wnd in [self.systemMsgWnd, self.emergencyWnd, self.whatIfWnd, self.rivalWnd, self.eventWnd]:
+        for wnd in [self.systemMsgWnd, self.emergencyWnd, self.whatIfWnd, self.rivalWnd, self.eventWnd, self.speedKillTimer]:
             if wnd:
                 wnd.Hide()
         self.systemMsgWnd = None
@@ -410,6 +413,7 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.whatIfWnd = None
         self.rivalWnd = None
         self.eventWnd = None
+        self.speedKillTimer = None
         
         self.ClearDictionary()
         self.isLoaded = False
@@ -2624,7 +2628,7 @@ class HunterLevelWindow(ui.ScriptWindow):
     def OnUpdate(self):
         if not self.isLoaded or self.isDestroyed:
             return
-        
+
         if self.systemMsgWnd:
             self.systemMsgWnd.OnUpdate()
         if self.emergencyWnd:
@@ -2633,6 +2637,8 @@ class HunterLevelWindow(ui.ScriptWindow):
             self.rivalWnd.OnUpdate()
         if self.eventWnd:
             self.eventWnd.OnUpdate()
+        if self.speedKillTimer and self.speedKillTimer.isActive:
+            self.speedKillTimer.OnUpdate()
         
         ct = app.GetTime()
         dt = ct - self.lastUpdateTime
@@ -2664,7 +2670,20 @@ class HunterLevelWindow(ui.ScriptWindow):
         if hasattr(self, 'weeklyTimerLabel') and self.weeklyTimerLabel:
             w = max(0, int(self.weeklyResetSeconds))
             self.weeklyTimerLabel.SetText("%dg %02d:%02d" % (w // 86400, (w % 86400) // 3600, (w % 3600) // 60))
-    
+
+    # ========================================================================
+    #  SPEED KILL TIMER
+    # ========================================================================
+    def StartSpeedKillTimer(self, timerType, timeLimit):
+        """Start speed kill timer"""
+        if self.speedKillTimer:
+            self.speedKillTimer.StartTimer(timerType, int(timeLimit))
+
+    def StopSpeedKillTimer(self):
+        """Stop speed kill timer"""
+        if self.speedKillTimer:
+            self.speedKillTimer.StopTimer()
+
     def Open(self):
         if not self.isLoaded:
             if not self.LoadWindow():
