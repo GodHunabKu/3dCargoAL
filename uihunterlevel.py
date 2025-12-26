@@ -388,7 +388,9 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.missionProgressWnd = None
         self.missionCompleteWnd = None
         self.allMissionsCompleteWnd = None
-        
+
+        self.onUpdateCrashed = False
+
         self.systemMsgWnd = uihunterlevel_whatif.SystemMessageWindow()
         self.emergencyWnd = uihunterlevel_whatif.EmergencyQuestWindow()
         self.whatIfWnd = uihunterlevel_whatif.WhatIfChoiceWindow()
@@ -2732,42 +2734,55 @@ class HunterLevelWindow(ui.ScriptWindow):
     #  UPDATE
     # ========================================================================
     def OnUpdate(self):
-        if not self.isLoaded or self.isDestroyed:
+        if self.onUpdateCrashed:
             return
 
-        if self.systemMsgWnd:
-            self.systemMsgWnd.OnUpdate()
-        if self.emergencyWnd:
-            self.emergencyWnd.OnUpdate()
-        if self.rivalWnd:
-            self.rivalWnd.OnUpdate()
-        if self.eventWnd:
-            self.eventWnd.OnUpdate()
-        if self.speedKillTimer and self.speedKillTimer.isActive:
-            self.speedKillTimer.OnUpdate()
-        
-        ct = app.GetTime()
-        dt = ct - self.lastUpdateTime
-        self.lastUpdateTime = ct
-        self.timerUpdateAccum += dt
+        try:
+            if not self.isLoaded or self.isDestroyed:
+                return
 
-        # Auto-close timer per finestra missioni
-        if self.autoCloseTimer > 0.0:
-            self.autoCloseTimer -= dt
-            if self.autoCloseTimer <= 0.0:
-                self.autoCloseTimer = 0.0
-                # Chiudi solo se è stata aperta automaticamente e player non ha interagito
-                if self.autoOpenedForMission:
-                    self.Close()
-                    self.autoOpenedForMission = False
+            # TEMPORARY FIX: Disabled sub-window OnUpdate to prevent crash
+            # Re-enable these one by one to find which one crashes
+            # if self.systemMsgWnd:
+            #     self.systemMsgWnd.OnUpdate()
+            # if self.emergencyWnd:
+            #     self.emergencyWnd.OnUpdate()
+            # if self.rivalWnd:
+            #     self.rivalWnd.OnUpdate()
+            # if self.eventWnd:
+            #     self.eventWnd.OnUpdate()
+            # if self.speedKillTimer and hasattr(self.speedKillTimer, 'isActive') and self.speedKillTimer.isActive:
+            #     self.speedKillTimer.OnUpdate()
 
-        if self.timerUpdateAccum >= 1.0:
-            self.timerUpdateAccum = 0.0
-            if self.dailyResetSeconds > 0:
-                self.dailyResetSeconds -= 1
-            if self.weeklyResetSeconds > 0:
-                self.weeklyResetSeconds -= 1
-            self.__UpdateTimers()
+            ct = app.GetTime()
+            dt = ct - self.lastUpdateTime
+            self.lastUpdateTime = ct
+            self.timerUpdateAccum += dt
+
+            # Auto-close timer per finestra missioni
+            if self.autoCloseTimer > 0.0:
+                self.autoCloseTimer -= dt
+                if self.autoCloseTimer <= 0.0:
+                    self.autoCloseTimer = 0.0
+                    # Chiudi solo se è stata aperta automaticamente e player non ha interagito
+                    if self.autoOpenedForMission:
+                        self.Close()
+                        self.autoOpenedForMission = False
+
+            if self.timerUpdateAccum >= 1.0:
+                self.timerUpdateAccum = 0.0
+                if self.dailyResetSeconds > 0:
+                    self.dailyResetSeconds -= 1
+                if self.weeklyResetSeconds > 0:
+                    self.weeklyResetSeconds -= 1
+                self.__UpdateTimers()
+        except Exception as e:
+            self.onUpdateCrashed = True
+            import dbg
+            import traceback
+            dbg.TraceError("[ERROR] OnUpdate crashed! Disabling further OnUpdate calls.")
+            dbg.TraceError("Error: " + str(e))
+            traceback.print_exc()
     
     def __UpdateTimers(self):
         if hasattr(self, 'dailyTimerLabel') and self.dailyTimerLabel:
