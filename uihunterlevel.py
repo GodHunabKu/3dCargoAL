@@ -2741,16 +2741,18 @@ class HunterLevelWindow(ui.ScriptWindow):
             if not self.isLoaded or self.isDestroyed:
                 return
 
-            if self.systemMsgWnd:
-                self.systemMsgWnd.OnUpdate()
-            if self.emergencyWnd:
-                self.emergencyWnd.OnUpdate()
-            if self.rivalWnd:
-                self.rivalWnd.OnUpdate()
-            if self.eventWnd:
-                self.eventWnd.OnUpdate()
-            if self.speedKillTimer and hasattr(self.speedKillTimer, 'isActive') and self.speedKillTimer.isActive:
-                self.speedKillTimer.OnUpdate()
+            # TEMPORARY FIX: Disabled sub-window OnUpdate to prevent crash
+            # Re-enable these one by one to find which one crashes
+            # if self.systemMsgWnd:
+            #     self.systemMsgWnd.OnUpdate()
+            # if self.emergencyWnd:
+            #     self.emergencyWnd.OnUpdate()
+            # if self.rivalWnd:
+            #     self.rivalWnd.OnUpdate()
+            # if self.eventWnd:
+            #     self.eventWnd.OnUpdate()
+            # if self.speedKillTimer and hasattr(self.speedKillTimer, 'isActive') and self.speedKillTimer.isActive:
+            #     self.speedKillTimer.OnUpdate()
 
             ct = app.GetTime()
             dt = ct - self.lastUpdateTime
