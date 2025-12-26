@@ -1231,85 +1231,85 @@ ADD COLUMN IF NOT EXISTS `icon_path` VARCHAR(100) DEFAULT NULL COMMENT 'Path ico
 -- =====================================================================
 -- 6. NUOVI ACHIEVEMENTS - TYPE 3: BOSS KILLS
 -- =====================================================================
-INSERT INTO `hunter_quest_achievements_config` (`achievement_id`, `achievement_name`, `achievement_desc`, `requirement_value`, `reward_vnum`, `reward_count`, `achievement_type`, `achievement_category`, `icon_path`) VALUES
-(101, 'Ammazza-Boss I', 'Uccidi 10 boss', 10, 50011, 1, 3, 'Boss Hunter', 'achievement_boss_1.tga'),
-(102, 'Ammazza-Boss II', 'Uccidi 50 boss', 50, 50011, 2, 3, 'Boss Hunter', 'achievement_boss_2.tga'),
-(103, 'Ammazza-Boss III', 'Uccidi 100 boss', 100, 50011, 3, 3, 'Boss Hunter', 'achievement_boss_3.tga'),
-(104, 'Sterminatore di Boss', 'Uccidi 250 boss', 250, 50011, 5, 3, 'Boss Hunter', 'achievement_boss_4.tga'),
-(105, 'Flagello dei Boss', 'Uccidi 500 boss', 500, 50012, 1, 3, 'Boss Hunter', 'achievement_boss_5.tga'),
-(106, 'Incubo dei Boss', 'Uccidi 1000 boss', 1000, 50012, 2, 3, 'Boss Hunter', 'achievement_boss_6.tga'),
-(107, 'Leggenda Boss Hunter', 'Uccidi 2500 boss', 2500, 50013, 1, 3, 'Boss Hunter', 'achievement_boss_legend.tga'),
+INSERT INTO `hunter_quest_achievements_config` VALUES
+(101, 'Ammazza-Boss I', 3, 10, 50011, 1, 1),
+(102, 'Ammazza-Boss II', 3, 50, 50011, 2, 1),
+(103, 'Ammazza-Boss III', 3, 100, 50011, 3, 1),
+(104, 'Sterminatore di Boss', 3, 250, 50011, 5, 1),
+(105, 'Flagello dei Boss', 3, 500, 50012, 1, 1),
+(106, 'Incubo dei Boss', 3, 1000, 50012, 2, 1),
+(107, 'Leggenda Boss Hunter', 3, 2500, 50013, 1, 1),
 
 -- =====================================================================
 -- 7. NUOVI ACHIEVEMENTS - TYPE 4: METIN DESTROYED
 -- =====================================================================
-(201, 'Distruttore di Metin I', 'Distruggi 10 Metin', 10, 50011, 1, 4, 'Metin Destroyer', 'achievement_metin_1.tga'),
-(202, 'Distruttore di Metin II', 'Distruggi 50 Metin', 50, 50011, 2, 4, 'Metin Destroyer', 'achievement_metin_2.tga'),
-(203, 'Distruttore di Metin III', 'Distruggi 100 Metin', 100, 50011, 3, 4, 'Metin Destroyer', 'achievement_metin_3.tga'),
-(204, 'Demolitore Esperto', 'Distruggi 250 Metin', 250, 50011, 5, 4, 'Metin Destroyer', 'achievement_metin_4.tga'),
-(205, 'Martello dei Metin', 'Distruggi 500 Metin', 500, 50012, 1, 4, 'Metin Destroyer', 'achievement_metin_5.tga'),
-(206, 'Annientatore Metin', 'Distruggi 1000 Metin', 1000, 50012, 2, 4, 'Metin Destroyer', 'achievement_metin_6.tga'),
-(207, 'Leggenda Anti-Metin', 'Distruggi 2500 Metin', 2500, 50013, 1, 4, 'Metin Destroyer', 'achievement_metin_legend.tga'),
+(201, 'Distruttore di Metin I', 4, 10, 50011, 1, 1),
+(202, 'Distruttore di Metin II', 4, 50, 50011, 2, 1),
+(203, 'Distruttore di Metin III', 4, 100, 50011, 3, 1),
+(204, 'Demolitore Esperto', 4, 250, 50011, 5, 1),
+(205, 'Martello dei Metin', 4, 500, 50012, 1, 1),
+(206, 'Annientatore Metin', 4, 1000, 50012, 2, 1),
+(207, 'Leggenda Anti-Metin', 4, 2500, 50013, 1, 1),
 
 -- =====================================================================
 -- 8. NUOVI ACHIEVEMENTS - TYPE 5: CHESTS OPENED
 -- =====================================================================
-(301, 'Cacciatore di Tesori I', 'Apri 10 bauli', 10, 50011, 1, 5, 'Treasure Hunter', 'achievement_chest_1.tga'),
-(302, 'Cacciatore di Tesori II', 'Apri 50 bauli', 50, 50011, 2, 5, 'Treasure Hunter', 'achievement_chest_2.tga'),
-(303, 'Cacciatore di Tesori III', 'Apri 100 bauli', 100, 50011, 3, 5, 'Treasure Hunter', 'achievement_chest_3.tga'),
-(304, 'Esploratore Avido', 'Apri 250 bauli', 250, 50011, 5, 5, 'Treasure Hunter', 'achievement_chest_4.tga'),
-(305, 'Maestro del Tesoro', 'Apri 500 bauli', 500, 50012, 1, 5, 'Treasure Hunter', 'achievement_chest_5.tga'),
-(306, 'Re dei Bauli', 'Apri 1000 bauli', 1000, 50012, 2, 5, 'Treasure Hunter', 'achievement_chest_6.tga'),
-(307, 'Leggenda Treasure Hunter', 'Apri 2500 bauli', 2500, 50013, 1, 5, 'Treasure Hunter', 'achievement_chest_legend.tga'),
+(301, 'Cacciatore di Tesori I', 5, 10, 50011, 1, 1),
+(302, 'Cacciatore di Tesori II', 5, 50, 50011, 2, 1),
+(303, 'Cacciatore di Tesori III', 5, 100, 50011, 3, 1),
+(304, 'Esploratore Avido', 5, 250, 50011, 5, 1),
+(305, 'Maestro del Tesoro', 5, 500, 50012, 1, 1),
+(306, 'Re dei Bauli', 5, 1000, 50012, 2, 1),
+(307, 'Leggenda Treasure Hunter', 5, 2500, 50013, 1, 1),
 
 -- =====================================================================
 -- 9. NUOVI ACHIEVEMENTS - TYPE 6: LOGIN STREAK DAYS
 -- =====================================================================
-(401, 'Fedele I', 'Login streak: 3 giorni', 3, 50011, 1, 6, 'Dedication', 'achievement_streak_1.tga'),
-(402, 'Fedele II', 'Login streak: 7 giorni', 7, 50011, 2, 6, 'Dedication', 'achievement_streak_2.tga'),
-(403, 'Fedele III', 'Login streak: 14 giorni', 14, 50011, 3, 6, 'Dedication', 'achievement_streak_3.tga'),
-(404, 'Cacciatore Devoto', 'Login streak: 30 giorni', 30, 50011, 5, 6, 'Dedication', 'achievement_streak_4.tga'),
-(405, 'Presenza Costante', 'Login streak: 60 giorni', 60, 50012, 1, 6, 'Dedication', 'achievement_streak_5.tga'),
-(406, 'Inarrestabile', 'Login streak: 90 giorni', 90, 50012, 2, 6, 'Dedication', 'achievement_streak_6.tga'),
-(407, 'Dedizione Assoluta', 'Login streak: 180 giorni', 180, 50012, 3, 6, 'Dedication', 'achievement_streak_7.tga'),
-(408, 'Leggenda della Dedizione', 'Login streak: 365 giorni', 365, 50013, 2, 6, 'Dedication', 'achievement_streak_legend.tga'),
+(401, 'Fedele I', 6, 3, 50011, 1, 1),
+(402, 'Fedele II', 6, 7, 50011, 2, 1),
+(403, 'Fedele III', 6, 14, 50011, 3, 1),
+(404, 'Cacciatore Devoto', 6, 30, 50011, 5, 1),
+(405, 'Presenza Costante', 6, 60, 50012, 1, 1),
+(406, 'Inarrestabile', 6, 90, 50012, 2, 1),
+(407, 'Dedizione Assoluta', 6, 180, 50012, 3, 1),
+(408, 'Leggenda della Dedizione', 6, 365, 50013, 2, 1),
 
 -- =====================================================================
 -- 10. NUOVI ACHIEVEMENTS - TYPE 7: MISSIONS COMPLETED
 -- =====================================================================
-(501, 'Seguace della Missione I', 'Completa 10 missioni', 10, 50011, 1, 7, 'Mission Master', 'achievement_mission_1.tga'),
-(502, 'Seguace della Missione II', 'Completa 25 missioni', 25, 50011, 2, 7, 'Mission Master', 'achievement_mission_2.tga'),
-(503, 'Seguace della Missione III', 'Completa 50 missioni', 50, 50011, 3, 7, 'Mission Master', 'achievement_mission_3.tga'),
-(504, 'Esecutore Esperto', 'Completa 100 missioni', 100, 50011, 5, 7, 'Mission Master', 'achievement_mission_4.tga'),
-(505, 'Veterano delle Missioni', 'Completa 250 missioni', 250, 50012, 1, 7, 'Mission Master', 'achievement_mission_5.tga'),
-(506, 'Maestro delle Missioni', 'Completa 500 missioni', 500, 50012, 2, 7, 'Mission Master', 'achievement_mission_6.tga'),
-(507, 'Leggenda Mission Master', 'Completa 1000 missioni', 1000, 50013, 1, 7, 'Mission Master', 'achievement_mission_legend.tga'),
+(501, 'Seguace della Missione I', 7, 10, 50011, 1, 1),
+(502, 'Seguace della Missione II', 7, 25, 50011, 2, 1),
+(503, 'Seguace della Missione III', 7, 50, 50011, 3, 1),
+(504, 'Esecutore Esperto', 7, 100, 50011, 5, 1),
+(505, 'Veterano delle Missioni', 7, 250, 50012, 1, 1),
+(506, 'Maestro delle Missioni', 7, 500, 50012, 2, 1),
+(507, 'Leggenda Mission Master', 7, 1000, 50013, 1, 1),
 
 -- =====================================================================
 -- 11. NUOVI ACHIEVEMENTS - TYPE 8: EVENTS PARTICIPATED
 -- =====================================================================
-(601, 'Partecipante I', 'Partecipa a 5 eventi', 5, 50011, 1, 8, 'Event Champion', 'achievement_event_1.tga'),
-(602, 'Partecipante II', 'Partecipa a 10 eventi', 10, 50011, 2, 8, 'Event Champion', 'achievement_event_2.tga'),
-(603, 'Partecipante III', 'Partecipa a 25 eventi', 25, 50011, 3, 8, 'Event Champion', 'achievement_event_3.tga'),
-(604, 'Entusiasta degli Eventi', 'Partecipa a 50 eventi', 50, 50011, 5, 8, 'Event Champion', 'achievement_event_4.tga'),
-(605, 'Veterano degli Eventi', 'Partecipa a 100 eventi', 100, 50012, 1, 8, 'Event Champion', 'achievement_event_5.tga'),
-(606, 'Campione degli Eventi', 'Partecipa a 250 eventi', 250, 50012, 2, 8, 'Event Champion', 'achievement_event_6.tga'),
-(607, 'Leggenda Event Champion', 'Partecipa a 500 eventi', 500, 50013, 1, 8, 'Event Champion', 'achievement_event_legend.tga'),
+(601, 'Partecipante I', 8, 5, 50011, 1, 1),
+(602, 'Partecipante II', 8, 10, 50011, 2, 1),
+(603, 'Partecipante III', 8, 25, 50011, 3, 1),
+(604, 'Entusiasta degli Eventi', 8, 50, 50011, 5, 1),
+(605, 'Veterano degli Eventi', 8, 100, 50012, 1, 1),
+(606, 'Campione degli Eventi', 8, 250, 50012, 2, 1),
+(607, 'Leggenda Event Champion', 8, 500, 50013, 1, 1),
 
 -- =====================================================================
 -- 12. ACHIEVEMENTS SPECIALI E NASCOSTI
 -- =====================================================================
-(701, 'Prima Caccia', 'Uccidi il tuo primo mostro come Hunter', 1, 50011, 1, 1, 'Special', 'achievement_first_kill.tga'),
-(702, 'Primo Passo', 'Raggiungi Rank D', 1000, 50011, 2, 2, 'Special', 'achievement_rank_d.tga'),
-(703, 'In Ascesa', 'Raggiungi Rank C', 5000, 50011, 3, 2, 'Special', 'achievement_rank_c.tga'),
-(704, 'Elite Hunter', 'Raggiungi Rank A', 50000, 50012, 1, 2, 'Special', 'achievement_rank_a.tga'),
-(705, 'Leggenda Nascente', 'Raggiungi Rank N', 250000, 50013, 3, 2, 'Special', 'achievement_rank_n.tga'),
-(706, 'Perfezionista', 'Completa tutti gli achievement (hidden)', 1, 50013, 5, 2, 'Special', 'achievement_perfectionist.tga'),
-(707, 'Resiliente', 'Recupera da 3 penalit\u00e0 senza ban (hidden)', 3, 50012, 2, 2, 'Special', 'achievement_resilient.tga'),
-(708, 'Imbattibile', 'Mantieni streak di 100 giorni (hidden)', 100, 50013, 2, 6, 'Special', 'achievement_unbeatable.tga');
+(701, 'Prima Caccia', 1, 1, 50011, 1, 1),
+(702, 'Primo Passo', 2, 1000, 50011, 2, 1),
+(703, 'In Ascesa', 2, 5000, 50011, 3, 1),
+(704, 'Elite Hunter', 2, 50000, 50012, 1, 1),
+(705, 'Leggenda Nascente', 2, 250000, 50013, 3, 1),
+(706, 'Perfezionista', 2, 1, 50013, 5, 1),
+(707, 'Resiliente', 2, 3, 50012, 2, 1),
+(708, 'Imbattibile', 6, 100, 50013, 2, 1);
 
 -- Imposta alcuni achievement come nascosti
-UPDATE `hunter_quest_achievements_config` SET `is_hidden` = 1 WHERE `achievement_id` IN (706, 707, 708);
+-- UPDATE `hunter_quest_achievements_config` SET `is_hidden` = 1 WHERE `achievement_id` IN (706, 707, 708);
 
 -- =====================================================================
 -- 13. TABELLA: hunter_ui_rank_colors
