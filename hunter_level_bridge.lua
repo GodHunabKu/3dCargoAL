@@ -1695,11 +1695,12 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_ranking("weekly")
             hunter_level_bridge.send_ranking("total")
 
-            -- Invia shop e achievements (tab Shop e Achiev)
-            hunter_level_bridge.send_shop()
-            hunter_level_bridge.send_achievements()
+            -- NON inviare shop/achievements all'apertura - troppi dati!
+            -- Li caricheremo quando clicchi sul tab specifico
+            -- hunter_level_bridge.send_shop()
+            -- hunter_level_bridge.send_achievements()
 
-            -- Invia calendario eventi
+            -- Invia calendario eventi (limitato a 21 entries)
             hunter_level_bridge.send_calendar()
 
             syschat("[HUNTER] Terminale pronto! Usa i tab per navigare.")
@@ -1711,7 +1712,19 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_ranking("weekly")
             hunter_level_bridge.send_ranking("total")
         end
-        
+
+        -- Carica shop items (quando clicchi tab Shop)
+        when chat."/hunter_load_shop" begin
+            hunter_level_bridge.send_shop()
+            syschat("[HUNTER] Shop caricato!")
+        end
+
+        -- Carica achievements (quando clicchi tab Achievements)
+        when chat."/hunter_load_achievements" begin
+            hunter_level_bridge.send_achievements()
+            syschat("[HUNTER] Achievements caricati!")
+        end
+
         -- Comando per forzare refresh del rank (senza relog)
         when chat."/hunter_refresh_rank" begin
             local pid = pc.get_player_id()
