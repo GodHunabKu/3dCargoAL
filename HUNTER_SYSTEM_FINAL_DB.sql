@@ -535,13 +535,12 @@ INSERT INTO `hunter_quest_tips` (`tip_text`, `tip_category`, `is_active`) VALUES
 ('Suggerimento: Puoi filtrare gli achievement per categoria nel tab dedicato!', 'UI', 1),
 ('Suggerimento: Rank N e il massimo: +30% Gloria e +20% Drop!', 'Ranks', 1),
 ('Suggerimento: Login streak di 365 giorni ti rende una Leggenda!', 'Streak', 1),
-('Suggerimento: Controlla le tue statistiche per vedere le fonti di Gloria!', 'Stats', 1);
-
-INSERT INTO `hunter_quest_tips` VALUES (26, 'Il sistema Hunter premia la costanza, non solo la forza bruta.');
-INSERT INTO `hunter_quest_tips` VALUES (27, 'Si narra che alcuni Boss Elite nascondano segreti antichi...');
-INSERT INTO `hunter_quest_tips` VALUES (28, 'Il reset Giornaliero avviene ogni notte. Assicurati di aver massimizzato il punteggio.');
-INSERT INTO `hunter_quest_tips` VALUES (29, 'Guardati le spalle mentre combatti un Boss... un nemico potrebbe essere in agguato.');
-INSERT INTO `hunter_quest_tips` VALUES (30, 'Vuoi vedere il tuo nome in cima a tutti? Premi N e scala la Sala delle Leggende.');
+('Suggerimento: Controlla le tue statistiche per vedere le fonti di Gloria!', 'Stats', 1),
+('Il sistema Hunter premia la costanza, non solo la forza bruta.', 'General', 1),
+('Si narra che alcuni Boss Elite nascondano segreti antichi...', 'Lore', 1),
+('Il reset Giornaliero avviene ogni notte. Assicurati di aver massimizzato il punteggio.', 'General', 1),
+('Guardati le spalle mentre combatti un Boss... un nemico potrebbe essere in agguato.', 'PvP', 1),
+('Vuoi vedere il tuo nome in cima a tutti? Premi N e scala la Sala delle Leggende.', 'Leaderboard', 1);
 
 -- ----------------------------
 -- Table structure for hunter_ranks
