@@ -1679,22 +1679,10 @@ quest hunter_level_bridge begin
         end
         
         when chat."/hunter_request_data" begin
-            -- SECURITY: Solo i propri dati + ranking top 10 pubblico (non tutti i dati!)
-            syschat("[DEBUG] Hunter: Received /hunter_request_data command")
-
-            hunter_level_bridge.send_player_data()  -- Solo dati personali
-            syschat("[DEBUG] Hunter: send_player_data() executed")
-
-            hunter_level_bridge.send_ranking("daily")  -- Solo top 10, non tutti
-            syschat("[DEBUG] Hunter: send_ranking(daily) executed")
-
+            hunter_level_bridge.send_player_data()
+            hunter_level_bridge.send_ranking("daily")
             hunter_level_bridge.send_ranking("weekly")
-            syschat("[DEBUG] Hunter: send_ranking(weekly) executed")
-
             hunter_level_bridge.send_ranking("total")
-            syschat("[DEBUG] Hunter: send_ranking(total) executed")
-
-            syschat("[DEBUG] Hunter: All data sent!")
         end
         
         -- Comando per forzare refresh del rank (senza relog)
@@ -1790,21 +1778,16 @@ quest hunter_level_bridge begin
         
         function send_player_data()
             local pid = pc.get_player_id()
-            syschat("[DEBUG] send_player_data: Getting data for PID " .. pid)
-
             local c, d = mysql_direct_query("SELECT total_points, spendable_points, daily_points, weekly_points, total_kills, daily_kills, weekly_kills, total_fractures, total_chests, total_metins, pending_daily_reward, pending_weekly_reward FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
-
-            syschat("[DEBUG] send_player_data: Query returned " .. c .. " rows")
 
             if c > 0 and d[1] then
                 local total_pts = tonumber(d[1].total_points) or 0
                 local dp, wp = tonumber(d[1].daily_points) or 0, tonumber(d[1].weekly_points) or 0
                 local pos_d, pos_w = 0, 0
-                
-                -- Aggiorna il rank numerico per colorare i messaggi
+
                 local new_rank_num = hunter_level_bridge.get_rank_index(total_pts)
                 pc.setqf("hq_rank_num", new_rank_num)
-                
+
                 if dp > 0 then
                     local cd, dd = mysql_direct_query("SELECT COUNT(*) as pos FROM srv1_hunabku.hunter_quest_ranking WHERE daily_points > " .. dp)
                     if cd > 0 and dd[1] then pos_d = (tonumber(dd[1].pos) or 0) + 1 end
@@ -1813,33 +1796,29 @@ quest hunter_level_bridge begin
                     local cw, dw = mysql_direct_query("SELECT COUNT(*) as pos FROM srv1_hunabku.hunter_quest_ranking WHERE weekly_points > " .. wp)
                     if cw > 0 and dw[1] then pos_w = (tonumber(dw[1].pos) or 0) + 1 end
                 end
-                
-                local pkt = hunter_level_bridge.clean_str(pc.get_name()) .. "|" .. 
-                    total_pts .. "|" .. 
+
+                local pkt = hunter_level_bridge.clean_str(pc.get_name()) .. "|" ..
+                    total_pts .. "|" ..
                     (tonumber(d[1].spendable_points) or 0) .. "|" ..
-                    dp .. "|" .. wp .. "|" .. 
+                    dp .. "|" .. wp .. "|" ..
                     (tonumber(d[1].total_kills) or 0) .. "|" ..
-                    (tonumber(d[1].daily_kills) or 0) .. "|" .. 
-                    (tonumber(d[1].weekly_kills) or 0) .. "|" .. 
+                    (tonumber(d[1].daily_kills) or 0) .. "|" ..
+                    (tonumber(d[1].weekly_kills) or 0) .. "|" ..
                     (pc.getqf("hq_login_streak") or 0) .. "|" ..
-                    (pc.getqf("hq_streak_bonus") or 0) .. "|" .. 
-                    (tonumber(d[1].total_fractures) or 0) .. "|" .. 
+                    (pc.getqf("hq_streak_bonus") or 0) .. "|" ..
+                    (tonumber(d[1].total_fractures) or 0) .. "|" ..
                     (tonumber(d[1].total_chests) or 0) .. "|" ..
-                    (tonumber(d[1].total_metins) or 0) .. "|" .. 
-                    (tonumber(d[1].pending_daily_reward) or 0) .. "|" .. 
+                    (tonumber(d[1].total_metins) or 0) .. "|" ..
+                    (tonumber(d[1].pending_daily_reward) or 0) .. "|" ..
                     (tonumber(d[1].pending_weekly_reward) or 0) .. "|" ..
                     pos_d .. "|" .. pos_w
 
-                syschat("[DEBUG] send_player_data: Sending cmdchat HunterPlayerData...")
                 cmdchat("HunterPlayerData " .. pkt)
-                syschat("[DEBUG] send_player_data: cmdchat sent!")
             else
-                syschat("[DEBUG] send_player_data: NO DATA FOUND! Creating default record...")
-                -- Create default record
                 local pname = mysql_escape_string(pc.get_name())
                 mysql_direct_query("INSERT INTO srv1_hunabku.hunter_quest_ranking (player_id, player_name, total_points, spendable_points) VALUES (" .. pid .. ", '" .. pname .. "', 0, 0)")
-                syschat("[DEBUG] send_player_data: Default record created. Retry...")
-                hunter_level_bridge.send_player_data()
+                local pkt = hunter_level_bridge.clean_str(pc.get_name()) .. "|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0"
+                cmdchat("HunterPlayerData " .. pkt)
             end
         end
         
