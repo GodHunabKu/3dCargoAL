@@ -928,8 +928,9 @@ quest hunter_level_bridge begin
             local last = game.get_event_flag("hunter_last_tip_time") or 0
             if get_time() - last < 10 then return end
             local c, d = mysql_direct_query("SELECT tip_text, tip_category FROM srv1_hunabku.hunter_quest_tips WHERE is_active=1 ORDER BY RAND() LIMIT 1")
-            if c > 0 and d[1] then
-                notice_all("|cffFFD700[HUNTER TIP]|r " .. d[1].tip_text)
+            if c > 0 and d[1] and d[1].tip_text then
+                local tip = tostring(d[1].tip_text)
+                notice_all("|cffFFD700[HUNTER TIP]|r " .. tip)
                 game.set_event_flag("hunter_last_tip_time", get_time())
             end
         end
