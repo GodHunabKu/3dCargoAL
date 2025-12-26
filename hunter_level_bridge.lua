@@ -10,13 +10,13 @@ quest hunter_level_bridge begin
         -- ============================================================
         -- CONSTANTS (Valori di sistema non configurabili)
         -- ============================================================
-        local SECONDS_PER_DAY = 86400
-        local SECONDS_PER_WEEK = 604800
-        local SECONDS_PER_HOUR = 3600
-        local SECONDS_PER_MINUTE = 60
-        local EPOCH_YEAR = 1970
-        local MAX_RANK_POINTS = 999999999
-        local CONFIG_CACHE_DURATION = 3600  -- 1 ora
+        SECONDS_PER_DAY = 86400
+        SECONDS_PER_WEEK = 604800
+        SECONDS_PER_HOUR = 3600
+        SECONDS_PER_MINUTE = 60
+        EPOCH_YEAR = 1970
+        MAX_RANK_POINTS = 999999999
+        CONFIG_CACHE_DURATION = 3600  -- 1 ora
 
         -- ============================================================
         -- SECURITY: Safe Math Operations
