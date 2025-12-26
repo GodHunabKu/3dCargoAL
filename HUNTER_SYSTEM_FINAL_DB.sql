@@ -1064,6 +1064,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 1. TABELLA: hunter_ui_config
 -- Parametri UI completamente configurabili
 -- =====================================================================
+DROP TABLE IF EXISTS `hunter_ui_config`;
 CREATE TABLE IF NOT EXISTS `hunter_ui_config` (
   `config_key` VARCHAR(50) PRIMARY KEY,
   `config_value` VARCHAR(255) NOT NULL,
@@ -1167,6 +1168,7 @@ INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `de
 -- 2. TABELLA: hunter_penalty_config
 -- Configurazione sistema penalit\u00e0
 -- =====================================================================
+DROP TABLE IF EXISTS `hunter_penalty_config`;
 CREATE TABLE IF NOT EXISTS `hunter_penalty_config` (
   `penalty_level` INT PRIMARY KEY,
   `strikes_required` INT NOT NULL,
@@ -1187,6 +1189,7 @@ INSERT INTO `hunter_penalty_config` (`penalty_level`, `strikes_required`, `durat
 -- 4. TABELLA: hunter_streak_milestones
 -- Milestone e ricompense per streak login
 -- =====================================================================
+DROP TABLE IF EXISTS `hunter_streak_milestones`;
 CREATE TABLE IF NOT EXISTS `hunter_streak_milestones` (
   `streak_days` INT PRIMARY KEY,
   `bonus_percent` INT NOT NULL DEFAULT 0,
@@ -1313,6 +1316,7 @@ UPDATE `hunter_quest_achievements_config` SET `is_hidden` = 1 WHERE `achievement
 -- 13. TABELLA: hunter_ui_rank_colors
 -- Colori UI per ogni rank (100% configurabile)
 -- =====================================================================
+DROP TABLE IF EXISTS `hunter_ui_rank_colors`;
 CREATE TABLE IF NOT EXISTS `hunter_ui_rank_colors` (
   `rank_code` VARCHAR(1) PRIMARY KEY,
   `bg_dark` VARCHAR(10) NOT NULL,
@@ -1454,6 +1458,7 @@ INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `de
 -- =====================================================================
 -- 20. SECURITY: AUDIT LOG TABLE
 -- =====================================================================
+DROP TABLE IF EXISTS `hunter_security_log`;
 CREATE TABLE IF NOT EXISTS `hunter_security_log` (
   `log_id` BIGINT AUTO_INCREMENT PRIMARY KEY,
   `player_id` INT NOT NULL,
