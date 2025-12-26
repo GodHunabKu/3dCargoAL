@@ -1,22 +1,23 @@
 quest hunter_level_bridge begin
+
+    -- ============================================================
+    -- HUNTER LEVEL SYSTEM v36.0 (Updated)
+    -- - 90% Chance What-If Hype Window
+    -- - 10% Chance Classic Quest Window
+    -- ============================================================
+
+    -- ============================================================
+    -- CONSTANTS (Valori di sistema non configurabili - QUEST LEVEL)
+    -- ============================================================
+    SECONDS_PER_DAY = 86400
+    SECONDS_PER_WEEK = 604800
+    SECONDS_PER_HOUR = 3600
+    SECONDS_PER_MINUTE = 60
+    EPOCH_YEAR = 1970
+    MAX_RANK_POINTS = 999999999
+    CONFIG_CACHE_DURATION = 3600  -- 1 ora
+
     state start begin
-
-        -- ============================================================
-        -- HUNTER LEVEL SYSTEM v36.0 (Updated)
-        -- - 90% Chance What-If Hype Window
-        -- - 10% Chance Classic Quest Window
-        -- ============================================================
-
-        -- ============================================================
-        -- CONSTANTS (Valori di sistema non configurabili)
-        -- ============================================================
-        SECONDS_PER_DAY = 86400
-        SECONDS_PER_WEEK = 604800
-        SECONDS_PER_HOUR = 3600
-        SECONDS_PER_MINUTE = 60
-        EPOCH_YEAR = 1970
-        MAX_RANK_POINTS = 999999999
-        CONFIG_CACHE_DURATION = 3600  -- 1 ora
 
         -- ============================================================
         -- SECURITY: Safe Math Operations
