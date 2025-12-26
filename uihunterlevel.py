@@ -2592,14 +2592,36 @@ class HunterLevelWindow(ui.ScriptWindow):
     #  DATA SETTERS
     # ========================================================================
     def SetPlayerData(self, d):
-        self.playerData.update(d)
-        self.__UpdateTheme()
-        self.__UpdateHeaderContent()
-        if self.currentTab == 0:
-            self.__ClearContent()
-            self.__LoadStats()
-            self.__SavePositions()
-            self.__UpdateScroll()
+        try:
+            import dbg
+            dbg.TraceError("[DEBUG] SetPlayerData: Received data: " + str(d))
+
+            dbg.TraceError("[DEBUG] SetPlayerData: Updating playerData...")
+            self.playerData.update(d)
+
+            dbg.TraceError("[DEBUG] SetPlayerData: Calling __UpdateTheme...")
+            self.__UpdateTheme()
+
+            dbg.TraceError("[DEBUG] SetPlayerData: Calling __UpdateHeaderContent...")
+            self.__UpdateHeaderContent()
+
+            if self.currentTab == 0:
+                dbg.TraceError("[DEBUG] SetPlayerData: Tab 0 - clearing content...")
+                self.__ClearContent()
+                dbg.TraceError("[DEBUG] SetPlayerData: Loading stats...")
+                self.__LoadStats()
+                dbg.TraceError("[DEBUG] SetPlayerData: Saving positions...")
+                self.__SavePositions()
+                dbg.TraceError("[DEBUG] SetPlayerData: Updating scroll...")
+                self.__UpdateScroll()
+
+            dbg.TraceError("[DEBUG] SetPlayerData: SUCCESS!")
+        except Exception as e:
+            import dbg
+            import traceback
+            dbg.TraceError("[ERROR] SetPlayerData crashed!")
+            dbg.TraceError("Error: " + str(e))
+            traceback.print_exc()
     
     def SetRankingData(self, rt, d):
         self.rankingData[rt] = d
