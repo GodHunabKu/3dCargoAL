@@ -347,7 +347,7 @@ quest hunter_level_bridge begin
             cmdchat(cmd)
         end
         
-        -- Vecchia funzione per compatibilita
+        -- Vecchia funzione per compatibilit�
         function ask_choice(qid, text, opt1, opt2, opt3)
             hunter_level_bridge.ask_choice_color(qid, text, opt1, opt2, opt3, "PURPLE")
         end
@@ -2901,7 +2901,7 @@ quest hunter_level_bridge begin
                 return false
             end
 
-            -- Se arrivati qui, UPDATE e' andato a buon fine -> possiamo dare item
+            -- Se arrivati qui, UPDATE è andato a buon fine → possiamo dare item
             -- Query achievement info
             local c2, d2 = mysql_direct_query("SELECT reward_vnum, reward_count, name FROM srv1_hunabku.hunter_quest_achievements_config WHERE id=" .. ach_id)
             if c2 == 0 then
