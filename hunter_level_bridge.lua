@@ -1690,10 +1690,17 @@ quest hunter_level_bridge begin
             hunter_level_bridge.send_player_data()
             hunter_level_bridge.send_timers()
 
-            -- Invia classifiche giornaliere (caricamento lazy)
+            -- Invia classifiche (tab Rank)
             hunter_level_bridge.send_ranking("daily")
             hunter_level_bridge.send_ranking("weekly")
             hunter_level_bridge.send_ranking("total")
+
+            -- Invia shop e achievements (tab Shop e Achiev)
+            hunter_level_bridge.send_shop()
+            hunter_level_bridge.send_achievements()
+
+            -- Invia calendario eventi
+            hunter_level_bridge.send_calendar()
 
             syschat("[HUNTER] Terminale pronto! Usa i tab per navigare.")
         end
