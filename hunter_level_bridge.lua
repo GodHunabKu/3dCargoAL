@@ -890,7 +890,7 @@ quest hunter_level_bridge begin
         end
         
         -- ============================================================
-        -- AUTO RESET TIMER (controlla ogni 60 secondi se e' mezzanotte)
+        -- AUTO RESET TIMER (controlla ogni 60 secondi se e mezzanotte)
         -- ============================================================
         when hunter_reset_check.timer begin
             local ts = get_time()
@@ -1045,7 +1045,7 @@ quest hunter_level_bridge begin
                 -- Notice globale per rank alti (A, S, N)
                 if new_rank >= 4 then
                     notice_all("")
-                    local global_msg = hunter_level_bridge.get_text("rank_up_global", {NAME = pc.get_name(), RANK = new_letter}) or ("|cffFFD700[RANK UP]|r |cffFFFFFF" .. pc.get_name() .. "|r e' salito al rango [" .. new_letter .. "-RANK]!")
+                    local global_msg = hunter_level_bridge.get_text("rank_up_global", {NAME = pc.get_name(), RANK = new_letter}) or ("|cffFFD700[RANK UP]|r |cffFFFFFF" .. pc.get_name() .. "|r e salito al rango [" .. new_letter .. "-RANK]!")
                     notice_all(global_msg)
                     notice_all("")
                 end
@@ -1178,7 +1178,7 @@ quest hunter_level_bridge begin
             if my_score < score_10 and new_score >= score_10 and score_10 > 0 then
                 -- Annuncio GLOBALE quando qualcuno entra in Top 10
                 notice_all("")
-                local top10_msg = hunter_level_bridge.get_text("overtake_top10", {NAME = pname, CATEGORY = label_nice}) or ("|cff00FFFF[TOP 10]|r |cffFFD700" .. pname .. "|r e' entrato nella Top 10 " .. label_nice .. "!")
+                local top10_msg = hunter_level_bridge.get_text("overtake_top10", {NAME = pname, CATEGORY = label_nice}) or ("|cff00FFFF[TOP 10]|r |cffFFD700" .. pname .. "|r e entrato nella Top 10 " .. label_nice .. "!")
                 notice_all(top10_msg)
                 notice_all("")
                 local congrats_msg = hunter_level_bridge.get_text("overtake_congrats", {CATEGORY = label_nice}) or ("CONGRATULAZIONI! SEI NELLA TOP 10 " .. label_nice .. "!")
@@ -1519,7 +1519,7 @@ quest hunter_level_bridge begin
             if number(1, 100) <= whatif_chance then
                 -- === WHAT-IF SCENARIO (90%) ===
                 -- I nomi e messaggi delle fratture ora vengono dal DB (tabella hunter_quest_fractures)
-                -- Il color_code e' gia' stato recuperato dalla query sopra (fcolor)
+                -- Il color_code e gia' stato recuperato dalla query sopra (fcolor)
                 
                 -- Legge le voci dal DB
                 local voice_ok = hunter_level_bridge.get_fracture_voice(fcolor, true)
@@ -1556,7 +1556,7 @@ quest hunter_level_bridge begin
                 say("")
                 
                 if player_pts >= freq then
-                    say(hunter_level_bridge.get_text("classic_gate_worthy") or "Il tuo Rango Hunter e' sufficiente.")
+                    say(hunter_level_bridge.get_text("classic_gate_worthy") or "Il tuo Rango Hunter e sufficiente.")
                     say(hunter_level_bridge.get_text("classic_gate_ask") or "Vuoi spezzare il sigillo ed entrare?")
                     say("")
                     local opt_open = hunter_level_bridge.get_text("classic_opt_open") or "Apri Gate"
@@ -1579,7 +1579,7 @@ quest hunter_level_bridge begin
                             hunter_level_bridge.open_gate(fname, frank, fcolor, pid)
                         end
                     else
-                        say_reward(hunter_level_bridge.get_text("classic_gate_come_back") or "Torna quando sarai piu' forte o con un Party da 4.")
+                        say_reward(hunter_level_bridge.get_text("classic_gate_come_back") or "Torna quando sarai piu forte o con un Party da 4.")
                         local opt_close = hunter_level_bridge.get_text("classic_opt_close") or "Chiudi"
                         select(opt_close)
                     end
@@ -1640,7 +1640,7 @@ quest hunter_level_bridge begin
                     hunter_level_bridge.hunter_speak_color(msg, fcolor or "GOLD")
                 else
                     -- Boss/Metin: usa il colore del mob stesso (basato sulla sua difficoltà)
-                    local msg = hunter_level_bridge.get_text("spawn_boss_appeared", {NAME = md[1].name}) or ("PERICOLO: " .. md[1].name .. " E' APPARSO!")
+                    local msg = hunter_level_bridge.get_text("spawn_boss_appeared", {NAME = md[1].name}) or ("PERICOLO: " .. md[1].name .. " E APPARSO!")
                     hunter_level_bridge.hunter_speak_color(msg, mob_color)
                     
                     -- *** NUOVO: ALERT BOSS A SCHERMO INTERO (Solo Leveling Style) ***
@@ -1660,7 +1660,7 @@ quest hunter_level_bridge begin
                     local pname = pc.get_name()
                     local alert_1 = hunter_level_bridge.get_text("spawn_alert_seal_broken", {PLAYER = pname}) or ("|cffFF4444[HUNTER ALERT]|r Il Cacciatore |cffFFD700" .. pname .. "|r ha spezzato il sigillo!")
                     notice_all(alert_1)
-                    local alert_2 = hunter_level_bridge.get_text("spawn_alert_location", {NAME = md[1].name, RANK = rank_label, X = x, Y = y}) or ("Un |cffFF0000" .. md[1].name .. "|r (" .. rank_label .. ") e' apparso a (" .. x .. ", " .. y .. ")!")
+                    local alert_2 = hunter_level_bridge.get_text("spawn_alert_location", {NAME = md[1].name, RANK = rank_label, X = x, Y = y}) or ("Un |cffFF0000" .. md[1].name .. "|r (" .. rank_label .. ") e apparso a (" .. x .. ", " .. y .. ")!")
                     notice_all(alert_2)
                 end
             end
@@ -1756,26 +1756,26 @@ quest hunter_level_bridge begin
             cmdchat("HunterOvertake TestPlayer|3") 
         end
         -- Test singole fratture
-        when chat."/htest_green" with pc.is_gm() begin 
-            hunter_level_bridge.ask_choice_color("test", "? FRATTURA PRIMORDIALE ?|'L'energia primordiale ti chiama...'", ">> ENTRA", "|| SIGILLA", "<< ESCI", "GREEN")
+        when chat."/htest_green" with pc.is_gm() begin
+            hunter_level_bridge.ask_choice_color("test", "? FRATTURA PRIMORDIALE ?|L energia primordiale ti chiama...", ">> ENTRA", "|| SIGILLA", "<< ESCI", "GREEN")
         end
-        when chat."/htest_blue" with pc.is_gm() begin 
-            hunter_level_bridge.ask_choice_color("test", "? FRATTURA ASTRALE ?|'Le stelle hanno scelto te.'", ">> ENTRA", "|| SIGILLA", "<< ESCI", "BLUE")
+        when chat."/htest_blue" with pc.is_gm() begin
+            hunter_level_bridge.ask_choice_color("test", "? FRATTURA ASTRALE ?|Le stelle hanno scelto te.", ">> ENTRA", "|| SIGILLA", "<< ESCI", "BLUE")
         end
-        when chat."/htest_orange" with pc.is_gm() begin 
-            hunter_level_bridge.ask_choice_color("test", "? FRATTURA ABISSALE ?|'L'abisso ti fissa...'", ">> ENTRA", "|| SIGILLA", "<< ESCI", "ORANGE")
+        when chat."/htest_orange" with pc.is_gm() begin
+            hunter_level_bridge.ask_choice_color("test", "? FRATTURA ABISSALE ?|L abisso ti fissa...", ">> ENTRA", "|| SIGILLA", "<< ESCI", "ORANGE")
         end
-        when chat."/htest_red" with pc.is_gm() begin 
-            hunter_level_bridge.ask_choice_color("test", "? FRATTURA CREMISI ?|'Il sangue chiama sangue.'", ">> ENTRA", "|| SIGILLA", "<< ESCI", "RED")
+        when chat."/htest_red" with pc.is_gm() begin
+            hunter_level_bridge.ask_choice_color("test", "? FRATTURA CREMISI ?|Il sangue chiama sangue.", ">> ENTRA", "|| SIGILLA", "<< ESCI", "RED")
         end
-        when chat."/htest_gold" with pc.is_gm() begin 
-            hunter_level_bridge.ask_choice_color("test", "? FRATTURA AUREA ?|'La gloria attende chi osa.'", ">> ENTRA", "|| SIGILLA", "<< ESCI", "GOLD")
+        when chat."/htest_gold" with pc.is_gm() begin
+            hunter_level_bridge.ask_choice_color("test", "? FRATTURA AUREA ?|La gloria attende chi osa.", ">> ENTRA", "|| SIGILLA", "<< ESCI", "GOLD")
         end
-        when chat."/htest_purple" with pc.is_gm() begin 
-            hunter_level_bridge.ask_choice_color("test", "? FRATTURA INFAUSTA ?|'Il destino e' scritto.'", ">> ENTRA", "|| SIGILLA", "<< ESCI", "PURPLE")
+        when chat."/htest_purple" with pc.is_gm() begin
+            hunter_level_bridge.ask_choice_color("test", "? FRATTURA INFAUSTA ?|Il destino e scritto.", ">> ENTRA", "|| SIGILLA", "<< ESCI", "PURPLE")
         end
-        when chat."/htest_bw" with pc.is_gm() begin 
-            hunter_level_bridge.ask_choice_color("test", "? FRATTURA DEL GIUDIZIO ?|'Il Giudizio Finale ti attende.'", ">> ENTRA", "|| SIGILLA", "<< ESCI", "BLACKWHITE")
+        when chat."/htest_bw" with pc.is_gm() begin
+            hunter_level_bridge.ask_choice_color("test", "? FRATTURA DEL GIUDIZIO ?|Il Giudizio Finale ti attende.", ">> ENTRA", "|| SIGILLA", "<< ESCI", "BLACKWHITE")
         end
 
         function send_all_data()
@@ -2030,10 +2030,10 @@ quest hunter_level_bridge begin
             say_item_vnum(vnum)
             say("")
             if is_claimed then 
-                say("|cffFF0000[!] RICOMPENSA GIA' RISCOSSA|r")
+                say("|cffFF0000[!] RICOMPENSA GIA RISCOSSA|r")
                 select("Chiudi")
             elseif not is_unlocked then 
-                say("|cff888888[!] BLOCCATO - Impegnati di piu'|r")
+                say("|cff888888[!] BLOCCATO - Impegnati di piu|r")
                 select("Chiudi")
             else
                 if select("Riscuoti Premio", "Chiudi") == 1 then
@@ -2901,7 +2901,7 @@ quest hunter_level_bridge begin
                 return false
             end
 
-            -- Se arrivati qui, UPDATE e' andato a buon fine -> possiamo dare item
+            -- Se arrivati qui, UPDATE e andato a buon fine -> possiamo dare item
             -- Query achievement info
             local c2, d2 = mysql_direct_query("SELECT reward_vnum, reward_count, name FROM srv1_hunabku.hunter_quest_achievements_config WHERE id=" .. ach_id)
             if c2 == 0 then
@@ -3170,7 +3170,7 @@ quest hunter_level_bridge begin
         -- 5. PENALTY VISIBILITY
         -- ============================================================
 
-        -- Invia stato penalit\u00e0 al client
+        -- Invia stato penalita al client
         function send_penalty_status()
             local pid = pc.get_player_id()
 
@@ -3190,7 +3190,7 @@ quest hunter_level_bridge begin
             end
         end
 
-        -- Applica penalit\u00e0 per missione fallita
+        -- Applica penalita per missione fallita
         function apply_mission_failure_penalty()
             local pid = pc.get_player_id()
 
@@ -3219,7 +3219,7 @@ quest hunter_level_bridge begin
             local penalty = _G.hunter_config_cache["penalties"][penalty_level]
 
             if penalty and strikes >= penalty.strikes then
-                -- Attiva penalit\u00e0!
+                -- Attiva penalita!
                 local duration_sec = penalty.hours * _G.SECONDS_PER_HOUR
                 local expires = get_time() + duration_sec
                 local malus = penalty.malus
@@ -3243,7 +3243,7 @@ quest hunter_level_bridge begin
             end
         end
 
-        -- Check se penalty \u00e8 scaduta (chiamare al login e periodicamente)
+        -- Check se penalty e scaduta (chiamare al login e periodicamente)
         function check_penalty_expiration()
             local pid = pc.get_player_id()
             local c, d = mysql_direct_query("SELECT penalty_active, penalty_expires FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
@@ -3253,7 +3253,7 @@ quest hunter_level_bridge begin
                 local expires = tonumber(d[1].penalty_expires) or 0
 
                 if active == 1 and get_time() >= expires then
-                    -- Penalit\u00e0 scaduta, rimuovi
+                    -- Penalita scaduta, rimuovi
                     mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET penalty_active=0, penalty_malus=0 WHERE player_id=" .. pid)
 
                     hunter_level_bridge.hunter_speak_color("Penalita scaduta! Torna a cacciare!", "GREEN")
@@ -3279,7 +3279,7 @@ quest hunter_level_bridge begin
                 local category = d[1].overtaken_category or "total"
 
                 if rival_name ~= "" and diff > 0 then
-                    -- C'\u00e8 un rival!
+                    -- C'e un rival!
                     cmdchat("HunterRivalInfo " .. hunter_level_bridge.clean_str(rival_name) .. "|" .. diff .. "|" .. category)
                 else
                     -- Nessun rival
@@ -3457,7 +3457,7 @@ quest hunter_level_bridge begin
                 hunter_level_bridge.check_streak_milestone(streak)
             end
 
-            -- 10. Update achievement tipo 6 (Login Streak) se streak \u00e8 nuovo record
+            -- 10. Update achievement tipo 6 (Login Streak) se streak e nuovo record
             local best_streak = pc.getqf("hq_best_streak") or 0
             if streak > best_streak then
                 pc.setqf("hq_best_streak", streak)
@@ -3476,17 +3476,17 @@ quest hunter_level_bridge begin
             -- Type 1: Kill Count
             hunter_level_bridge.update_achievement_progress(pid, 1, 1)
 
-            -- Type 3: Boss Kills (se \u00e8 boss)
+            -- Type 3: Boss Kills (se e boss)
             if mob_info and mob_info.type_name == "BOSS" then
                 hunter_level_bridge.update_achievement_progress(pid, 3, 1)
             end
 
-            -- Type 4: Metin Destroyed (se \u00e8 metin)
+            -- Type 4: Metin Destroyed (se e metin)
             if mob_info and (mob_info.type_name == "SUPER_METIN" or mob_info.type_name == "METIN") then
                 hunter_level_bridge.update_achievement_progress(pid, 4, 1)
             end
 
-            -- Type 5: Chests Opened (se \u00e8 baule)
+            -- Type 5: Chests Opened (se e baule)
             if mob_info and (mob_info.type_name == "BAULE" or mob_info.type_name == "CHEST") then
                 hunter_level_bridge.update_achievement_progress(pid, 5, 1)
             end
