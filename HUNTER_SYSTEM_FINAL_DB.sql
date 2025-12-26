@@ -556,7 +556,6 @@ CREATE TABLE `hunter_ranks`  (
   `max_points` int NULL DEFAULT 999999999,
   `color_hex` varchar(10) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT 'FF808080',
   `bonus_gloria` int NULL DEFAULT 0,
-  `bonus_drop` int NULL DEFAULT 0,
   `rank_order` int NULL DEFAULT 0,
   PRIMARY KEY (`rank_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Dynamic;
@@ -564,14 +563,14 @@ CREATE TABLE `hunter_ranks`  (
 -- ----------------------------
 -- Records of hunter_ranks
 -- ----------------------------
-INSERT INTO `hunter_ranks` VALUES (1, 'E', 'E-Rank', 'Risvegliato', 0, 2000, 'FF808080', 0, 0, 1);
-INSERT INTO `hunter_ranks` VALUES (2, 'D', 'D-Rank', 'Apprendista', 2000, 10000, 'FF00AA00', 2, 1, 2);
-INSERT INTO `hunter_ranks` VALUES (3, 'C', 'C-Rank', 'Cacciatore', 10000, 50000, 'FF00CCFF', 5, 2, 3);
-INSERT INTO `hunter_ranks` VALUES (4, 'B', 'B-Rank', 'Veterano', 50000, 150000, 'FF0066FF', 8, 4, 4);
-INSERT INTO `hunter_ranks` VALUES (5, 'A', 'A-Rank', 'Maestro', 150000, 500000, 'FFAA00FF', 12, 6, 5);
-INSERT INTO `hunter_ranks` VALUES (6, 'S', 'S-Rank', 'Leggenda', 500000, 1500000, 'FFFF6600', 18, 10, 6);
-INSERT INTO `hunter_ranks` VALUES (7, 'N', 'NATIONAL', 'Monarca Nazionale', 1500000, 5000000, 'FFFF0000', 25, 15, 7);
-INSERT INTO `hunter_ranks` VALUES (8, '?', '???', 'Trascendente', 5000000, 999999999, 'FFFFFFFF', 35, 25, 8);
+INSERT INTO `hunter_ranks` VALUES (1, 'E', 'E-Rank', 'Risvegliato', 0, 2000, 'FF808080', 0, 1);
+INSERT INTO `hunter_ranks` VALUES (2, 'D', 'D-Rank', 'Apprendista', 2000, 10000, 'FF00AA00', 2, 2);
+INSERT INTO `hunter_ranks` VALUES (3, 'C', 'C-Rank', 'Cacciatore', 10000, 50000, 'FF00CCFF', 5, 3);
+INSERT INTO `hunter_ranks` VALUES (4, 'B', 'B-Rank', 'Veterano', 50000, 150000, 'FF0066FF', 8, 4);
+INSERT INTO `hunter_ranks` VALUES (5, 'A', 'A-Rank', 'Maestro', 150000, 500000, 'FFAA00FF', 12, 5);
+INSERT INTO `hunter_ranks` VALUES (6, 'S', 'S-Rank', 'Leggenda', 500000, 1500000, 'FFFF6600', 18, 6);
+INSERT INTO `hunter_ranks` VALUES (7, 'N', 'NATIONAL', 'Monarca Nazionale', 1500000, 5000000, 'FFFF0000', 25, 7);
+INSERT INTO `hunter_ranks` VALUES (8, '?', '???', 'Trascendente', 5000000, 999999999, 'FFFFFFFF', 35, 8);
 
 -- ----------------------------
 -- Table structure for hunter_scheduled_events
@@ -1165,35 +1164,7 @@ INSERT INTO `hunter_ui_config` (`config_key`, `config_value`, `config_type`, `de
 ('leaderboard_refresh_interval', '60', 'int', 'Intervallo refresh leaderboard (secondi)');
 
 -- =====================================================================
--- 2. TABELLA: hunter_rank_bonuses
--- Configurazione bonus per ogni rank
--- =====================================================================
-CREATE TABLE IF NOT EXISTS `hunter_rank_bonuses` (
-  `rank_code` VARCHAR(1) PRIMARY KEY,
-  `rank_name` VARCHAR(50) NOT NULL,
-  `min_points` INT NOT NULL,
-  `max_points` INT NOT NULL,
-  `bonus_gloria_percent` INT NOT NULL DEFAULT 0,
-  `bonus_drop_percent` INT NOT NULL DEFAULT 0,
-  `rank_color_hex` VARCHAR(8) NOT NULL,
-  `rank_title` VARCHAR(100) NOT NULL,
-  `rank_icon` VARCHAR(50) DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Popolamento hunter_rank_bonuses
-INSERT INTO `hunter_rank_bonuses` (`rank_code`, `rank_name`, `min_points`, `max_points`, `bonus_gloria_percent`, `bonus_drop_percent`, `rank_color_hex`, `rank_title`, `rank_icon`) VALUES
-('E', 'Novizio', 0, 999, 0, 0, '0xFFCCCCCC', 'Cacciatore Novizio', 'icon_rank_e.tga'),
-('D', 'Apprendista', 1000, 4999, 5, 2, '0xFF00FF00', 'Cacciatore Apprendista', 'icon_rank_d.tga'),
-('C', 'Esperto', 5000, 19999, 10, 5, '0xFF00BFFF', 'Cacciatore Esperto', 'icon_rank_c.tga'),
-('B', 'Veterano', 20000, 49999, 15, 8, '0xFFFF00FF', 'Cacciatore Veterano', 'icon_rank_b.tga'),
-('A', 'Elite', 50000, 99999, 20, 12, '0xFFFF8C00', 'Cacciatore Elite', 'icon_rank_a.tga'),
-('S', 'Maestro', 100000, 249999, 25, 15, '0xFFFF0000', 'Maestro Cacciatore', 'icon_rank_s.tga'),
-('N', 'Leggenda', 250000, 999999999, 30, 20, '0xFFFFD700', 'Leggenda Vivente', 'icon_rank_n.tga');
-
--- =====================================================================
--- 3. TABELLA: hunter_penalty_config
+-- 2. TABELLA: hunter_penalty_config
 -- Configurazione sistema penalit\u00e0
 -- =====================================================================
 CREATE TABLE IF NOT EXISTS `hunter_penalty_config` (

@@ -2712,14 +2712,13 @@ quest hunter_level_bridge begin
 
             -- 2. Ricarica Rank Bonuses
             local count_ranks = 0
-            c, d = mysql_direct_query("SELECT rank_code, bonus_gloria_percent, bonus_drop_percent, rank_name, rank_title FROM srv1_hunabku.hunter_rank_bonuses ORDER BY min_points")
+            c, d = mysql_direct_query("SELECT rank_code, bonus_gloria, rank_name, rank_title FROM srv1_hunabku.hunter_ranks ORDER BY min_points")
             if c > 0 then
                 _G.hunter_config_cache["rank_bonuses"] = {}
                 for i = 1, c do
                     local code = d[i].rank_code
                     _G.hunter_config_cache["rank_bonuses"][code] = {
-                        gloria = tonumber(d[i].bonus_gloria_percent) or 0,
-                        drop = tonumber(d[i].bonus_drop_percent) or 0,
+                        gloria = tonumber(d[i].bonus_gloria) or 0,
                         name = d[i].rank_name or code,
                         title = d[i].rank_title or ("Hunter " .. code)
                     }
@@ -3328,7 +3327,7 @@ quest hunter_level_bridge begin
                 if rank_num < 6 then
                     local next_letter = hunter_level_bridge.get_rank_letter(rank_num + 1)
                     -- Query min_points per next rank
-                    local nc, nd = mysql_direct_query("SELECT min_points FROM srv1_hunabku.hunter_rank_bonuses WHERE rank_code='" .. next_letter .. "'")
+                    local nc, nd = mysql_direct_query("SELECT min_points FROM srv1_hunabku.hunter_ranks WHERE rank_code='" .. next_letter .. "'")
                     if nc > 0 and nd[1] then
                         next_rank_pts = tonumber(nd[1].min_points) or 0
                     end
