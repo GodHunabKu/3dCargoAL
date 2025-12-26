@@ -978,19 +978,21 @@ class HunterLevelWindow(ui.ScriptWindow):
     def __LoadShop(self):
         t = self.theme
         y = 5
-        
+
         self.__CText("[ MERCANTE HUNTER ]", 150, y, t["accent"])
         y += 28
-        
+
         self.__CText("Crediti disponibili:", 15, y, t["text_muted"])
         self.__CText(FormatNumber(self.playerData["spendable_points"]), 150, y, 0xFFFFA500)
         y += 25
-        
+
         self.__CSep(5, y)
         y += 15
-        
+
+        # LAZY LOADING: Carica shop solo la prima volta che clicchi sul tab
         if not self.shopData:
-            self.__CText("Negozio vuoto.", 160, y + 40, t["text_muted"])
+            self.__CText("Caricamento shop...", 160, y + 40, t["text_muted"])
+            net.SendChatPacket("/hunter_load_shop")
             return
         
         for item in self.shopData:
@@ -1208,12 +1210,14 @@ class HunterLevelWindow(ui.ScriptWindow):
     def __LoadAchievements(self):
         t = self.theme
         y = 5
-        
+
         self.__CText("TRAGUARDI", 5, y, t["accent"])
         y += 30
-        
+
+        # LAZY LOADING: Carica achievements solo la prima volta che clicchi sul tab
         if not self.achievementsData:
-            self.__CText("Nessun traguardo.", 150, y + 40, t["text_muted"])
+            self.__CText("Caricamento traguardi...", 150, y + 40, t["text_muted"])
+            net.SendChatPacket("/hunter_load_achievements")
             return
         
         for a in self.achievementsData:
@@ -2636,9 +2640,15 @@ class HunterLevelWindow(ui.ScriptWindow):
     
     def SetShopItems(self, d):
         self.shopData = d
-    
+        # Auto-refresh shop tab se è attivo
+        if self.currentTab == 2:  # Shop tab
+            self.__LoadTabContent(2)
+
     def SetAchievements(self, d):
         self.achievementsData = d
+        # Auto-refresh achievements tab se è attivo
+        if self.currentTab == 3:  # Achievements tab
+            self.__LoadTabContent(3)
     
     def SetCalendarEvents(self, d):
         self.calendarData = d
