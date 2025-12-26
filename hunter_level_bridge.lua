@@ -83,27 +83,7 @@ quest hunter_level_bridge begin
         
         function clean_str(str)
             if str == nil then return "" end
-            local result = tostring(str)
-
-            -- SECURITY: Rimuovi caratteri pericolosi per cmdchat injection
-            result = string.gsub(result, "|", "")  -- Pipe separator cmdchat
-            result = string.gsub(result, "\n", "")  -- Newline
-            result = string.gsub(result, "\r", "")  -- Carriage return
-            result = string.gsub(result, "<", "")   -- HTML tags
-            result = string.gsub(result, ">", "")
-            result = string.gsub(result, string.char(34), "")  -- Remove double quotes (ASCII 34)
-            result = string.gsub(result, string.char(39), "")  -- Remove single quotes (ASCII 39)
-            result = string.gsub(result, ";", "")   -- SQL separator
-            result = string.gsub(result, "`", "")   -- Backtick
-
-            -- Sostituisci spazi con +
-            result = string.gsub(result, " ", "+")
-
-            -- SECURITY: Max 255 caratteri
-            if string.len(result) > 255 then
-                result = string.sub(result, 1, 255)
-            end
-
+            local result = string.gsub(tostring(str), " ", "+")
             return result
         end
 
@@ -1700,10 +1680,21 @@ quest hunter_level_bridge begin
         
         when chat."/hunter_request_data" begin
             -- SECURITY: Solo i propri dati + ranking top 10 pubblico (non tutti i dati!)
+            syschat("[DEBUG] Hunter: Received /hunter_request_data command")
+
             hunter_level_bridge.send_player_data()  -- Solo dati personali
+            syschat("[DEBUG] Hunter: send_player_data() executed")
+
             hunter_level_bridge.send_ranking("daily")  -- Solo top 10, non tutti
+            syschat("[DEBUG] Hunter: send_ranking(daily) executed")
+
             hunter_level_bridge.send_ranking("weekly")
+            syschat("[DEBUG] Hunter: send_ranking(weekly) executed")
+
             hunter_level_bridge.send_ranking("total")
+            syschat("[DEBUG] Hunter: send_ranking(total) executed")
+
+            syschat("[DEBUG] Hunter: All data sent!")
         end
         
         -- Comando per forzare refresh del rank (senza relog)
@@ -1799,7 +1790,12 @@ quest hunter_level_bridge begin
         
         function send_player_data()
             local pid = pc.get_player_id()
+            syschat("[DEBUG] send_player_data: Getting data for PID " .. pid)
+
             local c, d = mysql_direct_query("SELECT total_points, spendable_points, daily_points, weekly_points, total_kills, daily_kills, weekly_kills, total_fractures, total_chests, total_metins, pending_daily_reward, pending_weekly_reward FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+
+            syschat("[DEBUG] send_player_data: Query returned " .. c .. " rows")
+
             if c > 0 and d[1] then
                 local total_pts = tonumber(d[1].total_points) or 0
                 local dp, wp = tonumber(d[1].daily_points) or 0, tonumber(d[1].weekly_points) or 0
@@ -1833,7 +1829,17 @@ quest hunter_level_bridge begin
                     (tonumber(d[1].pending_daily_reward) or 0) .. "|" .. 
                     (tonumber(d[1].pending_weekly_reward) or 0) .. "|" ..
                     pos_d .. "|" .. pos_w
+
+                syschat("[DEBUG] send_player_data: Sending cmdchat HunterPlayerData...")
                 cmdchat("HunterPlayerData " .. pkt)
+                syschat("[DEBUG] send_player_data: cmdchat sent!")
+            else
+                syschat("[DEBUG] send_player_data: NO DATA FOUND! Creating default record...")
+                -- Create default record
+                local pname = mysql_escape_string(pc.get_name())
+                mysql_direct_query("INSERT INTO srv1_hunabku.hunter_quest_ranking (player_id, player_name, total_points, spendable_points) VALUES (" .. pid .. ", '" .. pname .. "', 0, 0)")
+                syschat("[DEBUG] send_player_data: Default record created. Retry...")
+                hunter_level_bridge.send_player_data()
             end
         end
         
