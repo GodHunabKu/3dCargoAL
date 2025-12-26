@@ -1,23 +1,28 @@
 quest hunter_level_bridge begin
 
-    -- ============================================================
-    -- HUNTER LEVEL SYSTEM v36.0 (Updated)
-    -- - 90% Chance What-If Hype Window
-    -- - 10% Chance Classic Quest Window
-    -- ============================================================
-
-    -- ============================================================
-    -- CONSTANTS (Valori di sistema non configurabili - QUEST LEVEL)
-    -- ============================================================
-    SECONDS_PER_DAY = 86400
-    SECONDS_PER_WEEK = 604800
-    SECONDS_PER_HOUR = 3600
-    SECONDS_PER_MINUTE = 60
-    EPOCH_YEAR = 1970
-    MAX_RANK_POINTS = 999999999
-    CONFIG_CACHE_DURATION = 3600  -- 1 ora
-
     state start begin
+
+        -- ============================================================
+        -- HUNTER LEVEL SYSTEM v36.0 (Compiler Compatible)
+        -- - 90% Chance What-If Hype Window
+        -- - 10% Chance Classic Quest Window
+        -- ============================================================
+
+        -- ============================================================
+        -- CONSTANTS INITIALIZATION (Compatibile con tutti i compiler)
+        -- ============================================================
+        function init_constants()
+            if not _G.HUNTER_CONSTANTS_LOADED then
+                _G.SECONDS_PER_DAY = 86400
+                _G.SECONDS_PER_WEEK = 604800
+                _G.SECONDS_PER_HOUR = 3600
+                _G.SECONDS_PER_MINUTE = 60
+                _G.EPOCH_YEAR = 1970
+                _G.MAX_RANK_POINTS = 999999999
+                _G.CONFIG_CACHE_DURATION = 3600  -- 1 ora
+                _G.HUNTER_CONSTANTS_LOADED = true
+            end
+        end
 
         -- ============================================================
         -- SECURITY: Safe Math Operations
@@ -29,8 +34,8 @@ quest hunter_level_bridge begin
             local sum = current + add
 
             -- SECURITY: Previeni integer overflow
-            if sum > MAX_RANK_POINTS then
-                return MAX_RANK_POINTS
+            if sum > _G.MAX_RANK_POINTS then
+                return _G.MAX_RANK_POINTS
             end
 
             if sum < 0 then  -- Underflow protection
@@ -153,8 +158,8 @@ quest hunter_level_bridge begin
         
         function get_today_date()
             local ts = get_time()
-            local days = math.floor(ts / SECONDS_PER_DAY)
-            local year = EPOCH_YEAR
+            local days = math.floor(ts / _G.SECONDS_PER_DAY)
+            local year = _G.EPOCH_YEAR
             local remaining_days = days
             while remaining_days >= 365 do
                 local leap = 0
@@ -295,7 +300,7 @@ quest hunter_level_bridge begin
                 
                 if bonus_pts > 0 then
                     -- SECURITY: LEAST() previene integer overflow a livello DB
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..bonus_pts..", "..MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..bonus_pts..", "..MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
+                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..bonus_pts..", ".._G.MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..bonus_pts..", ".._G.MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
                 end
                 
                 if reward_vnum > 0 and reward_count > 0 then
@@ -634,6 +639,9 @@ quest hunter_level_bridge begin
         end
         
         when login with pc.get_level() >= 5 begin
+            -- Inizializza costanti (solo prima volta)
+            hunter_level_bridge.init_constants()
+
             local pid = pc.get_player_id()
             local pname = mysql_escape_string(pc.get_name())
             local chk, res = mysql_direct_query("SELECT player_id, total_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
@@ -892,7 +900,7 @@ quest hunter_level_bridge begin
             -- Reset Daily a mezzanotte (00:00 - 00:01)
             if hour == 0 and min == 0 then
                 local last_daily = game.get_event_flag("hunter_last_daily_reset") or 0
-                local today = math.floor(get_time() / SECONDS_PER_DAY)
+                local today = math.floor(get_time() / _G.SECONDS_PER_DAY)
                 if last_daily < today then
                     game.set_event_flag("hunter_last_daily_reset", today)
                     hunter_level_bridge.announce_daily_winners()
@@ -902,7 +910,7 @@ quest hunter_level_bridge begin
                 -- Reset Weekly ogni Lunedi a mezzanotte
                 if dow == 1 then
                     local last_weekly = game.get_event_flag("hunter_last_weekly_reset") or 0
-                    local this_week = math.floor(get_time() / SECONDS_PER_WEEK)
+                    local this_week = math.floor(get_time() / _G.SECONDS_PER_WEEK)
                     if last_weekly < this_week then
                         game.set_event_flag("hunter_last_weekly_reset", this_week)
                         hunter_level_bridge.announce_weekly_winners()
@@ -941,7 +949,7 @@ quest hunter_level_bridge begin
         end
         
         function check_login_streak()
-            local today = math.floor(get_time() / SECONDS_PER_DAY)
+            local today = math.floor(get_time() / _G.SECONDS_PER_DAY)
             local last_login = pc.getqf("hq_last_login_day") or 0
             local streak = pc.getqf("hq_login_streak") or 0
             if today > last_login + 1 then 
@@ -1256,7 +1264,7 @@ quest hunter_level_bridge begin
             local old_total_pts = pc.getqf("hq_total_points") or 0
             
             -- SECURITY: LEAST() previene integer overflow a livello DB
-            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+" .. base_pts .. ", " .. MAX_RANK_POINTS .. "), spendable_points=LEAST(spendable_points+" .. base_pts .. ", " .. MAX_RANK_POINTS .. "), daily_points=daily_points+" .. base_pts .. ", weekly_points=weekly_points+" .. base_pts .. ", total_kills=total_kills+1, daily_kills=daily_kills+1, weekly_kills=weekly_kills+1 WHERE player_id=" .. pid)
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+" .. base_pts .. ", " .. _G.MAX_RANK_POINTS .. "), spendable_points=LEAST(spendable_points+" .. base_pts .. ", " .. _G.MAX_RANK_POINTS .. "), daily_points=daily_points+" .. base_pts .. ", weekly_points=weekly_points+" .. base_pts .. ", total_kills=total_kills+1, daily_kills=daily_kills+1, weekly_kills=weekly_kills+1 WHERE player_id=" .. pid)
             
             pc.setqf("hq_total_kills", (pc.getqf("hq_total_kills") or 0) + 1)
             local new_total_pts = old_total_pts + base_pts
@@ -1408,7 +1416,7 @@ quest hunter_level_bridge begin
                 hunter_level_bridge.hunter_speak(msg)
                 if b > 0 then
                     -- SECURITY: LEAST() previene integer overflow a livello DB
-                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..b..", "..MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..b..", "..MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
+                    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points=LEAST(total_points+"..b..", ".._G.MAX_RANK_POINTS.."), spendable_points=LEAST(spendable_points+"..b..", ".._G.MAX_RANK_POINTS..") WHERE player_id="..pc.get_player_id())
                     local bonus_msg = hunter_level_bridge.get_text("chest_bonus", {POINTS = b}) or ("Incredibile! Il baule conteneva anche " .. b .. " Gloria!")
                     syschat("|cffFFD700[BONUS]|r " .. bonus_msg)
                 end
@@ -1936,13 +1944,13 @@ quest hunter_level_bridge begin
             local min = hunter_level_bridge.get_min_from_ts(ts)
             local sec = hunter_level_bridge.get_sec_from_ts(ts)
             -- Calcola secondi fino a mezzanotte
-            local seconds_today = (hour * SECONDS_PER_HOUR) + (min * SECONDS_PER_MINUTE) + sec
-            local daily = SECONDS_PER_DAY - seconds_today
+            local seconds_today = (hour * _G.SECONDS_PER_HOUR) + (min * _G.SECONDS_PER_MINUTE) + sec
+            local daily = _G.SECONDS_PER_DAY - seconds_today
             -- Calcola secondi fino a lunedi
             local wday = hunter_level_bridge.get_day_db_from_ts(ts)  -- 1=Mon...7=Sun
             local days_to_mon = 8 - wday
             if days_to_mon == 8 then days_to_mon = 7 end
-            local weekly = (days_to_mon * SECONDS_PER_DAY) - seconds_today
+            local weekly = (days_to_mon * _G.SECONDS_PER_DAY) - seconds_today
             cmdchat("HunterTimers " .. daily .. "|" .. weekly)
         end
         
@@ -2792,7 +2800,7 @@ quest hunter_level_bridge begin
             -- Auto-reload se cache vuota o troppo vecchia (> 1 ora)
             if not _G.hunter_config_cache or table.getn(_G.hunter_config_cache) == 0 then
                 hunter_level_bridge.reload_all_config()
-            elseif get_time() - _G.hunter_config_last_load > CONFIG_CACHE_DURATION then
+            elseif get_time() - _G.hunter_config_last_load > _G.CONFIG_CACHE_DURATION then
                 -- Auto-reload ogni ora
                 hunter_level_bridge.reload_all_config()
             end
@@ -3212,7 +3220,7 @@ quest hunter_level_bridge begin
 
             if penalty and strikes >= penalty.strikes then
                 -- Attiva penalit\u00e0!
-                local duration_sec = penalty.hours * SECONDS_PER_HOUR
+                local duration_sec = penalty.hours * _G.SECONDS_PER_HOUR
                 local expires = get_time() + duration_sec
                 local malus = penalty.malus
                 local msg = penalty.message or "Penalita attiva"
@@ -3333,7 +3341,7 @@ quest hunter_level_bridge begin
                         next_rank_pts = tonumber(nd[1].min_points) or 0
                     end
                 else
-                    next_rank_pts = MAX_RANK_POINTS  -- Massimo rank
+                    next_rank_pts = _G.MAX_RANK_POINTS  -- Massimo rank
                 end
 
                 -- Invia al client
