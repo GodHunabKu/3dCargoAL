@@ -1212,21 +1212,6 @@ INSERT INTO `hunter_streak_milestones` (`streak_days`, `bonus_percent`, `milesto
 (365, 50, '\uD83D\uDD25 Streak 1 ANNO! +50% bonus gloria! HAI RAGGIUNTO L\'OLIMPO!', 50013, 3);
 
 -- =====================================================================
--- 5. ESTENSIONE: hunter_quest_achievements_config
--- Aggiungi colonna achievement_type per categorizzare gli achievement
--- =====================================================================
--- Verifica se la colonna esiste gi\u00e0, se no la aggiungo
-ALTER TABLE `hunter_quest_achievements_config`
-ADD COLUMN IF NOT EXISTS `achievement_type` INT NOT NULL DEFAULT 1 COMMENT '1=Kill Count, 2=Glory Points, 3=Boss Kills, 4=Metin Destroyed, 5=Chests Opened, 6=Login Streak, 7=Missions Completed, 8=Events Participated';
-
-ALTER TABLE `hunter_quest_achievements_config`
-ADD COLUMN IF NOT EXISTS `achievement_category` VARCHAR(50) DEFAULT 'General' COMMENT 'Categoria achievement';
-
-ALTER TABLE `hunter_quest_achievements_config`
-ADD COLUMN IF NOT EXISTS `is_hidden` TINYINT(1) DEFAULT 0 COMMENT 'Achievement nascosto fino allo sblocco';
-
-ALTER TABLE `hunter_quest_achievements_config`
-ADD COLUMN IF NOT EXISTS `icon_path` VARCHAR(100) DEFAULT NULL COMMENT 'Path icona achievement';
 
 -- =====================================================================
 -- 6. NUOVI ACHIEVEMENTS - TYPE 3: BOSS KILLS
@@ -1470,11 +1455,6 @@ CREATE TABLE IF NOT EXISTS `hunter_security_log` (
   INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- =====================================================================
--- 21. SECURITY: ADD claimed_at COLUMN FOR RACE CONDITION FIX
--- =====================================================================
-ALTER TABLE `hunter_quest_player_achievements`
-ADD COLUMN IF NOT EXISTS `claimed_at` DATETIME NULL DEFAULT NULL;
 
 -- =====================================================================
 -- FINE SCHEMA SQL
@@ -1500,7 +1480,7 @@ CREATE TABLE `hunter_quest_player_achievements` (
   INDEX idx_achievement (achievement_id),
   INDEX idx_unlocked (unlocked_at),
   INDEX idx_claimed (claimed_at),
-  FOREIGN KEY (`achievement_id`) REFERENCES `hunter_quest_achievements_config`(`achievement_id`) ON DELETE CASCADE
+  FOREIGN KEY (`achievement_id`) REFERENCES `hunter_quest_achievements_config`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================================

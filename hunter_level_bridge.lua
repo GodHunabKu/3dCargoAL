@@ -2762,7 +2762,7 @@ quest hunter_level_bridge begin
 
             -- 5. Ricarica Achievement Config (tutti i tipi)
             local count_achievements = 0
-            c, d = mysql_direct_query("SELECT achievement_id, achievement_type FROM srv1_hunabku.hunter_quest_achievements_config ORDER BY achievement_type, requirement_value")
+            c, d = mysql_direct_query("SELECT id, type FROM srv1_hunabku.hunter_quest_achievements_config ORDER BY type, requirement")
             if c > 0 then
                 count_achievements = c
             end
@@ -2826,11 +2826,11 @@ quest hunter_level_bridge begin
             pc.setqf(flag_key, new_value)
 
             -- Query achievement di questo tipo per check unlock
-            local c, d = mysql_direct_query("SELECT achievement_id, achievement_name, requirement_value, reward_vnum, reward_count FROM srv1_hunabku.hunter_quest_achievements_config WHERE achievement_type=" .. achievement_type .. " AND requirement_value <= " .. new_value .. " ORDER BY requirement_value")
+            local c, d = mysql_direct_query("SELECT id, name, requirement, reward_vnum, reward_count FROM srv1_hunabku.hunter_quest_achievements_config WHERE type=" .. achievement_type .. " AND requirement <= " .. new_value .. " ORDER BY requirement")
 
             if c > 0 then
                 for i = 1, c do
-                    local ach_id = tonumber(d[i].achievement_id) or 0
+                    local ach_id = tonumber(d[i].id) or 0
                     local unlocked_flag = "hq_ach_unlock_" .. ach_id
 
                     -- Se non ancora unlocked, sbloccalo!
@@ -2838,7 +2838,7 @@ quest hunter_level_bridge begin
                         pc.setqf(unlocked_flag, 1)
 
                         -- Notifica unlock
-                        local ach_name = d[i].achievement_name or "Achievement"
+                        local ach_name = d[i].name or "Achievement"
                         local reward_vnum = tonumber(d[i].reward_vnum) or 0
                         local reward_count = tonumber(d[i].reward_count) or 1
 
@@ -2894,7 +2894,7 @@ quest hunter_level_bridge begin
 
             -- Se arrivati qui, UPDATE è andato a buon fine → possiamo dare item
             -- Query achievement info
-            local c2, d2 = mysql_direct_query("SELECT reward_vnum, reward_count, achievement_name FROM srv1_hunabku.hunter_quest_achievements_config WHERE achievement_id=" .. ach_id)
+            local c2, d2 = mysql_direct_query("SELECT reward_vnum, reward_count, name FROM srv1_hunabku.hunter_quest_achievements_config WHERE id=" .. ach_id)
             if c2 == 0 then
                 hunter_level_bridge.hunter_speak_color("Achievement non trovato!", "RED")
                 return false
@@ -2902,7 +2902,7 @@ quest hunter_level_bridge begin
 
             local vnum = tonumber(d2[1].reward_vnum) or 0
             local count = tonumber(d2[1].reward_count) or 1
-            local name = d2[1].achievement_name or "Achievement"
+            local name = d2[1].name or "Achievement"
 
             -- Dai ricompensa
             if vnum > 0 and count > 0 then
