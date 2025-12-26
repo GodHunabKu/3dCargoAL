@@ -91,8 +91,8 @@ quest hunter_level_bridge begin
             result = string.gsub(result, "\r", "")  -- Carriage return
             result = string.gsub(result, "<", "")   -- HTML tags
             result = string.gsub(result, ">", "")
-            result = string.gsub(result, '"', '')   -- Double quotes (use single quotes for empty string)
-            result = string.gsub(result, "'", "")   -- Single quotes (use double quotes for empty string)
+            result = string.gsub(result, string.char(34), "")  -- Remove double quotes (ASCII 34)
+            result = string.gsub(result, string.char(39), "")  -- Remove single quotes (ASCII 39)
             result = string.gsub(result, ";", "")   -- SQL separator
             result = string.gsub(result, "`", "")   -- Backtick
 
