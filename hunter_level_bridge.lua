@@ -83,27 +83,7 @@ quest hunter_level_bridge begin
         
         function clean_str(str)
             if str == nil then return "" end
-            local result = tostring(str)
-
-            -- SECURITY: Rimuovi caratteri pericolosi per cmdchat injection
-            result = string.gsub(result, "|", "")  -- Pipe separator cmdchat
-            result = string.gsub(result, "\n", "")  -- Newline
-            result = string.gsub(result, "\r", "")  -- Carriage return
-            result = string.gsub(result, "<", "")   -- HTML tags
-            result = string.gsub(result, ">", "")
-            result = string.gsub(result, string.char(34), "")  -- Remove double quotes (ASCII 34)
-            result = string.gsub(result, string.char(39), "")  -- Remove single quotes (ASCII 39)
-            result = string.gsub(result, ";", "")   -- SQL separator
-            result = string.gsub(result, "`", "")   -- Backtick
-
-            -- Sostituisci spazi con +
-            result = string.gsub(result, " ", "+")
-
-            -- SECURITY: Max 255 caratteri
-            if string.len(result) > 255 then
-                result = string.sub(result, 1, 255)
-            end
-
+            local result = string.gsub(tostring(str), " ", "+")
             return result
         end
 
