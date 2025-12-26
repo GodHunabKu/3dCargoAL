@@ -1116,7 +1116,7 @@ class HunterLevelWindow(ui.ScriptWindow):
         y += 8
         
         # =====================================================
-        # CLASSIFICA TOP 10
+        # CLASSIFICA TOP 10 - LAZY LOADING
         # =====================================================
         data = self.rankingData.get(rType, [])
         if not data:
@@ -1125,10 +1125,11 @@ class HunterLevelWindow(ui.ScriptWindow):
                 data = self.rankingData.get("daily_points", self.rankingData.get("daily", []))
             elif "kills" in rType:
                 data = self.rankingData.get("daily_kills", [])
-        
+
+        # LAZY LOADING: Se non ci sono dati, richiedili
         if not data:
-            self.__CText("Nessun dato disponibile.", 130, y + 30, t["text_muted"])
-            self.__CText("Gioca per scalare la classifica!", 120, y + 50, t["text_muted"])
+            self.__CText("Caricamento classifiche...", 130, y + 30, t["text_muted"])
+            net.SendChatPacket("/hunter_load_rankings")
             return
         
         # Header colonne
@@ -1253,9 +1254,9 @@ class HunterLevelWindow(ui.ScriptWindow):
         self.__CText("Missioni Giornaliere + Eventi Programmati 24H", 65, y + 28, t["text_muted"])
         y += 48
 
-        # Se non abbiamo dati eventi E non stiamo refreshando dopo averli ricevuti
+        # LAZY LOADING: Carica eventi solo se non già caricati
         if not self.eventsData and not skipRequest:
-            net.SendChatPacket("/hunter_events_silent")  # Richiedi eventi senza aprire popup
+            net.SendChatPacket("/hunter_load_calendar")  # Richiedi calendario eventi
 
         # =====================================================
         # SEZIONE MISSIONI GIORNALIERE
@@ -2637,6 +2638,9 @@ class HunterLevelWindow(ui.ScriptWindow):
             self.rankingData["weekly_points"] = d
         elif rt == "total":
             self.rankingData["total_points"] = d
+        # Auto-refresh ranking tab se è attivo
+        if self.currentTab == 1:  # Ranking tab
+            self.__LoadTabContent(1)
     
     def SetShopItems(self, d):
         self.shopData = d
@@ -2652,6 +2656,9 @@ class HunterLevelWindow(ui.ScriptWindow):
     
     def SetCalendarEvents(self, d):
         self.calendarData = d
+        # Auto-refresh events tab se è attivo
+        if self.currentTab == 4:  # Events tab
+            self.__LoadTabContent(4)
     
     def SetActiveEvent(self, n, desc):
         self.activeEvent = (n if n else "Nessuno", desc)
