@@ -217,11 +217,31 @@ function hg_lib.get_level_range_for_rank(rank)
 end
 
 -- CACHE MOB ELITE (FIX CRASH: Non cancella pi  la tabella globale brutalmente)
+-- FIX: Funzione per invalidare la cache elite (chiamabile da GM)
+function hg_lib.invalidate_elite_cache()
+    _G.hunter_elite_cache = nil
+    _G.hunter_elite_data = nil
+    _G.hunter_cache_loaded = 0
+end
+
+-- FIX: Funzione per invalidare TUTTE le cache (chiamabile da GM)
+function hg_lib.invalidate_all_caches()
+    _G.hunter_elite_cache = nil
+    _G.hunter_elite_data = nil
+    _G.hunter_cache_loaded = 0
+    _G.hunter_config_cache = nil
+    _G.hunter_config_cache_time = 0
+    _G.hunter_rank_bonus_cache = nil
+    _G.hunter_defense_waves_cache = nil
+    _G.hunter_defense_total_mobs = nil
+end
+
 function hg_lib.load_elite_cache()
-    -- Se la cache esiste ed   recente (< 1 ora), non ricaricare
+    -- Se la cache esiste ed e' recente (< 30 min), non ricaricare
+    -- FIX: Ridotto da 1 ora a 30 minuti per aggiornamenti piu' rapidi
     local now = get_time()
-    if _G.hunter_elite_cache and _G.hunter_cache_loaded and (now - _G.hunter_cache_loaded < 3600) then
-        return 
+    if _G.hunter_elite_cache and _G.hunter_cache_loaded and (now - _G.hunter_cache_loaded < 1800) then
+        return
     end
 
     -- Inizializza solo se necessario

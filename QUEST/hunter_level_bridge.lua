@@ -7,7 +7,7 @@ quest hunter_level_bridge begin
         -- ============================================================
         when letter begin
              -- FIX: Rimossa la pulizia manuale pericolosa della cache globale.
-             -- La gestione è ora affidata in modo sicuro a hg_lib.load_elite_cache()
+             -- La gestione ï¿½ ora affidata in modo sicuro a hg_lib.load_elite_cache()
              send_letter("Hunter Terminal")
 
              -- PERFORMANCE: Carica cache configurazioni (una query all'avvio)
@@ -19,16 +19,23 @@ quest hunter_level_bridge begin
              -- PERFORMANCE: Avvia timer salvataggio periodico ranking (ogni 5 minuti)
              cleartimer("hq_ranking_flush_timer")
              loop_timer("hq_ranking_flush_timer", 300)
-             
-             -- NOTA: Timer eventi (hq_event_check_timer) spostato in sezione login
-             -- per garantire che venga eseguito per tutti i player online
+
+             -- FIX: Timer eventi a livello SERVER (non solo login)
+             -- Questo garantisce che gli eventi vengano processati anche senza player online
+             cleartimer("hq_event_check_timer")
+             loop_timer("hq_event_check_timer", 60)
+
+             -- FIX: Timer reset giornaliero/settimanale a livello SERVER
+             -- Controlla ogni minuto se e' ora di fare il reset globale
+             cleartimer("hq_server_reset_timer")
+             loop_timer("hq_server_reset_timer", 60)
 
              -- MEMORY LEAK FIX: Timer cleanup tabelle globali (ogni 1 ora)
              cleartimer("hq_cleanup_timer")
              loop_timer("hq_cleanup_timer", 3600)
 
              -- FIX RACE CONDITION: Pulisci flag globali stale al login del player
-             -- Questo previene stati inconsistenti se il server è crashato o riavviato
+             -- Questo previene stati inconsistenti se il server ï¿½ crashato o riavviato
              local pid = pc.get_player_id()
              local old_gate_vid = pc.getqf("hq_defense_fracture_vid") or 0
              if old_gate_vid > 0 then
@@ -267,7 +274,7 @@ when chat."/hunter_request_trial_data" begin
             end
             
             -- FIX: Sincronizza TUTTI i qf con il database al login
-            -- Questo è CRITICO per il controllo requisiti fratture e achievement!
+            -- Questo ï¿½ CRITICO per il controllo requisiti fratture e achievement!
             pc.setqf("hq_total_points", total_pts)
             pc.setqf("hq_total_kills", total_kills)
             pc.setqf("hq_total_fractures", total_fractures)
@@ -277,8 +284,8 @@ when chat."/hunter_request_trial_data" begin
             pc.setqf("hq_total_missions", total_missions)
             pc.setqf("hq_total_trials", total_trials)
             
-            -- SYNC FIX: Sincronizza i quest flags degli achievement già riscossi
-            -- Questo risolve il bug "traguardi da ritirare" quando sono già stati riscossi
+            -- SYNC FIX: Sincronizza i quest flags degli achievement giï¿½ riscossi
+            -- Questo risolve il bug "traguardi da ritirare" quando sono giï¿½ stati riscossi
             hg_lib.sync_achievement_flags()
             
             local rank_num = hg_lib.get_rank_index(total_pts)
@@ -378,7 +385,7 @@ when chat."/hunter_request_trial_data" begin
         end
 
         when hq_welcome_msg.timer begin
-            -- Usa rank_num già calcolato invece di ricalcolarlo dai punti
+            -- Usa rank_num giï¿½ calcolato invece di ricalcolarlo dai punti
             local rank_num = pc.getqf("hq_rank_num") or 0
             local pts = pc.getqf("hq_welcome_pts") or 0
             hg_lib.show_rank_welcome_by_rank(pc.get_name(), rank_num, pts)
@@ -557,6 +564,38 @@ when chat."/hunter_request_trial_data" begin
             end
         end
 
+        -- FIX: Timer reset a livello SERVER - controlla reset giornaliero/settimanale
+        -- Questo garantisce il reset anche se nessun player era online a mezzanotte
+        when hq_server_reset_timer.timer begin
+            local hour = tonumber(os.date("%H")) or 0
+            local min = tonumber(os.date("%M")) or 0
+            local dow = tonumber(os.date("%w")) or 0  -- 0=domenica, 1=lunedi
+            local today = math.floor(get_time() / 86400)
+
+            -- Reset giornaliero: alle 00:00-00:05
+            if hour == 0 and min <= 5 then
+                local last_daily = game.get_event_flag("hunter_last_daily_reset") or 0
+                if last_daily < today then
+                    game.set_event_flag("hunter_last_daily_reset", today)
+                    hg_lib.announce_daily_winners()
+                    hg_lib.process_daily_reset()
+                    notice_all("|cff00FFFF[HUNTER]|r Reset giornaliero completato!")
+                end
+
+                -- Reset settimanale: lunedi alle 00:00-00:05
+                if dow == 1 then
+                    local this_week = math.floor(get_time() / 604800)
+                    local last_weekly = game.get_event_flag("hunter_last_weekly_reset") or 0
+                    if last_weekly < this_week then
+                        game.set_event_flag("hunter_last_weekly_reset", this_week)
+                        hg_lib.announce_weekly_winners()
+                        hg_lib.process_weekly_reset()
+                        notice_all("|cffFF6600[HUNTER]|r Reset settimanale completato!")
+                    end
+                end
+            end
+        end
+
         when kill with not npc.is_pc() and pc.get_level() >= 5 begin
             local vnum = npc.get_race()
             local mob_level = npc.get_level()
@@ -567,7 +606,7 @@ when chat."/hunter_request_trial_data" begin
             hg_lib.on_mob_kill(vnum)  -- Semplice: passa solo il vnum
             
             -- I mob Elite (Boss/Metin/Bauli) vengono SEMPRE processati
-            -- Il level range check è solo per mob normali (spawning fratture)
+            -- Il level range check ï¿½ solo per mob normali (spawning fratture)
             if hg_lib.is_elite_mob(vnum) then
                 hg_lib.process_elite_kill(vnum)
             else
@@ -596,7 +635,7 @@ when chat."/hunter_request_trial_data" begin
                 return
             end
             
-            -- FIX: Se la frattura è stata marcata per la distruzione (difesa fallita), rimuovila
+            -- FIX: Se la frattura ï¿½ stata marcata per la distruzione (difesa fallita), rimuovila
             local should_destroy = game.get_event_flag("hq_gate_destroy_"..vid) or 0
             if should_destroy == 1 then
                 game.set_event_flag("hq_gate_destroy_"..vid, 0)
@@ -1195,7 +1234,7 @@ when chat."/hunter_request_trial_data" begin
             local fracture_vid = game.get_event_flag("hq_conq_timeout_vid_" .. pid) or 0
             
             if fracture_vid > 0 then
-                -- Controlla se il player ha ancora il diritto (potrebbe averla già aperta)
+                -- Controlla se il player ha ancora il diritto (potrebbe averla giï¿½ aperta)
                 local owner_pid = game.get_event_flag("hq_gate_conq_" .. fracture_vid) or 0
                 
                 if owner_pid == pid then
@@ -1206,7 +1245,7 @@ when chat."/hunter_request_trial_data" begin
                     game.set_event_flag("hq_gate_data_rank_" .. fracture_vid, 0)
                     game.set_event_flag("hq_gate_data_color_" .. fracture_vid, 0)
                     
-                    -- Marca la frattura per la distruzione (verrà rimossa quando qualcuno la tocca)
+                    -- Marca la frattura per la distruzione (verrï¿½ rimossa quando qualcuno la tocca)
                     game.set_event_flag("hq_gate_destroy_" .. fracture_vid, 1)
                     
                     -- Tenta di distruggere la frattura direttamente
