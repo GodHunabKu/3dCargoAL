@@ -9,6 +9,47 @@
 quest hunter_items begin
     state start begin
 
+        -- =====================================================
+        -- BUONI GLORIA (Convertono in punti Gloria)
+        -- =====================================================
+
+        -- Item: Buono 100 Punti Gloria
+        when 80030.use begin
+            local pid = pc.get_player_id()
+            local bonus = 100
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + " .. bonus .. ", spendable_points = spendable_points + " .. bonus .. " WHERE player_id = " .. pid)
+            hg_lib.hunter_speak_color("Buono riscattato! +" .. bonus .. " Gloria!", "GOLD")
+            syschat("[HUNTER] Hai ricevuto " .. bonus .. " punti Gloria!")
+            hg_lib.send_player_data(true)
+            item.remove()
+        end
+
+        -- Item: Buono 500 Punti Gloria
+        when 80031.use begin
+            local pid = pc.get_player_id()
+            local bonus = 500
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + " .. bonus .. ", spendable_points = spendable_points + " .. bonus .. " WHERE player_id = " .. pid)
+            hg_lib.hunter_speak_color("Buono riscattato! +" .. bonus .. " Gloria!", "GOLD")
+            syschat("[HUNTER] Hai ricevuto " .. bonus .. " punti Gloria!")
+            hg_lib.send_player_data(true)
+            item.remove()
+        end
+
+        -- Item: Buono 1000 Punti Gloria
+        when 80032.use begin
+            local pid = pc.get_player_id()
+            local bonus = 1000
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + " .. bonus .. ", spendable_points = spendable_points + " .. bonus .. " WHERE player_id = " .. pid)
+            hg_lib.hunter_speak_color("Buono riscattato! +" .. bonus .. " Gloria!", "GOLD")
+            syschat("[HUNTER] Hai ricevuto " .. bonus .. " punti Gloria!")
+            hg_lib.send_player_data(true)
+            item.remove()
+        end
+
+        -- =====================================================
+        -- ITEM SPECIALI HUNTER
+        -- =====================================================
+
         -- Item: Scanner di Fratture (Evoca Subito)
         when 50160.use begin
             local msg = hg_lib.get_text("ITEM_SCANNER_ACTIVE", nil, "Scanner in funzione... Frattura rilevata!")
