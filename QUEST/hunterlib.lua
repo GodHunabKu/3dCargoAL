@@ -5241,8 +5241,8 @@ end
 -- ============================================================
 function hg_lib.cleanup_global_tables()
     local now = get_time()
-    local cleanup_threshold = 3600  -- 1 ora
-    local max_entries = 1000  -- Safety: Limite massimo entry per tabella
+    local cleanup_threshold = 1800  -- FIX: Ridotto a 30 minuti (era 1 ora)
+    local max_entries = 500  -- FIX: Ridotto a 500 (era 1000) per maggiore sicurezza
 
     -- 1. Pulisci hunter_temp_gate_data (dati gate temporanei)
     if _G.hunter_temp_gate_data then

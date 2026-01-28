@@ -30,9 +30,10 @@ quest hunter_level_bridge begin
              cleartimer("hq_server_reset_timer")
              loop_timer("hq_server_reset_timer", 60)
 
-             -- MEMORY LEAK FIX: Timer cleanup tabelle globali (ogni 1 ora)
+             -- MEMORY LEAK FIX: Timer cleanup tabelle globali (ogni 30 minuti)
+             -- FIX: Ridotto da 1 ora a 30 minuti per pulizia piu' frequente
              cleartimer("hq_cleanup_timer")
-             loop_timer("hq_cleanup_timer", 3600)
+             loop_timer("hq_cleanup_timer", 1800)
 
              -- FIX RACE CONDITION: Pulisci flag globali stale al login del player
              -- Questo previene stati inconsistenti se il server � crashato o riavviato
@@ -341,6 +342,35 @@ when chat."/hunter_request_trial_data" begin
             -- PERSISTENZA EMERGENCY QUEST: Restaura se ancora attiva, altrimenti fallisce
             -- Timer a 6 secondi per apparire DOPO tutti gli altri messaggi di login
             timer("hq_restore_emergency", 6)
+
+            -- FIX CRASH SAFETY: Timer periodico per salvare dati pending
+            -- Salva ogni 60 secondi per evitare perdita dati in caso di crash
+            cleartimer("hq_periodic_flush")
+            loop_timer("hq_periodic_flush", 60)
+        end
+
+        -- FIX CRASH SAFETY: Salvataggio periodico dati pending
+        when hq_periodic_flush.timer begin
+            local pid = pc.get_player_id()
+            local pending_pts = pc.getqf("hq_pending_total_pts") or 0
+            local pending_kills = pc.getqf("hq_pending_total_kills") or 0
+
+            -- Salva solo se ci sono dati pending
+            if pending_pts > 0 or pending_kills > 0 then
+                local status, err = pcall(hg_lib.flush_ranking_updates)
+                if not status then
+                    -- Retry dopo 5 secondi
+                    timer("hq_flush_retry", 5)
+                end
+            end
+        end
+
+        -- FIX: Retry flush se fallito
+        when hq_flush_retry.timer begin
+            local status, err = pcall(hg_lib.flush_ranking_updates)
+            if not status then
+                syserr("HunterSystem: Flush retry failed for pid " .. pc.get_player_id())
+            end
         end
 
         when logout begin
