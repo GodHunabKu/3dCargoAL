@@ -117,7 +117,11 @@ CREATE TABLE `hunter_event_participants`  (
   `player_id` int NOT NULL,
   `player_name` varchar(50) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `joined_at` datetime NOT NULL DEFAULT current_timestamp,
+  `unique_participation_key` varchar(50) GENERATED ALWAYS AS (
+    CONCAT(event_id, '_', player_id, '_', DATE(joined_at))
+  ) STORED,
   PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_unique_participation`(`unique_participation_key`) USING BTREE,
   INDEX `idx_event_player`(`event_id` ASC, `player_id` ASC) USING BTREE,
   INDEX `idx_joined_at`(`joined_at` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 29 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = DYNAMIC;
@@ -162,7 +166,14 @@ CREATE TABLE `hunter_event_winners`  (
   `winner_type` varchar(20) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `winner_data` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL,
   `won_at` datetime NOT NULL DEFAULT current_timestamp,
+  `unique_winner_key` varchar(50) GENERATED ALWAYS AS (
+    CASE
+      WHEN winner_type IN ('first_rift', 'first_boss') THEN CONCAT(event_id, '_', winner_type, '_', DATE(won_at))
+      ELSE CONCAT('lottery_', id)
+    END
+  ) STORED,
   PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_unique_winner`(`unique_winner_key`) USING BTREE,
   INDEX `idx_event_won`(`event_id` ASC, `won_at` ASC) USING BTREE,
   INDEX `idx_player`(`player_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = DYNAMIC;

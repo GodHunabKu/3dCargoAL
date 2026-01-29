@@ -2298,24 +2298,34 @@ function hg_lib.register_event_participant()
     local event_name = event.event_name or "Evento"
     local participation_prize = tonumber(event.reward_glory_base) or 50
     local winner_prize = tonumber(event.reward_glory_winner) or 200
+    local min_rank = event.min_rank or "E"
     local pid = pc.get_player_id()
     local pname = pc.get_name()
     local today = os.date("%Y-%m-%d")
 
-    -- Controlla se gia registrato oggi per questo evento
-    local check_q = string.format(
-        "SELECT id FROM srv1_hunabku.hunter_event_participants WHERE event_id=%d AND player_id=%d AND DATE(joined_at)='%s'",
-        event_id, pid, today
-    )
-    local c = mysql_direct_query(check_q)
+    -- FIX CRITICO: Controlla se il player ha il rank minimo richiesto
+    local rc, rd = mysql_direct_query("SELECT total_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+    local pts = 0
+    if rc > 0 and rd[1] then pts = tonumber(rd[1].total_points) or 0 end
+    local player_rank_num = hg_lib.get_rank_index(pts)
+    local required_rank_num = hg_lib.get_rank_index_by_letter(min_rank)
 
-    if c == 0 then
+    if player_rank_num < required_rank_num then
+        -- Rank insufficiente - non registrare
+        return false
+    end
+
+    -- RACE CONDITION FIX: Usa INSERT IGNORE con UNIQUE constraint
+    -- Se già registrato, INSERT fallisce silenziosamente
+    local insert_q = string.format(
+        "INSERT IGNORE INTO srv1_hunabku.hunter_event_participants (event_id, player_id, player_name, joined_at) VALUES (%d, %d, '%s', NOW())",
+        event_id, pid, mysql_escape_string(pname)
+    )
+    local insert_result = mysql_direct_query(insert_q)
+
+    -- Verifica se INSERT ha avuto successo (affected_rows > 0)
+    if insert_result and insert_result > 0 then
         -- Prima partecipazione oggi, registra
-        local insert_q = string.format(
-            "INSERT INTO srv1_hunabku.hunter_event_participants (event_id, player_id, player_name, joined_at) VALUES (%d, %d, '%s', NOW())",
-            event_id, pid, mysql_escape_string(pname)
-        )
-        mysql_direct_query(insert_q)
 
         -- Ottieni il rank del player per l'annuncio
         local rc, rd = mysql_direct_query("SELECT total_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
@@ -2363,44 +2373,40 @@ end
 function hg_lib.check_first_rift_winner()
     local event = hg_lib.get_current_scheduled_event()
     if not event then return end
-    
+
     local etype = event.event_type or ""
     if etype ~= "first_rift" then return end
-    
-    local event_id = tonumber(event.id)
+
+    local event_id = tonumber(event.id) or 0
+    if event_id == 0 then return end
+
     local today = os.date("%Y-%m-%d")
-    
-    -- Controlla se c'e' gia' un vincitore oggi per questo evento
-    local check_q = string.format(
-        "SELECT id FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_rift'",
-        event_id, today
-    )
-    local c = mysql_direct_query(check_q)
-    
-    if c > 0 then
-        -- Gia' c'e' un vincitore oggi, niente da fare
-        return
-    end
-    
-    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     local pid = pc.get_player_id()
     local pname = pc.get_name()
     local glory_prize = tonumber(event.reward_glory_winner) or 500
     local event_name = event.event_name or "Frattura della Sera"
-    
-    -- Dai la gloria al vincitore
+
+    -- FIX RACE CONDITION: Usa INSERT IGNORE per evitare duplicati
+    -- Se qualcun altro ha gia' vinto, l'INSERT fallisce silenziosamente
+    local insert_result = mysql_direct_query(string.format(
+        "INSERT IGNORE INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) SELECT %d, %d, '%s', 'first_rift', '%d', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_rift')",
+        event_id, pid, mysql_escape_string(pname), glory_prize, event_id, today
+    ))
+
+    -- Verifica se l'INSERT ha avuto successo (affected_rows > 0)
+    -- Se insert_result e' nil o 0, qualcun altro ha gia' vinto
+    if not insert_result or insert_result == 0 then
+        -- Qualcun altro ha vinto prima di noi
+        return
+    end
+
+    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     mysql_direct_query(string.format(
         "UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + %d, spendable_points = spendable_points + %d WHERE player_id=%d",
         glory_prize, glory_prize, pid
     ))
     -- KARMA: /10
     pc.change_alignment(math.floor(glory_prize / 10))
-    
-    -- Registra come vincitore "first_rift"
-    mysql_direct_query(string.format(
-        "INSERT INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) VALUES (%d, %d, '%s', 'first_rift', '%d', NOW())",
-        event_id, pid, mysql_escape_string(pname), glory_prize
-    ))
     
     -- Notifica il vincitore
     local msg = hg_lib.get_text("EVENT_FIRST_WIN", {PTS = glory_prize}, "SEI IL PRIMO! HAI VINTO +" .. glory_prize .. " GLORIA!")
@@ -2422,41 +2428,38 @@ end
 function hg_lib.check_first_boss_winner(boss_vnum)
     local event = hg_lib.get_current_scheduled_event()
     if not event then return end
-    
+
     local etype = event.event_type or ""
     if etype ~= "first_boss" then return end
-    
-    local event_id = tonumber(event.id)
+
+    local event_id = tonumber(event.id) or 0
+    if event_id == 0 then return end
+
     local today = os.date("%Y-%m-%d")
-    
-    -- Controlla se c'e' gia' un vincitore oggi per questo evento
-    local check_q = string.format(
-        "SELECT id FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_boss'",
-        event_id, today
-    )
-    local c = mysql_direct_query(check_q)
-    
-    if c > 0 then return end
-    
-    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     local pid = pc.get_player_id()
     local pname = pc.get_name()
     local glory_prize = tonumber(event.reward_glory_winner) or 500
     local event_name = event.event_name or "Caccia al Boss"
-    
-    -- Dai la gloria
+
+    -- FIX RACE CONDITION: Usa INSERT atomico per evitare duplicati
+    local insert_result = mysql_direct_query(string.format(
+        "INSERT IGNORE INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) SELECT %d, %d, '%s', 'first_boss', '%d', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_boss')",
+        event_id, pid, mysql_escape_string(pname), glory_prize, event_id, today
+    ))
+
+    -- Verifica se l'INSERT ha avuto successo
+    if not insert_result or insert_result == 0 then
+        -- Qualcun altro ha vinto prima
+        return
+    end
+
+    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     mysql_direct_query(string.format(
         "UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + %d, spendable_points = spendable_points + %d WHERE player_id=%d",
         glory_prize, glory_prize, pid
     ))
     -- KARMA: /10
     pc.change_alignment(math.floor(glory_prize / 10))
-    
-    -- Registra vincitore
-    mysql_direct_query(string.format(
-        "INSERT INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) VALUES (%d, %d, '%s', 'first_boss', '%d', NOW())",
-        event_id, pid, mysql_escape_string(pname), glory_prize
-    ))
     
     -- === SYSCHAT DETTAGLIATO EVENTO VINCITORE ===
     syschat("|cffFFD700========================================|r")
@@ -2828,15 +2831,52 @@ end
 
 function hg_lib.check_login_streak()
     local today = math.floor(get_time() / 86400)
-    local last_login = pc.getqf("hq_last_login_day") or 0
-    local streak = pc.getqf("hq_login_streak") or 0
-    if today > last_login + 1 then 
-        streak = 1 
-    elseif today == last_login + 1 then 
-        streak = streak + 1 
+    local pid = pc.get_player_id()
+
+    -- FIX CRITICO: Controlla se il database è stato resettato (beta reset)
+    -- Se login_streak nel DB è 0 ma nei quest flags è > 0, significa reset
+    local db_streak = 0
+    local db_last_login = 0
+    local c, d = mysql_direct_query("SELECT login_streak, UNIX_TIMESTAMP(last_login) as last_ts FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+    if c > 0 and d[1] then
+        db_streak = tonumber(d[1].login_streak) or 0
+        db_last_login = tonumber(d[1].last_ts) or 0
     end
+
+    local qf_streak = pc.getqf("hq_login_streak") or 0
+    local qf_last_login = pc.getqf("hq_last_login_day") or 0
+
+    -- DETECT BETA RESET: Se DB ha streak=0 e last_login=0 ma quest flags hanno valori
+    -- Oppure se DB streak è molto diverso (più di 1) dai quest flags = desync
+    local force_reset = false
+    if db_streak == 0 and db_last_login == 0 and qf_streak > 0 then
+        -- Database resettato, forza reset dei quest flags
+        force_reset = true
+        hg_lib.log_debug("[STREAK] Beta reset detected - forcing quest flag reset")
+    end
+
+    local last_login = qf_last_login
+    local streak = qf_streak
+
+    if force_reset then
+        -- Reset completo - inizia da streak 1
+        streak = 1
+        last_login = today
+        -- Reset anche altri flag correlati
+        pc.setqf("hq_best_streak", 0)
+        pc.setqf("hq_streak_bonus", 0)
+        pc.setqf("hq_defense_fail_streak", 0)
+    elseif today > last_login + 1 then
+        streak = 1
+    elseif today == last_login + 1 then
+        streak = streak + 1
+    end
+
     pc.setqf("hq_login_streak", streak)
     pc.setqf("hq_last_login_day", today)
+
+    -- Aggiorna anche il database per mantenerlo sincronizzato
+    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET login_streak = " .. streak .. ", last_login = NOW() WHERE player_id = " .. pid)
         
     local days_tier3 = tonumber(hg_lib.get_config("streak_days_tier3")) or 30
     local bonus_tier3 = tonumber(hg_lib.get_config("streak_bonus_30days")) or 20
@@ -5787,24 +5827,44 @@ function hg_lib.smart_claim_reward()
 end
 
 function hg_lib.give_pending_reward(rtype, pos)
-    if pc.getqf("hq_reward_lock") == 1 then 
+    if pc.getqf("hq_reward_lock") == 1 then
         syschat("Attendere prego...")
-        return 
+        return
     end
-    pc.setqf("hq_reward_lock", 1) 
+    pc.setqf("hq_reward_lock", 1)
 
     local pid = pc.get_player_id()
+    local pcol = rtype == "weekly" and "pending_weekly_reward" or "pending_daily_reward"
+
+    -- RACE CONDITION FIX: UPDATE atomico che resetta SOLO se il valore corrisponde
+    -- Se qualcuno ha già riscosso (valore = 0 o diverso), affected_rows = 0
+    local update_result = mysql_direct_query(string.format(
+        "UPDATE srv1_hunabku.hunter_quest_ranking SET %s = 0 WHERE player_id = %d AND %s = %d",
+        pcol, pid, pcol, pos
+    ))
+
+    -- Verifica se UPDATE ha avuto successo (affected_rows > 0)
+    if not update_result or update_result == 0 then
+        -- Premio già riscosso o non valido
+        syschat("|cffFF6600[HUNTER]|r Premio già riscosso o non disponibile.")
+        pc.setqf("hq_reward_lock", 0)
+        return
+    end
+
+    -- UPDATE riuscito - ora possiamo dare l'item in sicurezza
     local rc, rd = mysql_direct_query("SELECT item_vnum, item_quantity FROM srv1_hunabku.hunter_quest_rewards WHERE reward_type='" .. rtype .. "' AND rank_position=" .. pos)
-    
+
     if rc > 0 and rd[1] then
-        mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET " .. (rtype=="weekly" and "pending_weekly_reward" or "pending_daily_reward") .. " = 0 WHERE player_id=" .. pid)
-        
         pc.give_item2(tonumber(rd[1].item_vnum), tonumber(rd[1].item_quantity))
-        
+
         local pname = pc.get_name()
         local rtype_label = rtype == "daily" and (hg_lib.get_text("reward_type_daily") or "Giornaliera") or (hg_lib.get_text("reward_type_weekly") or "Settimanale")
         local msg = hg_lib.get_text("reward_claimed", {PLAYER = pname, TYPE = rtype_label}) or ("|cffFFD700[HUNTER]|r " .. pname .. " ha riscosso il premio Top Classifica " .. rtype_label .. "!")
         notice_all(msg)
+    else
+        -- Config premio non trovata - logga errore
+        hg_lib.log_error("RANKING_REWARD", "Config not found", "rtype=" .. rtype .. " pos=" .. pos)
+        syschat("|cffFF0000[ERRORE]|r Configurazione premio non trovata. Contatta un GM.")
     end
 
     pc.setqf("hq_reward_lock", 0)
@@ -6608,15 +6668,52 @@ function hg_lib.send_today_events(openWindow)
             local reward_str = "+" .. (e.reward_glory_base or 50) .. "+Gloria"
             local winner_prize = tonumber(e.reward_glory_winner) or 200
                 
-            local pkt = tostring(tonumber(e.id) or 0) .. "~" ..
+            -- Controlla se c'e' un vincitore oggi per questo evento (first_rift, first_boss)
+            local winner_name = ""
+            local winner_rank = ""
+            local etype = e.event_type or "glory_rush"
+            if etype == "first_rift" or etype == "first_boss" then
+                local today = os.date("%Y-%m-%d")
+                local event_id = tonumber(e.id) or 0
+                local wq = "SELECT w.player_name, r.total_points FROM srv1_hunabku.hunter_event_winners w LEFT JOIN srv1_hunabku.hunter_quest_ranking r ON w.player_id = r.player_id WHERE w.event_id=" .. event_id .. " AND DATE(w.won_at)='" .. today .. "' LIMIT 1"
+                local wc, wd = mysql_direct_query(wq)
+                if wc > 0 and wd[1] then
+                    winner_name = wd[1].player_name or ""
+                    local wpts = tonumber(wd[1].total_points) or 0
+                    winner_rank = hg_lib.get_rank_key(wpts)
+                end
+            end
+
+            -- Controlla se QUESTO player e' iscritto oggi
+            local pid = pc.get_player_id()
+            local today = os.date("%Y-%m-%d")
+            local event_id = tonumber(e.id) or 0
+            local is_registered = 0
+            local pq = "SELECT id FROM srv1_hunabku.hunter_event_participants WHERE event_id=" .. event_id .. " AND player_id=" .. pid .. " AND DATE(joined_at)='" .. today .. "'"
+            local pc_check = mysql_direct_query(pq)
+            if pc_check > 0 then is_registered = 1 end
+
+            -- Controlla se QUESTO player ha VINTO oggi
+            local player_won = 0
+            if etype == "first_rift" or etype == "first_boss" then
+                local pwq = "SELECT id FROM srv1_hunabku.hunter_event_winners WHERE event_id=" .. event_id .. " AND player_id=" .. pid .. " AND DATE(won_at)='" .. today .. "'"
+                local pwc = mysql_direct_query(pwq)
+                if pwc > 0 then player_won = 1 end
+            end
+
+            local pkt = tostring(event_id) .. "~" ..
                 hg_lib.clean_str(e.event_name or "Evento") .. "~" ..
                 start_time .. "~" ..
                 end_time .. "~" ..
-                (e.event_type or "glory_rush") .. "~" ..
+                etype .. "~" ..
                 reward_str .. "~" ..
                 status .. "~" ..
                 (e.min_rank or "E") .. "~" ..
-                winner_prize
+                winner_prize .. "~" ..
+                hg_lib.clean_str(winner_name) .. "~" ..
+                winner_rank .. "~" ..
+                is_registered .. "~" ..
+                player_won
                 
             if batch ~= "" then batch = batch .. ";" end
             batch = batch .. pkt
@@ -6887,14 +6984,6 @@ function hg_lib.claim_achievement(ach_id)
     local reward_count = tonumber(d[1].reward_count) or 1
     local reward_glory = tonumber(d[1].reward_glory) or 0
 
-    -- Controlla se gia riscosso
-    local check_q = "SELECT id FROM srv1_hunabku.hunter_achievements_claimed WHERE player_id=" .. pid .. " AND achievement_id=" .. ach_id
-    local cc = mysql_direct_query(check_q)
-    if cc > 0 then
-        hg_lib.syschat_t("ACH_ALREADY_CLAIMED", "Gia' riscosso!", nil, "FF6600")
-        return
-    end
-
     -- Controlla progresso usando la funzione centralizzata
     local progress = hg_lib.get_achievement_progress(ach_type)
 
@@ -6911,21 +7000,33 @@ function hg_lib.claim_achievement(ach_id)
     end
     pc.setqf(lock_key, 1)
 
-    -- Controlla inventario (solo se c'� un item da dare)
+    -- Controlla inventario (solo se c'è un item da dare)
     if reward_vnum > 0 and pc.count_empty_inventory(0) < 1 then
         pc.setqf(lock_key, 0)
         hg_lib.syschat_t("ACH_INV_FULL", "Inventario pieno!", nil, "FF0000")
         return
     end
 
-    -- CRITICAL FIX: Dai item PRIMA di marcare come claimed
+    -- RACE CONDITION FIX: Prima prova a inserire nel DB (atomico con UNIQUE constraint)
+    -- Se INSERT fallisce, qualcun altro ha già riscosso (o double-click)
+    local insert_result = mysql_direct_query("INSERT IGNORE INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. ach_id .. ", NOW())")
+
+    -- Verifica se INSERT ha avuto successo (affected_rows > 0)
+    if not insert_result or insert_result == 0 then
+        pc.setqf(lock_key, 0)
+        hg_lib.syschat_t("ACH_ALREADY_CLAIMED", "Gia' riscosso!", nil, "FF6600")
+        return
+    end
+
+    -- INSERT riuscito - ora possiamo dare le ricompense in sicurezza
     local success = true
     if reward_vnum > 0 then
         success = pc.give_item2(reward_vnum, reward_count)
         if not success or success == 0 then
-            pc.setqf(lock_key, 0)
+            -- PROBLEMA: DB già marcato ma item non dato - logga per GM
             syschat("|cffFF0000[ACHIEVEMENT]|r Errore durante la consegna. Contatta un GM.")
-            hg_lib.log_error("ACHIEVEMENT", "give_item2 failed", "ach_id=" .. ach_id .. " vnum=" .. reward_vnum)
+            hg_lib.log_error("ACHIEVEMENT", "give_item2 failed after INSERT", "ach_id=" .. ach_id .. " vnum=" .. reward_vnum)
+            pc.setqf(lock_key, 0)
             return
         end
     end
@@ -6934,9 +7035,6 @@ function hg_lib.claim_achievement(ach_id)
     if reward_glory > 0 then
         hg_lib.award_glory_to_player(pid, reward_glory)
     end
-
-    -- Item/Gloria dati con successo, ora marca come claimed
-    mysql_direct_query("INSERT INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. ach_id .. ", NOW())")
     
     -- SYNC FIX: Setta anche il quest flag per sincronizzare con check_achievements()
     pc.setqf("hq_ach_clm_" .. ach_id, 1)
@@ -6984,19 +7082,32 @@ function hg_lib.smart_claim_all()
                 return
             end
 
-            -- CRITICAL FIX: Dai item PRIMA di marcare come claimed
-            local success = pc.give_item2(a.reward_vnum, a.reward_count)
+            -- RACE CONDITION FIX: Prima prova a inserire nel DB (atomico con UNIQUE constraint)
+            -- Se INSERT fallisce, qualcun altro ha già riscosso
+            local insert_result = mysql_direct_query("INSERT IGNORE INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. a.id .. ", NOW())")
 
-            if success and success ~= 0 then
-                -- Item dato con successo, marca come claimed
-                mysql_direct_query("INSERT INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. a.id .. ", NOW())")
-                -- SYNC FIX: Setta anche il quest flag per sincronizzare con check_achievements()
-                pc.setqf("hq_ach_clm_" .. a.id, 1)
-                claimed_count = claimed_count + 1
+            -- Verifica se INSERT ha avuto successo (affected_rows > 0)
+            if not insert_result or insert_result == 0 then
+                -- Già riscosso (race condition prevenuta!)
+                -- Non fare nulla, passa al prossimo achievement
             else
-                -- Fallito, logga e continua
-                hg_lib.log_error("SMART_CLAIM", "give_item2 failed", "ach_id=" .. a.id)
-                failed_count = failed_count + 1
+                -- INSERT riuscito, ora dai l'item
+                local success = pc.give_item2(a.reward_vnum, a.reward_count)
+
+                if success and success ~= 0 then
+                    -- Item dato con successo
+                    pc.setqf("hq_ach_clm_" .. a.id, 1)
+                    claimed_count = claimed_count + 1
+
+                    -- Dai anche gloria se presente
+                    if a.reward_glory and a.reward_glory > 0 then
+                        hg_lib.award_glory_to_player(pid, a.reward_glory)
+                    end
+                else
+                    -- Item fallito ma DB già marcato - PROBLEMA! Logga per GM
+                    hg_lib.log_error("SMART_CLAIM", "give_item2 failed after INSERT", "ach_id=" .. a.id .. " vnum=" .. a.reward_vnum)
+                    failed_count = failed_count + 1
+                end
             end
         end
     end

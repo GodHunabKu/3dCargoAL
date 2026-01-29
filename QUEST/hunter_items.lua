@@ -46,6 +46,31 @@ quest hunter_items begin
             item.remove()
         end
 
+        -- Item: Sigillo del Campione Settimanale (Premio 1° Classifica Weekly)
+        -- Questo item viene dato come premio al 1° posto della classifica settimanale
+        when 80039.use begin
+            local pid = pc.get_player_id()
+            local bonus = 5000
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + " .. bonus .. ", spendable_points = spendable_points + " .. bonus .. " WHERE player_id = " .. pid)
+            hg_lib.hunter_speak_color("SIGILLO DEL CAMPIONE riscattato! +" .. bonus .. " Gloria!", "PURPLE")
+            notice_all("|cffFFD700[HUNTER]|r " .. pc.get_name() .. " ha riscattato il |cffFF00FFSigillo del Campione|r!")
+            syschat("[HUNTER] Hai ricevuto " .. bonus .. " punti Gloria dal Sigillo del Campione!")
+            hg_lib.send_player_data(true)
+            item.remove()
+        end
+
+        -- Item: Cristallo dell'Elite (Premio 2° Classifica Weekly / Bonus N-Rank)
+        -- Questo item viene dato come premio al 2° posto weekly e come bonus bauli N-Rank
+        when 80040.use begin
+            local pid = pc.get_player_id()
+            local bonus = 2500
+            mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + " .. bonus .. ", spendable_points = spendable_points + " .. bonus .. " WHERE player_id = " .. pid)
+            hg_lib.hunter_speak_color("CRISTALLO DELL'ELITE riscattato! +" .. bonus .. " Gloria!", "CYAN")
+            syschat("[HUNTER] Hai ricevuto " .. bonus .. " punti Gloria dal Cristallo dell'Elite!")
+            hg_lib.send_player_data(true)
+            item.remove()
+        end
+
         -- =====================================================
         -- ITEM SPECIALI HUNTER
         -- =====================================================
