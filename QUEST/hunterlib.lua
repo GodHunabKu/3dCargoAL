@@ -2298,9 +2298,22 @@ function hg_lib.register_event_participant()
     local event_name = event.event_name or "Evento"
     local participation_prize = tonumber(event.reward_glory_base) or 50
     local winner_prize = tonumber(event.reward_glory_winner) or 200
+    local min_rank = event.min_rank or "E"
     local pid = pc.get_player_id()
     local pname = pc.get_name()
     local today = os.date("%Y-%m-%d")
+
+    -- FIX CRITICO: Controlla se il player ha il rank minimo richiesto
+    local rc, rd = mysql_direct_query("SELECT total_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+    local pts = 0
+    if rc > 0 and rd[1] then pts = tonumber(rd[1].total_points) or 0 end
+    local player_rank_num = hg_lib.get_rank_index(pts)
+    local required_rank_num = hg_lib.get_rank_index_by_letter(min_rank)
+
+    if player_rank_num < required_rank_num then
+        -- Rank insufficiente - non registrare
+        return false
+    end
 
     -- Controlla se gia registrato oggi per questo evento
     local check_q = string.format(
