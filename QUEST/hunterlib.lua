@@ -217,11 +217,31 @@ function hg_lib.get_level_range_for_rank(rank)
 end
 
 -- CACHE MOB ELITE (FIX CRASH: Non cancella pi  la tabella globale brutalmente)
+-- FIX: Funzione per invalidare la cache elite (chiamabile da GM)
+function hg_lib.invalidate_elite_cache()
+    _G.hunter_elite_cache = nil
+    _G.hunter_elite_data = nil
+    _G.hunter_cache_loaded = 0
+end
+
+-- FIX: Funzione per invalidare TUTTE le cache (chiamabile da GM)
+function hg_lib.invalidate_all_caches()
+    _G.hunter_elite_cache = nil
+    _G.hunter_elite_data = nil
+    _G.hunter_cache_loaded = 0
+    _G.hunter_config_cache = nil
+    _G.hunter_config_cache_time = 0
+    _G.hunter_rank_bonus_cache = nil
+    _G.hunter_defense_waves_cache = nil
+    _G.hunter_defense_total_mobs = nil
+end
+
 function hg_lib.load_elite_cache()
-    -- Se la cache esiste ed   recente (< 1 ora), non ricaricare
+    -- Se la cache esiste ed e' recente (< 30 min), non ricaricare
+    -- FIX: Ridotto da 1 ora a 30 minuti per aggiornamenti piu' rapidi
     local now = get_time()
-    if _G.hunter_elite_cache and _G.hunter_cache_loaded and (now - _G.hunter_cache_loaded < 3600) then
-        return 
+    if _G.hunter_elite_cache and _G.hunter_cache_loaded and (now - _G.hunter_cache_loaded < 1800) then
+        return
     end
 
     -- Inizializza solo se necessario
@@ -415,11 +435,12 @@ end
 
 function hg_lib.reset_first_of_day_flags()
     local pid = pc.get_player_id()
-    -- Usa formato numerico YYYYMMDD per compatibilità con pc.setqf
+    -- Usa formato numerico YYYYMMDD per compatibilita' con pc.setqf
     local today = tonumber(os.date("%Y%m%d")) or 0
     local last_fod_date = pc.getqf("hq_fod_date") or 0
-    
-    -- Se la data e' cambiata, resetta tutti i flag
+    local did_reset = false
+
+    -- Se la data e' cambiata, resetta tutti i flag giornalieri
     if last_fod_date ~= today then
         pc.setqf("hq_fod_date", today)
         pc.setqf("hq_fod_fracture", 0)  -- Prima frattura del giorno
@@ -431,9 +452,27 @@ function hg_lib.reset_first_of_day_flags()
         game.set_event_flag("hq_fod_done_boss_" .. pid, 0)
         game.set_event_flag("hq_fod_done_metin_" .. pid, 0)
         game.set_event_flag("hq_fod_done_fracture_" .. pid, 0)
-        return true  -- Flags resetted
+
+        -- FIX CRITICO: Resetta i punti giornalieri del player nel database
+        -- Questo garantisce il reset anche se nessuno era online a mezzanotte
+        mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET daily_points = 0, daily_kills = 0 WHERE player_id = " .. pid)
+
+        did_reset = true
     end
-    return false  -- Same day, no reset
+
+    -- FIX CRITICO: Check reset SETTIMANALE (basato sul numero di settimana)
+    -- Settimana = numero di settimane dall'epoch (604800 = secondi in una settimana)
+    local current_week = math.floor(os.time() / 604800)
+    local last_week = pc.getqf("hq_last_week") or 0
+
+    if last_week ~= current_week then
+        pc.setqf("hq_last_week", current_week)
+        -- Resetta i punti settimanali del player nel database
+        mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET weekly_points = 0, weekly_kills = 0 WHERE player_id = " .. pid)
+        did_reset = true
+    end
+
+    return did_reset
 end
 
 -- Controlla se e' la prima attivita' del tipo specificato per oggi
@@ -4038,7 +4077,7 @@ end
 function hg_lib.sync_achievement_flags()
     local pid = pc.get_player_id()
     
-    -- Query per ottenere tutti gli achievement già riscossi dal player
+    -- Query per ottenere tutti gli achievement giï¿½ riscossi dal player
     -- Tabella corretta: hunter_achievements_claimed (senza "quest_")
     local q = "SELECT achievement_id FROM srv1_hunabku.hunter_achievements_claimed WHERE player_id = " .. pid
     local c, d = mysql_direct_query(q)
@@ -4052,7 +4091,7 @@ function hg_lib.sync_achievement_flags()
         if d[i] then
             local aid = tonumber(d[i].achievement_id)
             if aid then
-                -- Setta il quest flag per ogni achievement già riscosso
+                -- Setta il quest flag per ogni achievement giï¿½ riscosso
                 pc.setqf("hq_ach_clm_" .. aid, 1)
             end
         end
@@ -4902,7 +4941,7 @@ function hg_lib.fail_defense(reason)
         end
     end
 
-    -- FIX: hunter_defense_data già pulito nel blocco if/else sopra - rimosso duplicato
+    -- FIX: hunter_defense_data giï¿½ pulito nel blocco if/else sopra - rimosso duplicato
 
     -- Messaggio finale differenziato per rank (NPC speak) - inviato a TUTTI
     local msg
@@ -5202,8 +5241,8 @@ end
 -- ============================================================
 function hg_lib.cleanup_global_tables()
     local now = get_time()
-    local cleanup_threshold = 3600  -- 1 ora
-    local max_entries = 1000  -- Safety: Limite massimo entry per tabella
+    local cleanup_threshold = 1800  -- FIX: Ridotto a 30 minuti (era 1 ora)
+    local max_entries = 500  -- FIX: Ridotto a 500 (era 1000) per maggiore sicurezza
 
     -- 1. Pulisci hunter_temp_gate_data (dati gate temporanei)
     if _G.hunter_temp_gate_data then
@@ -5434,7 +5473,7 @@ function hg_lib.send_player_data(force)
         pc.setqf("hq_total_missions", total_missions)
         pc.setqf("hq_total_trials", total_trials)
         
-        -- Sincronizza streak (la migliore è salvata nel qf hq_best_streak)
+        -- Sincronizza streak (la migliore ï¿½ salvata nel qf hq_best_streak)
         local current_streak = pc.getqf("hq_login_streak") or 0
         local best_streak = pc.getqf("hq_best_streak") or 0
         if current_streak > best_streak then
@@ -6872,7 +6911,7 @@ function hg_lib.claim_achievement(ach_id)
     end
     pc.setqf(lock_key, 1)
 
-    -- Controlla inventario (solo se c'è un item da dare)
+    -- Controlla inventario (solo se c'ï¿½ un item da dare)
     if reward_vnum > 0 and pc.count_empty_inventory(0) < 1 then
         pc.setqf(lock_key, 0)
         hg_lib.syschat_t("ACH_INV_FULL", "Inventario pieno!", nil, "FF0000")

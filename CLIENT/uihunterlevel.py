@@ -3038,24 +3038,48 @@ class HunterLevelWindow(ui.ScriptWindow):
             self.eventsWnd.Open(self.eventsData, self.theme)
 
     def OnNewDay(self):
-        """E' passata la mezzanotte - resetta cache eventi e aggiorna UI"""
+        """E' passata la mezzanotte - resetta cache eventi e dati giornalieri"""
         import chat
-        
+
         # Pulisci cache eventi vecchi
         self.eventsData = []
         self.eventsCount = 0
-        
+
+        # RESET DATI GIORNALIERI DEL PLAYER
+        self.playerData["daily_points"] = 0
+        self.playerData["daily_kills"] = 0
+        self.playerData["daily_pos"] = 0
+        self.playerData["pending_daily_reward"] = 0
+
+        # RESET CLASSIFICHE GIORNALIERE
+        self.rankingData["daily"] = []
+        self.rankingData["daily_points"] = []
+        self.rankingData["daily_kills"] = []
+
         # Chiudi popup eventi se aperto (mostrera' dati vecchi)
         if self.eventsWnd and self.eventsWnd.IsShow():
             self.eventsWnd.Hide()
-        
+
         # Notifica player
-        chat.AppendChat(chat.CHAT_TYPE_INFO, "|cff00FFFF[HUNTER]|r Nuovo giorno! Lista eventi aggiornata.")
-        
-        # Se siamo nel tab eventi, forza refresh
-        if self.currentTab == 4:
+        chat.AppendChat(chat.CHAT_TYPE_INFO, "|cff00FFFF[HUNTER]|r Nuovo giorno! Classifiche giornaliere resettate.")
+
+        # Aggiorna header con i nuovi dati (0 punti daily)
+        self.__UpdateHeaderContent()
+
+        # Se siamo nel tab statistiche o classifiche, forza refresh
+        if self.currentTab == 0:
             self.__ClearContent()
-            self.__LoadEvents(skipRequest=False)  # Richiedi nuovi dati
+            self.__LoadStats()
+            self.__SavePositions()
+            self.__UpdateScroll()
+        elif self.currentTab == 1:
+            self.__ClearContent()
+            self.__LoadRanking()
+            self.__SavePositions()
+            self.__UpdateScroll()
+        elif self.currentTab == 4:
+            self.__ClearContent()
+            self.__LoadEvents(skipRequest=False)
             self.__SavePositions()
             self.__UpdateScroll()
 
