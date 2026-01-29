@@ -169,7 +169,7 @@ CREATE TABLE `hunter_event_winners`  (
   `unique_winner_key` varchar(50) GENERATED ALWAYS AS (
     CASE
       WHEN winner_type IN ('first_rift', 'first_boss') THEN CONCAT(event_id, '_', winner_type, '_', DATE(won_at))
-      ELSE CONCAT('lottery_', id)
+      ELSE NULL
     END
   ) STORED,
   PRIMARY KEY (`id`) USING BTREE,

@@ -24,12 +24,12 @@ DROP TEMPORARY TABLE temp_winners_to_keep;
 
 -- Step 2: Aggiungi colonna generata per chiave univoca vincitori
 -- Per first_rift/first_boss: garantisce UN solo vincitore per evento/giorno
--- Per lottery: usa ID quindi permette vincitori multipli
+-- Per lottery: NULL (MySQL UNIQUE permette multipli NULL = nessun limite per lottery)
 ALTER TABLE hunter_event_winners
 ADD COLUMN `unique_winner_key` varchar(50) GENERATED ALWAYS AS (
     CASE
       WHEN winner_type IN ('first_rift', 'first_boss') THEN CONCAT(event_id, '_', winner_type, '_', DATE(won_at))
-      ELSE CONCAT('lottery_', id)
+      ELSE NULL
     END
 ) STORED;
 
