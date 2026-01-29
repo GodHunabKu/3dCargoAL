@@ -2828,15 +2828,52 @@ end
 
 function hg_lib.check_login_streak()
     local today = math.floor(get_time() / 86400)
-    local last_login = pc.getqf("hq_last_login_day") or 0
-    local streak = pc.getqf("hq_login_streak") or 0
-    if today > last_login + 1 then 
-        streak = 1 
-    elseif today == last_login + 1 then 
-        streak = streak + 1 
+    local pid = pc.get_player_id()
+
+    -- FIX CRITICO: Controlla se il database è stato resettato (beta reset)
+    -- Se login_streak nel DB è 0 ma nei quest flags è > 0, significa reset
+    local db_streak = 0
+    local db_last_login = 0
+    local c, d = mysql_direct_query("SELECT login_streak, UNIX_TIMESTAMP(last_login) as last_ts FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
+    if c > 0 and d[1] then
+        db_streak = tonumber(d[1].login_streak) or 0
+        db_last_login = tonumber(d[1].last_ts) or 0
     end
+
+    local qf_streak = pc.getqf("hq_login_streak") or 0
+    local qf_last_login = pc.getqf("hq_last_login_day") or 0
+
+    -- DETECT BETA RESET: Se DB ha streak=0 e last_login=0 ma quest flags hanno valori
+    -- Oppure se DB streak è molto diverso (più di 1) dai quest flags = desync
+    local force_reset = false
+    if db_streak == 0 and db_last_login == 0 and qf_streak > 0 then
+        -- Database resettato, forza reset dei quest flags
+        force_reset = true
+        hg_lib.log_debug("[STREAK] Beta reset detected - forcing quest flag reset")
+    end
+
+    local last_login = qf_last_login
+    local streak = qf_streak
+
+    if force_reset then
+        -- Reset completo - inizia da streak 1
+        streak = 1
+        last_login = today
+        -- Reset anche altri flag correlati
+        pc.setqf("hq_best_streak", 0)
+        pc.setqf("hq_streak_bonus", 0)
+        pc.setqf("hq_defense_fail_streak", 0)
+    elseif today > last_login + 1 then
+        streak = 1
+    elseif today == last_login + 1 then
+        streak = streak + 1
+    end
+
     pc.setqf("hq_login_streak", streak)
     pc.setqf("hq_last_login_day", today)
+
+    -- Aggiorna anche il database per mantenerlo sincronizzato
+    mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET login_streak = " .. streak .. ", last_login = NOW() WHERE player_id = " .. pid)
         
     local days_tier3 = tonumber(hg_lib.get_config("streak_days_tier3")) or 30
     local bonus_tier3 = tonumber(hg_lib.get_config("streak_bonus_30days")) or 20
