@@ -2315,20 +2315,17 @@ function hg_lib.register_event_participant()
         return false
     end
 
-    -- Controlla se gia registrato oggi per questo evento
-    local check_q = string.format(
-        "SELECT id FROM srv1_hunabku.hunter_event_participants WHERE event_id=%d AND player_id=%d AND DATE(joined_at)='%s'",
-        event_id, pid, today
+    -- RACE CONDITION FIX: Usa INSERT IGNORE con UNIQUE constraint
+    -- Se già registrato, INSERT fallisce silenziosamente
+    local insert_q = string.format(
+        "INSERT IGNORE INTO srv1_hunabku.hunter_event_participants (event_id, player_id, player_name, joined_at) VALUES (%d, %d, '%s', NOW())",
+        event_id, pid, mysql_escape_string(pname)
     )
-    local c = mysql_direct_query(check_q)
+    local insert_result = mysql_direct_query(insert_q)
 
-    if c == 0 then
+    -- Verifica se INSERT ha avuto successo (affected_rows > 0)
+    if insert_result and insert_result > 0 then
         -- Prima partecipazione oggi, registra
-        local insert_q = string.format(
-            "INSERT INTO srv1_hunabku.hunter_event_participants (event_id, player_id, player_name, joined_at) VALUES (%d, %d, '%s', NOW())",
-            event_id, pid, mysql_escape_string(pname)
-        )
-        mysql_direct_query(insert_q)
 
         -- Ottieni il rank del player per l'annuncio
         local rc, rd = mysql_direct_query("SELECT total_points FROM srv1_hunabku.hunter_quest_ranking WHERE player_id=" .. pid)
@@ -6967,14 +6964,6 @@ function hg_lib.claim_achievement(ach_id)
     local reward_count = tonumber(d[1].reward_count) or 1
     local reward_glory = tonumber(d[1].reward_glory) or 0
 
-    -- Controlla se gia riscosso
-    local check_q = "SELECT id FROM srv1_hunabku.hunter_achievements_claimed WHERE player_id=" .. pid .. " AND achievement_id=" .. ach_id
-    local cc = mysql_direct_query(check_q)
-    if cc > 0 then
-        hg_lib.syschat_t("ACH_ALREADY_CLAIMED", "Gia' riscosso!", nil, "FF6600")
-        return
-    end
-
     -- Controlla progresso usando la funzione centralizzata
     local progress = hg_lib.get_achievement_progress(ach_type)
 
@@ -6991,21 +6980,33 @@ function hg_lib.claim_achievement(ach_id)
     end
     pc.setqf(lock_key, 1)
 
-    -- Controlla inventario (solo se c'� un item da dare)
+    -- Controlla inventario (solo se c'è un item da dare)
     if reward_vnum > 0 and pc.count_empty_inventory(0) < 1 then
         pc.setqf(lock_key, 0)
         hg_lib.syschat_t("ACH_INV_FULL", "Inventario pieno!", nil, "FF0000")
         return
     end
 
-    -- CRITICAL FIX: Dai item PRIMA di marcare come claimed
+    -- RACE CONDITION FIX: Prima prova a inserire nel DB (atomico con UNIQUE constraint)
+    -- Se INSERT fallisce, qualcun altro ha già riscosso (o double-click)
+    local insert_result = mysql_direct_query("INSERT IGNORE INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. ach_id .. ", NOW())")
+
+    -- Verifica se INSERT ha avuto successo (affected_rows > 0)
+    if not insert_result or insert_result == 0 then
+        pc.setqf(lock_key, 0)
+        hg_lib.syschat_t("ACH_ALREADY_CLAIMED", "Gia' riscosso!", nil, "FF6600")
+        return
+    end
+
+    -- INSERT riuscito - ora possiamo dare le ricompense in sicurezza
     local success = true
     if reward_vnum > 0 then
         success = pc.give_item2(reward_vnum, reward_count)
         if not success or success == 0 then
-            pc.setqf(lock_key, 0)
+            -- PROBLEMA: DB già marcato ma item non dato - logga per GM
             syschat("|cffFF0000[ACHIEVEMENT]|r Errore durante la consegna. Contatta un GM.")
-            hg_lib.log_error("ACHIEVEMENT", "give_item2 failed", "ach_id=" .. ach_id .. " vnum=" .. reward_vnum)
+            hg_lib.log_error("ACHIEVEMENT", "give_item2 failed after INSERT", "ach_id=" .. ach_id .. " vnum=" .. reward_vnum)
+            pc.setqf(lock_key, 0)
             return
         end
     end
@@ -7014,9 +7015,6 @@ function hg_lib.claim_achievement(ach_id)
     if reward_glory > 0 then
         hg_lib.award_glory_to_player(pid, reward_glory)
     end
-
-    -- Item/Gloria dati con successo, ora marca come claimed
-    mysql_direct_query("INSERT INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. ach_id .. ", NOW())")
     
     -- SYNC FIX: Setta anche il quest flag per sincronizzare con check_achievements()
     pc.setqf("hq_ach_clm_" .. ach_id, 1)
@@ -7064,19 +7062,32 @@ function hg_lib.smart_claim_all()
                 return
             end
 
-            -- CRITICAL FIX: Dai item PRIMA di marcare come claimed
-            local success = pc.give_item2(a.reward_vnum, a.reward_count)
+            -- RACE CONDITION FIX: Prima prova a inserire nel DB (atomico con UNIQUE constraint)
+            -- Se INSERT fallisce, qualcun altro ha già riscosso
+            local insert_result = mysql_direct_query("INSERT IGNORE INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. a.id .. ", NOW())")
 
-            if success and success ~= 0 then
-                -- Item dato con successo, marca come claimed
-                mysql_direct_query("INSERT INTO srv1_hunabku.hunter_achievements_claimed (player_id, achievement_id, claimed_at) VALUES (" .. pid .. ", " .. a.id .. ", NOW())")
-                -- SYNC FIX: Setta anche il quest flag per sincronizzare con check_achievements()
-                pc.setqf("hq_ach_clm_" .. a.id, 1)
-                claimed_count = claimed_count + 1
+            -- Verifica se INSERT ha avuto successo (affected_rows > 0)
+            if not insert_result or insert_result == 0 then
+                -- Già riscosso (race condition prevenuta!)
+                -- Non fare nulla, passa al prossimo achievement
             else
-                -- Fallito, logga e continua
-                hg_lib.log_error("SMART_CLAIM", "give_item2 failed", "ach_id=" .. a.id)
-                failed_count = failed_count + 1
+                -- INSERT riuscito, ora dai l'item
+                local success = pc.give_item2(a.reward_vnum, a.reward_count)
+
+                if success and success ~= 0 then
+                    -- Item dato con successo
+                    pc.setqf("hq_ach_clm_" .. a.id, 1)
+                    claimed_count = claimed_count + 1
+
+                    -- Dai anche gloria se presente
+                    if a.reward_glory and a.reward_glory > 0 then
+                        hg_lib.award_glory_to_player(pid, a.reward_glory)
+                    end
+                else
+                    -- Item fallito ma DB già marcato - PROBLEMA! Logga per GM
+                    hg_lib.log_error("SMART_CLAIM", "give_item2 failed after INSERT", "ach_id=" .. a.id .. " vnum=" .. a.reward_vnum)
+                    failed_count = failed_count + 1
+                end
             end
         end
     end
