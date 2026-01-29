@@ -2376,44 +2376,40 @@ end
 function hg_lib.check_first_rift_winner()
     local event = hg_lib.get_current_scheduled_event()
     if not event then return end
-    
+
     local etype = event.event_type or ""
     if etype ~= "first_rift" then return end
-    
-    local event_id = tonumber(event.id)
+
+    local event_id = tonumber(event.id) or 0
+    if event_id == 0 then return end
+
     local today = os.date("%Y-%m-%d")
-    
-    -- Controlla se c'e' gia' un vincitore oggi per questo evento
-    local check_q = string.format(
-        "SELECT id FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_rift'",
-        event_id, today
-    )
-    local c = mysql_direct_query(check_q)
-    
-    if c > 0 then
-        -- Gia' c'e' un vincitore oggi, niente da fare
-        return
-    end
-    
-    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     local pid = pc.get_player_id()
     local pname = pc.get_name()
     local glory_prize = tonumber(event.reward_glory_winner) or 500
     local event_name = event.event_name or "Frattura della Sera"
-    
-    -- Dai la gloria al vincitore
+
+    -- FIX RACE CONDITION: Usa INSERT IGNORE per evitare duplicati
+    -- Se qualcun altro ha gia' vinto, l'INSERT fallisce silenziosamente
+    local insert_result = mysql_direct_query(string.format(
+        "INSERT IGNORE INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) SELECT %d, %d, '%s', 'first_rift', '%d', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_rift')",
+        event_id, pid, mysql_escape_string(pname), glory_prize, event_id, today
+    ))
+
+    -- Verifica se l'INSERT ha avuto successo (affected_rows > 0)
+    -- Se insert_result e' nil o 0, qualcun altro ha gia' vinto
+    if not insert_result or insert_result == 0 then
+        -- Qualcun altro ha vinto prima di noi
+        return
+    end
+
+    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     mysql_direct_query(string.format(
         "UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + %d, spendable_points = spendable_points + %d WHERE player_id=%d",
         glory_prize, glory_prize, pid
     ))
     -- KARMA: /10
     pc.change_alignment(math.floor(glory_prize / 10))
-    
-    -- Registra come vincitore "first_rift"
-    mysql_direct_query(string.format(
-        "INSERT INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) VALUES (%d, %d, '%s', 'first_rift', '%d', NOW())",
-        event_id, pid, mysql_escape_string(pname), glory_prize
-    ))
     
     -- Notifica il vincitore
     local msg = hg_lib.get_text("EVENT_FIRST_WIN", {PTS = glory_prize}, "SEI IL PRIMO! HAI VINTO +" .. glory_prize .. " GLORIA!")
@@ -2435,41 +2431,38 @@ end
 function hg_lib.check_first_boss_winner(boss_vnum)
     local event = hg_lib.get_current_scheduled_event()
     if not event then return end
-    
+
     local etype = event.event_type or ""
     if etype ~= "first_boss" then return end
-    
-    local event_id = tonumber(event.id)
+
+    local event_id = tonumber(event.id) or 0
+    if event_id == 0 then return end
+
     local today = os.date("%Y-%m-%d")
-    
-    -- Controlla se c'e' gia' un vincitore oggi per questo evento
-    local check_q = string.format(
-        "SELECT id FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_boss'",
-        event_id, today
-    )
-    local c = mysql_direct_query(check_q)
-    
-    if c > 0 then return end
-    
-    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     local pid = pc.get_player_id()
     local pname = pc.get_name()
     local glory_prize = tonumber(event.reward_glory_winner) or 500
     local event_name = event.event_name or "Caccia al Boss"
-    
-    -- Dai la gloria
+
+    -- FIX RACE CONDITION: Usa INSERT atomico per evitare duplicati
+    local insert_result = mysql_direct_query(string.format(
+        "INSERT IGNORE INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) SELECT %d, %d, '%s', 'first_boss', '%d', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM srv1_hunabku.hunter_event_winners WHERE event_id=%d AND DATE(won_at)='%s' AND winner_type='first_boss')",
+        event_id, pid, mysql_escape_string(pname), glory_prize, event_id, today
+    ))
+
+    -- Verifica se l'INSERT ha avuto successo
+    if not insert_result or insert_result == 0 then
+        -- Qualcun altro ha vinto prima
+        return
+    end
+
+    -- QUESTO PLAYER E' IL PRIMO! Assegna il premio
     mysql_direct_query(string.format(
         "UPDATE srv1_hunabku.hunter_quest_ranking SET total_points = total_points + %d, spendable_points = spendable_points + %d WHERE player_id=%d",
         glory_prize, glory_prize, pid
     ))
     -- KARMA: /10
     pc.change_alignment(math.floor(glory_prize / 10))
-    
-    -- Registra vincitore
-    mysql_direct_query(string.format(
-        "INSERT INTO srv1_hunabku.hunter_event_winners (event_id, player_id, player_name, winner_type, winner_data, won_at) VALUES (%d, %d, '%s', 'first_boss', '%d', NOW())",
-        event_id, pid, mysql_escape_string(pname), glory_prize
-    ))
     
     -- === SYSCHAT DETTAGLIATO EVENTO VINCITORE ===
     syschat("|cffFFD700========================================|r")
