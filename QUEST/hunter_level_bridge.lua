@@ -263,13 +263,32 @@ when chat."/hunter_request_trial_data" begin
             
             -- =============================================================
             -- FIX BETA RESET: Rileva se il DB e' stato resettato
-            -- Se DB ha valori 0 ma quest flags hanno valori > 0, forza reset COMPLETO
+            -- CONDIZIONI ULTRA-SICURE per evitare falsi positivi:
+            -- 1. Query DB deve essere riuscita (chk > 0)
+            -- 2. DB deve avere TUTTI i valori a 0 (punti, kill, fratture, bauli, missioni)
+            -- 3. Quest flags devono avere valore SIGNIFICATIVO (> 500 punti O > 50 kill)
+            --
+            -- Questo e' IMPOSSIBILE durante il gioco normale perche':
+            -- - I quest flags vengono sincronizzati DAL database ad ogni login
+            -- - Se hai 500+ punti nei qf, li avresti anche nel DB
+            -- - L'unico modo per avere DB=0 e qf>500 e' un reset manuale del DB
             -- =============================================================
             local qf_total_pts = pc.getqf("hq_total_points") or 0
+            local qf_total_kills = pc.getqf("hq_total_kills") or 0
             local beta_reset_detected = false
 
-            if total_pts == 0 and total_kills == 0 and total_fractures == 0 and qf_total_pts > 100 then
-                -- Database resettato ma quest flags hanno ancora vecchi valori
+            -- Rilevamento automatico ULTRA-SICURO
+            local should_reset = (
+                chk > 0 and  -- Query DB riuscita (NON errore di connessione)
+                total_pts == 0 and
+                total_kills == 0 and
+                total_fractures == 0 and
+                total_chests == 0 and
+                total_missions == 0 and
+                (qf_total_pts > 500 or qf_total_kills > 50)  -- Soglia alta per sicurezza
+            )
+
+            if should_reset then
                 beta_reset_detected = true
                 syschat("|cffFF6600[HUNTER]|r Rilevato reset beta - sincronizzazione in corso...")
 
