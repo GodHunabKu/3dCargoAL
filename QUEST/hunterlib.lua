@@ -5827,24 +5827,44 @@ function hg_lib.smart_claim_reward()
 end
 
 function hg_lib.give_pending_reward(rtype, pos)
-    if pc.getqf("hq_reward_lock") == 1 then 
+    if pc.getqf("hq_reward_lock") == 1 then
         syschat("Attendere prego...")
-        return 
+        return
     end
-    pc.setqf("hq_reward_lock", 1) 
+    pc.setqf("hq_reward_lock", 1)
 
     local pid = pc.get_player_id()
+    local pcol = rtype == "weekly" and "pending_weekly_reward" or "pending_daily_reward"
+
+    -- RACE CONDITION FIX: UPDATE atomico che resetta SOLO se il valore corrisponde
+    -- Se qualcuno ha già riscosso (valore = 0 o diverso), affected_rows = 0
+    local update_result = mysql_direct_query(string.format(
+        "UPDATE srv1_hunabku.hunter_quest_ranking SET %s = 0 WHERE player_id = %d AND %s = %d",
+        pcol, pid, pcol, pos
+    ))
+
+    -- Verifica se UPDATE ha avuto successo (affected_rows > 0)
+    if not update_result or update_result == 0 then
+        -- Premio già riscosso o non valido
+        syschat("|cffFF6600[HUNTER]|r Premio già riscosso o non disponibile.")
+        pc.setqf("hq_reward_lock", 0)
+        return
+    end
+
+    -- UPDATE riuscito - ora possiamo dare l'item in sicurezza
     local rc, rd = mysql_direct_query("SELECT item_vnum, item_quantity FROM srv1_hunabku.hunter_quest_rewards WHERE reward_type='" .. rtype .. "' AND rank_position=" .. pos)
-    
+
     if rc > 0 and rd[1] then
-        mysql_direct_query("UPDATE srv1_hunabku.hunter_quest_ranking SET " .. (rtype=="weekly" and "pending_weekly_reward" or "pending_daily_reward") .. " = 0 WHERE player_id=" .. pid)
-        
         pc.give_item2(tonumber(rd[1].item_vnum), tonumber(rd[1].item_quantity))
-        
+
         local pname = pc.get_name()
         local rtype_label = rtype == "daily" and (hg_lib.get_text("reward_type_daily") or "Giornaliera") or (hg_lib.get_text("reward_type_weekly") or "Settimanale")
         local msg = hg_lib.get_text("reward_claimed", {PLAYER = pname, TYPE = rtype_label}) or ("|cffFFD700[HUNTER]|r " .. pname .. " ha riscosso il premio Top Classifica " .. rtype_label .. "!")
         notice_all(msg)
+    else
+        -- Config premio non trovata - logga errore
+        hg_lib.log_error("RANKING_REWARD", "Config not found", "rtype=" .. rtype .. " pos=" .. pos)
+        syschat("|cffFF0000[ERRORE]|r Configurazione premio non trovata. Contatta un GM.")
     end
 
     pc.setqf("hq_reward_lock", 0)
