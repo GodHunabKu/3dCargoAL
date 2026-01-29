@@ -94,14 +94,14 @@ DELETE FROM hunter_gate_history WHERE 1=1;
 -- Pulisci missioni player
 DELETE FROM hunter_player_missions WHERE 1=1;
 
--- Pulisci rewards pendenti
-DELETE FROM hunter_pending_rewards WHERE 1=1;
+-- Pulisci trial player (se esiste)
+-- DELETE FROM hunter_player_trials WHERE 1=1;
 
--- Pulisci snapshot (se esiste)
-DELETE FROM hunter_player_stats_snapshot WHERE 1=1;
-
--- Reset system status
-UPDATE hunter_system_status SET value = 0 WHERE status_key IN ('daily_reset', 'weekly_reset');
+-- NOTA: Le seguenti tabelle potrebbero non esistere in tutte le installazioni
+-- Esegui manualmente se necessario:
+-- DELETE FROM hunter_pending_rewards WHERE 1=1;
+-- DELETE FROM hunter_player_stats_snapshot WHERE 1=1;
+-- UPDATE hunter_system_status SET value = 0 WHERE status_key IN ('daily_reset', 'weekly_reset');
 
 -- PARTE 3: CONFERMA
 -- ============================================================
