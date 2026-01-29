@@ -325,6 +325,21 @@ when chat."/hunter_request_trial_data" begin
                 game.set_event_flag("hq_force_conquest_" .. pid, 0)
                 game.set_event_flag("hq_force_speedkill_" .. pid, 0)
                 game.set_event_flag("hq_fracture_rank_" .. pid, 0)
+
+                -- Reset TUTTI i flag degli achievement riscossi
+                -- Categorie: COMBAT(101-114), GLORY(201-215), FRACTURE(301-312),
+                -- CHEST(401-412), METIN(501-511), BOSS(601-612), MISSION(701-712),
+                -- TRIAL(801-811), STREAK(901-912), RANK(1001-1007)
+                local ach_ranges = {
+                    {101, 114}, {201, 215}, {301, 312}, {401, 412},
+                    {501, 511}, {601, 612}, {701, 712}, {801, 811},
+                    {901, 912}, {1001, 1007}
+                }
+                for _, range in ipairs(ach_ranges) do
+                    for aid = range[1], range[2] do
+                        pc.setqf("hq_ach_clm_" .. aid, 0)
+                    end
+                end
             end
 
             -- SYNC KARMA/GLORIA: Forza Karma = Gloria

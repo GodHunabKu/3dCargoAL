@@ -867,10 +867,15 @@ class EventSlotHoverArea(ui.Window):
             self.toolTip.AppendTextLine("Vincitore: +%d Gloria!" % winnerPrize, 0xFF00FF00)
             self.toolTip.AppendSpace(5)
             
-            # Status
+            # Status iscrizione player
+            isRegistered = self.eventData.get("is_registered", 0)
+            playerWon = self.eventData.get("player_won", 0)
             status = self.eventData.get("status", "pending")
-            if status == "joined":
-                self.toolTip.AppendTextLine("[SEI ISCRITTO!]", 0xFF00FF00)
+
+            if playerWon == 1:
+                self.toolTip.AppendTextLine("[HAI VINTO!]", 0xFF00FF00)
+            elif isRegistered == 1:
+                self.toolTip.AppendTextLine("[SEI ISCRITTO]", 0xFF00FFFF)
             elif status == "active":
                 self.toolTip.AppendTextLine("[EVENTO IN CORSO]", 0xFFFFAA00)
                 self.toolTip.AppendTextLine("Gioca per iscriverti!", 0xFFCCCCCC)
@@ -878,7 +883,22 @@ class EventSlotHoverArea(ui.Window):
                 self.toolTip.AppendTextLine("[TERMINATO]", 0xFF888888)
             else:
                 self.toolTip.AppendTextLine("[NON ANCORA INIZIATO]", 0xFFAAAAAA)
-            
+
+            # Info vincitore (per eventi first_rift, first_boss)
+            winnerName = self.eventData.get("winner_name", "")
+            winnerRank = self.eventData.get("winner_rank", "")
+            if winnerName:
+                self.toolTip.AppendSpace(5)
+                self.toolTip.AppendTextLine("--------------------------------", 0xFF444444)
+                self.toolTip.AppendTextLine("[VINCITORE DI OGGI]", 0xFFFFD700)
+                rankColors = {"E": 0xFF808080, "D": 0xFF8B4513, "C": 0xFF00FF00, "B": 0xFF00BFFF, "A": 0xFFFFD700, "S": 0xFFFF4500, "N": 0xFFFF00FF}
+                rankColor = rankColors.get(winnerRank, 0xFFFFFFFF)
+                self.toolTip.AppendTextLine("%s [%s-Rank]" % (winnerName, winnerRank), rankColor)
+            elif etype in ("first_rift", "first_boss") and status == "active":
+                self.toolTip.AppendSpace(3)
+                self.toolTip.AppendTextLine("Nessun vincitore ancora!", 0xFFFF6600)
+                self.toolTip.AppendTextLine("Sii il primo!", 0xFFFFFF00)
+
             self.toolTip.AppendSpace(3)
             self.toolTip.Show()
         except:
@@ -1165,20 +1185,38 @@ class EventsScheduleWindow(ui.Window, DraggableMixin):
             "metin_frenzy": 0xFFFF8800,
             "double_spawn": 0xFFFF4444,
         }
-        
+
         etype = event.get("type", "glory_rush")
         typeColor = typeColors.get(etype, 0xFFFF6600)
-        
+
         slot["typeBar"].SetColor(typeColor)
         slot["nameText"].SetText(event.get("name", "Evento")[:40])
         slot["timeText"].SetText("%s - %s" % (event.get("start_time", "--:--"), event.get("end_time", "--:--")))
-        slot["rewardText"].SetText("+%s" % event.get("reward", "0"))
-        
+
+        # Mostra premio o vincitore se c'e'
+        winnerName = event.get("winner_name", "")
+        winnerRank = event.get("winner_rank", "")
+        if winnerName and etype in ("first_rift", "first_boss"):
+            # Mostra vincitore invece del premio
+            slot["rewardText"].SetText("Vinto da: %s [%s]" % (winnerName[:12], winnerRank))
+            slot["rewardText"].SetPackedFontColor(0xFFFFD700)
+        else:
+            slot["rewardText"].SetText("+%s" % event.get("reward", "0"))
+            slot["rewardText"].SetPackedFontColor(0xFF88FF88)
+
+        # Status con priorita': HAI VINTO > ISCRITTO > IN CORSO > TERMINATO
         status = event.get("status", "pending")
-        if status == "joined":
-            slot["statusText"].SetText("[ISCRITTO]")
+        playerWon = event.get("player_won", 0)
+        isRegistered = event.get("is_registered", 0)
+
+        if playerWon == 1:
+            slot["statusText"].SetText("[HAI VINTO!]")
             slot["statusText"].SetPackedFontColor(0xFF00FF00)
-            slot["bg"].SetColor(0x44003300)
+            slot["bg"].SetColor(0x44006600)
+        elif isRegistered == 1:
+            slot["statusText"].SetText("[ISCRITTO]")
+            slot["statusText"].SetPackedFontColor(0xFF00FFFF)
+            slot["bg"].SetColor(0x44003333)
         elif status == "active":
             slot["statusText"].SetText("[IN CORSO]")
             slot["statusText"].SetPackedFontColor(0xFFFFAA00)

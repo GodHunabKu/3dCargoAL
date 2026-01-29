@@ -6658,15 +6658,52 @@ function hg_lib.send_today_events(openWindow)
             local reward_str = "+" .. (e.reward_glory_base or 50) .. "+Gloria"
             local winner_prize = tonumber(e.reward_glory_winner) or 200
                 
-            local pkt = tostring(tonumber(e.id) or 0) .. "~" ..
+            -- Controlla se c'e' un vincitore oggi per questo evento (first_rift, first_boss)
+            local winner_name = ""
+            local winner_rank = ""
+            local etype = e.event_type or "glory_rush"
+            if etype == "first_rift" or etype == "first_boss" then
+                local today = os.date("%Y-%m-%d")
+                local event_id = tonumber(e.id) or 0
+                local wq = "SELECT w.player_name, r.total_points FROM srv1_hunabku.hunter_event_winners w LEFT JOIN srv1_hunabku.hunter_quest_ranking r ON w.player_id = r.player_id WHERE w.event_id=" .. event_id .. " AND DATE(w.won_at)='" .. today .. "' LIMIT 1"
+                local wc, wd = mysql_direct_query(wq)
+                if wc > 0 and wd[1] then
+                    winner_name = wd[1].player_name or ""
+                    local wpts = tonumber(wd[1].total_points) or 0
+                    winner_rank = hg_lib.get_rank_key(wpts)
+                end
+            end
+
+            -- Controlla se QUESTO player e' iscritto oggi
+            local pid = pc.get_player_id()
+            local today = os.date("%Y-%m-%d")
+            local event_id = tonumber(e.id) or 0
+            local is_registered = 0
+            local pq = "SELECT id FROM srv1_hunabku.hunter_event_participants WHERE event_id=" .. event_id .. " AND player_id=" .. pid .. " AND DATE(joined_at)='" .. today .. "'"
+            local pc_check = mysql_direct_query(pq)
+            if pc_check > 0 then is_registered = 1 end
+
+            -- Controlla se QUESTO player ha VINTO oggi
+            local player_won = 0
+            if etype == "first_rift" or etype == "first_boss" then
+                local pwq = "SELECT id FROM srv1_hunabku.hunter_event_winners WHERE event_id=" .. event_id .. " AND player_id=" .. pid .. " AND DATE(won_at)='" .. today .. "'"
+                local pwc = mysql_direct_query(pwq)
+                if pwc > 0 then player_won = 1 end
+            end
+
+            local pkt = tostring(event_id) .. "~" ..
                 hg_lib.clean_str(e.event_name or "Evento") .. "~" ..
                 start_time .. "~" ..
                 end_time .. "~" ..
-                (e.event_type or "glory_rush") .. "~" ..
+                etype .. "~" ..
                 reward_str .. "~" ..
                 status .. "~" ..
                 (e.min_rank or "E") .. "~" ..
-                winner_prize
+                winner_prize .. "~" ..
+                hg_lib.clean_str(winner_name) .. "~" ..
+                winner_rank .. "~" ..
+                is_registered .. "~" ..
+                player_won
                 
             if batch ~= "" then batch = batch .. ";" end
             batch = batch .. pkt
