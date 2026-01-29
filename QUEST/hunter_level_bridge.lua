@@ -261,6 +261,53 @@ when chat."/hunter_request_trial_data" begin
                 syschat("|cffFFD700[HUNTER]|r Hai ricevuto +" .. pending_karma .. " Karma mentre eri offline!")
             end
             
+            -- =============================================================
+            -- FIX BETA RESET: Rileva se il DB e' stato resettato
+            -- Se DB ha valori 0 ma quest flags hanno valori > 0, forza reset COMPLETO
+            -- =============================================================
+            local qf_total_pts = pc.getqf("hq_total_points") or 0
+            local beta_reset_detected = false
+
+            if total_pts == 0 and total_kills == 0 and total_fractures == 0 and qf_total_pts > 100 then
+                -- Database resettato ma quest flags hanno ancora vecchi valori
+                beta_reset_detected = true
+                syschat("|cffFF6600[HUNTER]|r Rilevato reset beta - sincronizzazione in corso...")
+
+                -- Reset TUTTI i quest flags Hunter
+                pc.setqf("hq_intro", 0)  -- Mostra di nuovo awakening
+                pc.setqf("hq_login_streak", 0)
+                pc.setqf("hq_best_streak", 0)
+                pc.setqf("hq_streak_bonus", 0)
+                pc.setqf("hq_last_login_day", 0)
+                pc.setqf("hq_defense_fail_streak", 0)
+                pc.setqf("hq_fod_date", 0)
+                pc.setqf("hq_fod_fracture", 0)
+                pc.setqf("hq_fod_boss", 0)
+                pc.setqf("hq_fod_chest", 0)
+                pc.setqf("hq_fod_metin", 0)
+                pc.setqf("hq_last_assign_day", 0)
+                pc.setqf("hq_last_reset_check_day", 0)
+                pc.setqf("hq_daily_reset_done", 0)
+                pc.setqf("hq_reminder_done", 0)
+                pc.setqf("hq_last_week", 0)
+                pc.setqf("hq_event_registered", 0)
+                pc.setqf("hq_last_tip_time", 0)
+                pc.setqf("hq_last_logout", 0)
+                pc.setqf("hq_pending_total_pts", 0)
+                pc.setqf("hq_pending_total_kills", 0)
+
+                -- Reset anche game event flags per questo player
+                game.set_event_flag("hq_fod_done_chest_" .. pid, 0)
+                game.set_event_flag("hq_fod_done_boss_" .. pid, 0)
+                game.set_event_flag("hq_fod_done_metin_" .. pid, 0)
+                game.set_event_flag("hq_fod_done_fracture_" .. pid, 0)
+                game.set_event_flag("hq_hunter_focus_" .. pid, 0)
+                game.set_event_flag("hq_force_chest_" .. pid, 0)
+                game.set_event_flag("hq_force_conquest_" .. pid, 0)
+                game.set_event_flag("hq_force_speedkill_" .. pid, 0)
+                game.set_event_flag("hq_fracture_rank_" .. pid, 0)
+            end
+
             -- SYNC KARMA/GLORIA: Forza Karma = Gloria
             -- Il karma interno di Metin2 e' 10x quello visualizzato
             -- Quindi DB 18500 -> target_karma 1850 -> visualizzato 18500
@@ -269,13 +316,13 @@ when chat."/hunter_request_trial_data" begin
             if current_karma ~= target_karma then
                 local diff = target_karma - current_karma
                 pc.change_alignment(diff)
-                if math.abs(diff) > 10 then
+                if math.abs(diff) > 10 or beta_reset_detected then
                     syschat("|cff888888[SYNC]|r Karma sincronizzato: " .. (current_karma * 10) .. " -> " .. total_pts)
                 end
             end
-            
+
             -- FIX: Sincronizza TUTTI i qf con il database al login
-            -- Questo � CRITICO per il controllo requisiti fratture e achievement!
+            -- Questo e' CRITICO per il controllo requisiti fratture e achievement!
             pc.setqf("hq_total_points", total_pts)
             pc.setqf("hq_total_kills", total_kills)
             pc.setqf("hq_total_fractures", total_fractures)
